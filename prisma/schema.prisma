@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  fullName  String
+  logs      Log[]
+  createdAt DateTime @default(now())
+}
+
+model WorkPeriod {
+  id        Int      @id @default(autoincrement())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  logs      Log[]
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  logs        Log[]
+}
+
+model Log {
+  id           Int        @id @default(autoincrement())
+  date         DateTime
+  category     LogCategory
+  description  String
+  difficulty   Difficulty?
+  timeSpent    Int?
+  user         User       @relation(fields: [userId], references: [id])
+  userId       Int
+  project      Project?   @relation(fields: [projectId], references: [id])
+  projectId    Int?
+  workPeriod   WorkPeriod @relation(fields: [workPeriodId], references: [id])
+  workPeriodId Int
+}
+
+enum LogCategory {
+  RESPONSIBILITY
+  PROJECT
+  OPERATIONS
+  MAINTENANCE
+  SIMONYI
+  OTHER
+}
+
+enum Difficulty {
+  SMALL
+  MEDIUM
+  LARGE
+}
