@@ -168,13 +168,22 @@ export class LogsService {
         description: data.description,
         difficulty: data.difficulty,
         timeSpent: data.timeSpent,
-        userId: data.userId,
-        projectId: data.projectId,
-        workPeriodId: data.workPeriodId,
       };
 
       if (data.date) {
         updateData.date = new Date(data.date);
+      }
+
+      if (data.userId) {
+        updateData.user = { connect: { id: data.userId } };
+      }
+
+      if (data.projectId) {
+        updateData.project = { connect: { id: data.projectId } };
+      }
+
+      if (data.workPeriodId) {
+        updateData.workPeriod = { connect: { id: data.workPeriodId } };
       }
 
       const log = await this.prisma.log.update({
