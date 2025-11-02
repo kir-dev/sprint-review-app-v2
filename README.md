@@ -1,8 +1,30 @@
 # Sprint Review App
 
-## Description
+A monorepo project with NestJS backend and React frontend for managing projects, work periods, and logs.
 
-Sprint Review Application - A NestJS backend for managing projects, work periods, logs, and user authentication via AuthSCH.
+## 📁 Project Structure
+
+```
+sprint-review-app-v2/
+├── apps/
+│   ├── backend/           # NestJS backend
+│   │   ├── src/
+│   │   │   ├── auth/      # AuthSCH + JWT authentication
+│   │   │   ├── users/     # User management
+│   │   │   ├── projects/  # Project management
+│   │   │   ├── work-periods/ # Work period tracking
+│   │   │   └── logs/      # Work log system
+│   │   ├── prisma/        # Database schema & migrations
+│   │   └── test/          # Backend tests
+│   └── frontend/          # React + Vite frontend
+│       ├── src/
+│       │   ├── pages/     # React pages
+│       │   ├── components/ # Reusable components
+│       │   └── context/   # React contexts
+│       └── public/
+├── .env                   # Environment variables
+└── package.json           # Root workspace config
+```
 
 ## Features
 
@@ -14,90 +36,93 @@ Sprint Review Application - A NestJS backend for managing projects, work periods
 - 📚 **Swagger Documentation** - Interactive API docs at `/api`
 - ⚛️ **React Frontend** - Modern UI with Tailwind CSS
 
-## Project setup
+## Getting Started
 
-### Backend Setup
+### Prerequisites
 
-```bash
-# Install backend dependencies
-$ yarn install
+- Node.js 20+
+- Yarn 1.22+
+- PostgreSQL database
 
-# Setup environment variables
-$ cp .env.example .env
-# Edit .env with your AuthSCH credentials and database URL
+### Installation
 
-# Setup database
-$ yarn prisma migrate dev
-$ yarn prisma db seed
-```
-
-### Frontend Setup
+Install all dependencies from the root:
 
 ```bash
-# Navigate to frontend directory
-$ cd frontend
-
-# Install frontend dependencies
-$ yarn install
+yarn install
 ```
 
-## AuthSCH Configuration
-
-1. Register your application at [https://auth.sch.bme.hu/console/create](https://auth.sch.bme.hu/console/create)
-2. Set the callback URL to: `http://localhost:3000/auth/callback`
-3. Copy your Client ID and Client Secret to `.env`:
-   ```bash
-   AUTHSCH_CLIENT_ID=your_client_id_here
-   AUTHSCH_CLIENT_SECRET=your_client_secret_here
-   JWT_SECRET=your_random_jwt_secret_here
-   FRONTEND_URL=http://localhost:3000
-   ```
-
-## Run the application
-
-### Backend (NestJS)
+### Environment Setup
 
 ```bash
-# development mode
-$ yarn run start:dev
+# Copy environment template
+cp .env.example .env
 
-# production mode
-$ yarn run start:prod
+# Edit .env with your configuration
+# - AUTHSCH_CLIENT_ID and AUTHSCH_CLIENT_SECRET from auth.sch.bme.hu
+# - DATABASE_URL for PostgreSQL
+# - JWT_SECRET for token signing
+# - FRONTEND_URL (default: http://localhost:3000)
 ```
 
-Backend runs on `http://localhost:3001`
-
-### Frontend (React + Vite)
+### Database Setup
 
 ```bash
-# Navigate to frontend directory
-$ cd frontend
+# Run migrations
+cd apps/backend
+yarn prisma migrate dev
 
-# development mode
-$ yarn dev
+# Seed database (optional)
+yarn prisma db seed
 ```
 
-Frontend runs on `http://localhost:3000`
+## Development
 
-## Run tests
+Run backend and frontend separately:
 
 ```bash
-# unit tests
-$ yarn run test
+# Start backend (runs on http://localhost:3001)
+yarn start:backend
 
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+# Start frontend (runs on http://localhost:3000)
+yarn start:frontend
 ```
 
-## Application Structure
+## Build
 
+```bash
+# Build backend
+yarn build:backend
+
+# Build frontend
+yarn build:frontend
 ```
-backend/
-├── src/
-│   ├── auth/              # AuthSCH + JWT authentication
+
+## Linting & Formatting
+
+```bash
+# Check all code
+yarn lint
+
+# Fix linting issues
+yarn lint:fix
+
+# Format code
+yarn format
+
+# Check formatting
+yarn format:check
+```
+
+## Testing
+
+```bash
+# Run backend tests
+yarn test
+
+# Run e2e tests
+yarn test:e2e
+```
 │   ├── users/             # User management
 │   ├── projects/          # Project management
 │   ├── work-periods/      # Sprint period tracking

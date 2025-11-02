@@ -11,15 +11,13 @@ export class AuthService {
 
   login(user: any): string {
     const payload = {
+      sub: user.id,
       id: user.id,
       email: user.email,
       fullName: user.fullName,
       githubUsername: user.githubUsername,
     };
 
-    return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET') || 'your-secret-key',
-      expiresIn: '7 days',
-    });
+    return this.jwtService.sign(payload);
   }
 }
