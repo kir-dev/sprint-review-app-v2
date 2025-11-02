@@ -1,7 +1,7 @@
 import {
-    AuthSchProfile,
-    AuthSchScope,
-    Strategy,
+  AuthSchProfile,
+  AuthSchScope,
+  Strategy,
 } from '@kir-dev/passport-authsch';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -15,8 +15,8 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
     private usersService: UsersService,
   ) {
     super({
-      clientId: configService.get<string>('AUTHSCH_CLIENT_ID'),
-      clientSecret: configService.get<string>('AUTHSCH_CLIENT_SECRET'),
+      clientId: configService.get<string>('AUTHSCH_CLIENT_ID') || '',
+      clientSecret: configService.get<string>('AUTHSCH_CLIENT_SECRET') || '',
       scopes: [
         AuthSchScope.PROFILE,
         AuthSchScope.EMAIL,
