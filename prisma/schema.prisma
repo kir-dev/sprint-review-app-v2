@@ -8,11 +8,14 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  fullName  String
-  logs      Log[]
-  createdAt DateTime @default(now())
+  id             Int        @id @default(autoincrement())
+  email          String     @unique
+  githubUsername String     @unique
+  fullName       String
+  logs           Log[]
+  createdAt      DateTime   @default(now())
+  managedProjects Project[] @relation("ProjectManager")
+  projects       Project[]  @relation("ProjectMembers")
 }
 
 model WorkPeriod {
@@ -24,10 +27,14 @@ model WorkPeriod {
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String?
-  logs        Log[]
+  id               Int      @id @default(autoincrement())
+  name             String   @unique
+  description      String?
+  githubUrl        String?
+  projectManager   User?    @relation("ProjectManager", fields: [projectManagerId], references: [id])
+  projectManagerId Int?
+  logs             Log[]
+  members          User[]   @relation("ProjectMembers")
 }
 
 model Log {
