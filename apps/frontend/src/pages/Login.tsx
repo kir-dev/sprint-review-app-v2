@@ -29,28 +29,28 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-primary-dark px-4">
-      <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
+    <div className="min-h-screen flex items-center justify-center bg-dark px-4">
+      <div className="bg-dark-lighter border border-dark rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
         <div className="text-6xl mb-6">📊</div>
-        <h1 className="text-4xl font-bold text-gray-800 mb-3">
+        <h1 className="text-4xl font-bold text-white mb-3">
           Sprint Review App
         </h1>
-        <p className="text-gray-600 mb-10">
+        <p className="text-gray-400 mb-10">
           Jelentkezz be az AuthSCH-val a folytatáshoz
         </p>
 
         <button
           onClick={handleLogin}
-          className="w-full bg-authsch hover:bg-[#e55a2b] text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
+          className="w-full bg-primary hover:bg-primary-600 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl shadow-primary/20"
         >
           🔐 Bejelentkezés AuthSCH-val
         </button>
 
-        <div className="mt-10 bg-gray-50 rounded-2xl p-6 text-left">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="mt-10 bg-dark border border-dark rounded-2xl p-6 text-left">
+          <h3 className="text-lg font-semibold text-white mb-4">
             Mi az AuthSCH?
           </h3>
-          <ul className="space-y-3 text-gray-600">
+          <ul className="space-y-3 text-gray-400">
             <li className="flex items-start">
               <span className="text-primary font-bold mr-3">✓</span>
               <span>
@@ -69,10 +69,10 @@ const Login = () => {
         </div>
 
         <a
-          href="http://localhost:3000/api"
+          href="http://localhost:3001/api"
           target="_blank"
           rel="noopener noreferrer"
-          className="block mt-6 text-primary hover:text-primary-dark text-sm font-medium transition-colors"
+          className="block mt-6 text-primary hover:text-primary-400 text-sm font-medium transition-colors"
         >
           📚 API Dokumentáció
         </a>

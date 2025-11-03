@@ -87,22 +87,22 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-dark">
       {/* Navbar */}
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-dark-lighter border-b border-dark shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <span className="text-3xl">📊</span>
-              <span className="text-xl font-bold text-gray-800">
+              <span className="text-xl font-bold text-white">
                 Sprint Review App
               </span>
             </div>
             <div className="flex items-center space-x-6">
-              <span className="text-gray-600">{user.fullName}</span>
+              <span className="text-gray-300">{user.fullName}</span>
               <button
                 onClick={handleLogout}
-                className="bg-authsch hover:bg-[#e55a2b] text-white font-semibold py-2 px-6 rounded-full transition-all duration-300"
+                className="bg-primary hover:bg-primary-600 text-white font-semibold py-2 px-6 rounded-full transition-all duration-300"
               >
                 Kijelentkezés
               </button>
@@ -114,82 +114,82 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Card */}
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <div className="bg-dark-lighter border border-dark rounded-2xl shadow-lg p-8 mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
             Üdvözöllek! 👋
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-400">
             Üdv {user.fullName}! Sikeres bejelentkezés az AuthSCH-val.
           </p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div className="bg-dark-lighter border border-dark rounded-2xl shadow-lg p-6 hover:shadow-xl hover:border-primary/30 transition-all">
             <div className="text-4xl mb-3">📝</div>
-            <div className="text-sm text-gray-500 mb-1">Logok</div>
-            <div className="text-3xl font-bold text-gray-800">
+            <div className="text-sm text-gray-400 mb-1">Logok</div>
+            <div className="text-3xl font-bold text-white">
               {stats.logsCount}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div className="bg-dark-lighter border border-dark rounded-2xl shadow-lg p-6 hover:shadow-xl hover:border-primary/30 transition-all">
             <div className="text-4xl mb-3">📁</div>
-            <div className="text-sm text-gray-500 mb-1">Projektek</div>
-            <div className="text-3xl font-bold text-gray-800">
+            <div className="text-sm text-gray-400 mb-1">Projektek</div>
+            <div className="text-3xl font-bold text-white">
               {stats.projectsCount}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div className="bg-dark-lighter border border-dark rounded-2xl shadow-lg p-6 hover:shadow-xl hover:border-primary/30 transition-all">
             <div className="text-4xl mb-3">⏱️</div>
-            <div className="text-sm text-gray-500 mb-1">Munkaórák</div>
-            <div className="text-3xl font-bold text-gray-800">
+            <div className="text-sm text-gray-400 mb-1">Munkaórák</div>
+            <div className="text-3xl font-bold text-white">
               {stats.hoursCount} óra
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div className="bg-dark-lighter border border-dark rounded-2xl shadow-lg p-6 hover:shadow-xl hover:border-primary/30 transition-all">
             <div className="text-4xl mb-3">📅</div>
-            <div className="text-sm text-gray-500 mb-1">Aktív Periódus</div>
-            <div className="text-2xl font-bold text-gray-800">
+            <div className="text-sm text-gray-400 mb-1">Aktív Periódus</div>
+            <div className="text-2xl font-bold text-white">
               {stats.periodName}
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-2xl shadow-sm p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+        <div className="bg-dark-lighter border border-dark rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-white mb-6">
             Gyors műveletek
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <a
-              href="http://localhost:3000/api"
+              href="http://localhost:3001/api"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gradient-to-br from-primary to-primary-dark text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 text-center"
+              className="bg-primary hover:bg-primary-600 text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1 text-center"
             >
               📚 API Dokumentáció
             </a>
 
             <button
               onClick={() => alert('Új log funkció hamarosan!')}
-              className="bg-gradient-to-br from-primary to-primary-dark text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-primary hover:bg-primary-600 text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1"
             >
               ➕ Új Log
             </button>
 
             <button
               onClick={() => alert('Statisztikák funkció hamarosan!')}
-              className="bg-gradient-to-br from-primary to-primary-dark text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-primary hover:bg-primary-600 text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1"
             >
               📊 Statisztikák
             </button>
 
             <button
               onClick={() => alert('Projektek funkció hamarosan!')}
-              className="bg-gradient-to-br from-primary to-primary-dark text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-primary hover:bg-primary-600 text-white font-semibold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1"
             >
               📁 Projektek
             </button>

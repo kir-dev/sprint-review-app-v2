@@ -1,7 +1,7 @@
 import {
-  AuthSchProfile,
-  AuthSchScope,
-  Strategy,
+    AuthSchProfile,
+    AuthSchScope,
+    Strategy,
 } from '@kir-dev/passport-authsch';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -26,16 +26,20 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
   }
 
   async validate(profile: AuthSchProfile): Promise<any> {
+    // Log profile for debugging
+    console.log('AuthSCH Profile:', JSON.stringify(profile, null, 2));
+    
     // Check if user exists
     try {
       const existingUser = await this.usersService.findByEmail(profile.email);
       return existingUser;
-    } catch {
+    } catch (error) {
       // User doesn't exist, create new one
+      console.log('Creating new user from profile');
       const newUser = await this.usersService.create({
         email: profile.email,
         fullName: profile.fullName,
-        githubUsername: profile.schAcc?.schAccUsername,
+        githubUsername: profile.schAcc?.schAccUsername ?? undefined,
       });
       return newUser;
     }
