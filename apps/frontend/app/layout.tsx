@@ -1,3 +1,4 @@
+import { AppLayout } from "@/components/app-layout"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/context/AuthContext"
 import type { Metadata } from "next"
@@ -11,7 +12,6 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Sprint Review App - Kir-Dev",
   description: "Sprint review and work log management for Kir-Dev",
-  generator: "v0.app",
 }
 
 export default function RootLayout({
@@ -23,7 +23,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
         <ThemeProvider defaultTheme="dark">
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <AppLayout>{children}</AppLayout>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

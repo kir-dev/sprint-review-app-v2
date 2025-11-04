@@ -1,10 +1,12 @@
 "use client"
 
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/context/AuthContext"
+import { cn } from "@/lib/utils"
+import { BarChart3, Calendar, FileText, FolderKanban, LayoutDashboard, LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, FolderKanban, Calendar, FileText, BarChart3 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -16,6 +18,7 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-card">
@@ -52,19 +55,34 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer with theme toggle */}
-      <div className="border-t border-border p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xs font-semibold text-primary">U</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium leading-none">User</span>
-              <span className="text-xs text-muted-foreground">user@sch.bme.hu</span>
-            </div>
+      {/* Footer with user info and theme toggle */}
+      <div className="border-t border-border p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <span className="text-xs font-semibold text-primary">
+              {user?.fullName?.charAt(0).toUpperCase() || "U"}
+            </span>
           </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="text-sm font-medium leading-none truncate">
+              {user?.fullName || "User"}
+            </span>
+            <span className="text-xs text-muted-foreground truncate">
+              {user?.email || "user@sch.bme.hu"}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className="flex-1 gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
       </div>
     </div>
