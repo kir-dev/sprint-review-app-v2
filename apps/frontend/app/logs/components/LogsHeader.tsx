@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { Filter, Plus } from "lucide-react"
+import { FileText, Filter, Plus } from "lucide-react"
 
 interface LogsHeaderProps {
   onToggleFilters: () => void
@@ -9,9 +9,14 @@ interface LogsHeaderProps {
 export function LogsHeader({ onToggleFilters, onCreateLog }: LogsHeaderProps) {
   return (
     <div className="flex items-center justify-between animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Work Logs</h1>
-        <p className="text-muted-foreground">Track your work hours and activities</p>
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center hover:scale-110 transition-transform">
+          <FileText className="h-6 w-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Work Logs</h1>
+          <p className="text-muted-foreground">Track your work hours and activities</p>
+        </div>
       </div>
       <div className="flex gap-3">
         <Button 

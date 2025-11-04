@@ -13,7 +13,7 @@ export function StatsCards({ totalLogs, totalHours, avgHours }: StatsCardsProps)
       <Card className="animate-slide-in-left hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Logs</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground animate-bounce-slow" />
+          <Calendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold transition-all duration-300">{totalLogs}</div>
@@ -23,7 +23,7 @@ export function StatsCards({ totalLogs, totalHours, avgHours }: StatsCardsProps)
       <Card className="animate-slide-in-bottom hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animation-delay-100">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground animate-pulse-slow" />
+          <Clock className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold transition-all duration-300">{totalHours}h</div>
@@ -33,7 +33,7 @@ export function StatsCards({ totalLogs, totalHours, avgHours }: StatsCardsProps)
       <Card className="animate-slide-in-right hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animation-delay-200">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Avg per Log</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground animate-spin-slow" />
+          <Clock className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold transition-all duration-300">{avgHours}h</div>

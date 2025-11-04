@@ -3,12 +3,12 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/context/AuthContext"
-import { Github, Mail, Save, User } from "lucide-react"
+import { Github, LogOut, Mail, Save, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 export default function ProfilePage() {
-  const { user, token, isLoading, refreshUser } = useAuth()
+  const { user, token, isLoading, refreshUser, logout } = useAuth()
   const router = useRouter()
   const [githubUsername, setGithubUsername] = useState("")
   const [isSaving, setIsSaving] = useState(false)
@@ -75,8 +75,8 @@ export default function ProfilePage() {
     <div className="flex justify-center items-start max-w-7xl min-h-screen p-8">
       <div className="flex flex-col gap-6 w-full max-w-4xl">
         {/* Header */}
-        <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+        <div className="flex items-center gap-3 animate-fade-in">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center hover:scale-110 transition-transform">
           <User className="h-6 w-6 text-primary" />
         </div>
         <div>
@@ -87,7 +87,7 @@ export default function ProfilePage() {
 
       {/* Save Message */}
       {saveMessage && (
-        <div className={`p-4 rounded-lg ${
+        <div className={`p-4 rounded-lg animate-slide-in-top ${
           saveMessage.type === 'success' 
             ? 'bg-green-500/10 text-green-500 border border-green-500/20' 
             : 'bg-destructive/10 text-destructive border border-destructive/20'
@@ -97,7 +97,7 @@ export default function ProfilePage() {
       )}
 
       {/* Profile Information */}
-      <Card>
+      <Card className="animate-slide-in-left hover:shadow-lg transition-shadow">
         <CardHeader>
           <CardTitle>Account Information</CardTitle>
           <CardDescription>
@@ -138,7 +138,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Editable Information */}
-      <Card>
+      <Card className="animate-slide-in-right hover:shadow-lg transition-shadow">
         <CardHeader>
           <CardTitle>Additional Information</CardTitle>
           <CardDescription>
@@ -171,13 +171,14 @@ export default function ProfilePage() {
               variant="outline"
               onClick={() => setGithubUsername(user.githubUsername || "")}
               disabled={isSaving}
+              className="hover:scale-105 transition-transform text-muted-foreground hover:text-foreground"
             >
               Reset
             </Button>
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="gap-2"
+              className="gap-2 hover:scale-105 transition-transform"
             >
               <Save className="h-4 w-4" />
               {isSaving ? 'Saving...' : 'Save Changes'}
@@ -187,7 +188,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Stats Card */}
-      <Card>
+      <Card className="animate-slide-in-bottom hover:shadow-lg transition-shadow">
         <CardHeader>
           <CardTitle>Activity Stats</CardTitle>
           <CardDescription>
@@ -196,19 +197,38 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-1">
+            <div className="space-y-1 hover:scale-105 transition-transform cursor-default">
               <p className="text-2xl font-bold">0</p>
               <p className="text-xs text-muted-foreground">Total Logs</p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 hover:scale-105 transition-transform cursor-default">
               <p className="text-2xl font-bold">0</p>
               <p className="text-xs text-muted-foreground">Hours Logged</p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 hover:scale-105 transition-transform cursor-default">
               <p className="text-2xl font-bold">0</p>
               <p className="text-xs text-muted-foreground">Projects</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Logout Section */}
+      <Card className="animate-slide-in-bottom hover:shadow-lg transition-shadow">
+        <CardHeader>
+          <CardDescription>
+            Sign out from your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="destructive"
+            onClick={logout}
+            className="w-full gap-2 hover:scale-105 transition-transform"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
         </CardContent>
       </Card>
       </div>

@@ -1,12 +1,13 @@
 "use client"
 
+import { useTheme } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/AuthContext"
 import { cn } from "@/lib/utils"
-import { BarChart3, Calendar, FileText, FolderKanban, LayoutDashboard, LogOut, User } from "lucide-react"
+import { BarChart3, Calendar, ChevronLeft, ChevronRight, FileText, FolderKanban, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -14,76 +15,130 @@ const navigation = [
   { name: "Work Periods", href: "/work-periods", icon: Calendar },
   { name: "Logs", href: "/logs", icon: FileText },
   { name: "Statistics", href: "/statistics", icon: BarChart3 },
-  { name: "Profile", href: "/profile", icon: User },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
+  const { theme } = useTheme()
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const logoSrc = theme === "light" ? "/Kir-Dev-Black.png" : "/Kir-Dev-White.png"
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-border bg-card">
+    <div className={cn(
+      "flex h-full flex-col border-r border-border bg-card animate-slide-in-left transition-all duration-300",
+      isCollapsed ? "w-16" : "w-64"
+    )}>
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <span className="text-sm font-bold text-primary-foreground">KD</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold leading-none">Sprint Review</span>
-          <span className="text-xs text-muted-foreground">Kir-Dev</span>
-        </div>
+      <div className={cn(
+        "flex h-16 items-center gap-2 border-b border-border animate-fade-in relative",
+        isCollapsed ? "px-2" : "px-6"
+      )}>
+        {!isCollapsed && (
+          <>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg transition-transform">
+              <img src={logoSrc} alt="kir-dev" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold leading-none">Sprint Review</span>
+              <span className="text-xs text-muted-foreground">Kir-Dev</span>
+            </div>
+          </>
+        )}
+        {isCollapsed && (
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg transition-all mx-auto">
+            <img src={logoSrc} alt="kir-dev" className="w-full h-full object-contain" />
+          </div>
+        )}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={cn(
+            "absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full border border-border bg-card hover:bg-accent transition-colors flex items-center justify-center",
+            "shadow-md hover:shadow-lg"
+          )}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-3 w-3" />
+          ) : (
+            <ChevronLeft className="h-3 w-3" />
+          )}
+        </button>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
-        {navigation.map((item) => {
+        {navigation.map((item, index) => {
           const isActive = pathname === item.href
           return (
             <Link
               key={item.name}
               href={item.href}
+              style={{ animationDelay: `${index * 50}ms` }}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all animate-fade-in",
                 isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  ? "bg-primary text-primary-foreground shadow-md hover:shadow-lg"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                isCollapsed && "justify-center px-2",
+                isCollapsed && !isActive && "hover:scale-110",
+                !isCollapsed && !isActive && "hover:translate-x-1"
               )}
+              title={isCollapsed ? item.name : undefined}
             >
-              <item.icon className="h-4 w-4" />
-              {item.name}
+              <item.icon className={cn(
+                "transition-transform",
+                isCollapsed ? "h-5 w-5" : "h-4 w-4",
+                isActive && "animate-pulse-slow"
+              )} />
+              {!isCollapsed && item.name}
             </Link>
           )
         })}
       </nav>
 
       {/* Footer with user info and theme toggle */}
-      <div className="border-t border-border p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-xs font-semibold text-primary">
-              {user?.fullName?.charAt(0).toUpperCase() || "U"}
-            </span>
-          </div>
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-sm font-medium leading-none truncate">
-              {user?.fullName || "User"}
-            </span>
-            <span className="text-xs text-muted-foreground truncate">
-              {user?.email || "user@sch.bme.hu"}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={logout}
-            className="flex-1 gap-2 text-muted-foreground hover:text-foreground"
+      <div className="border-t border-border p-4 animate-slide-in-bottom">
+        <div className={cn(
+          "flex items-center gap-2 rounded-lg p-2 transition-all",
+          isCollapsed ? "flex-col" : "group"
+        )}>
+          <Link 
+            href="/profile"
+            className={cn(
+              "flex items-center gap-2 flex-1 min-w-0 rounded-lg transition-all hover:bg-accent/50 p-2 -m-2",
+              isCollapsed && "flex-col"
+            )}
+            title={isCollapsed ? "Profile" : undefined}
           >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
+            <div className={cn(
+              "rounded-full bg-primary/10 flex items-center justify-center shrink-0",
+              isCollapsed ? "h-10 w-10" : "h-8 w-8"
+            )}>
+              <span className={cn(
+                "font-semibold text-primary",
+                isCollapsed ? "text-sm" : "text-xs"
+              )}>
+                {user?.fullName?.charAt(0).toUpperCase() || "U"}
+              </span>
+            </div>
+            {!isCollapsed && (
+              <div className="flex flex-col flex-1 min-w-0">
+                <span className="text-sm font-medium leading-none truncate">
+                  {user?.fullName || "User"}
+                </span>
+                <span className="text-xs text-muted-foreground truncate">
+                  {user?.email || "user@sch.bme.hu"}
+                </span>
+              </div>
+            )}
+          </Link>
+          <div className={cn(
+            "shrink-0 rounded-lg p-2 -m-2 transition-colors hover:bg-accent/50",
+            isCollapsed && "mt-2"
+          )}>
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </div>
