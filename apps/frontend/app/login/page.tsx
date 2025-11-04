@@ -1,31 +1,36 @@
-import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+'use client';
 
-const Login = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { login, token } = useAuth();
+import { useAuth } from '@/context/AuthContext';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, user, token, isLoading } = useAuth();
 
   useEffect(() => {
     // Check if JWT is in URL (from OAuth callback)
     const jwtFromUrl = searchParams.get('jwt');
     if (jwtFromUrl) {
+      console.log('🔑 JWT found in URL, calling login()');
       login(jwtFromUrl);
-      navigate('/dashboard', { replace: true });
+      // Don't redirect here - wait for user to be loaded
     }
-  }, [searchParams, login, navigate]);
+  }, [searchParams, login]);
 
-  // If already logged in, redirect to dashboard
+  // Redirect to dashboard when user is loaded
   useEffect(() => {
-    if (token) {
-      navigate('/dashboard', { replace: true });
+    console.log('🔄 Auth state:', { isLoading, hasUser: !!user, hasToken: !!token });
+    if (!isLoading && user && token) {
+      console.log('✅ Redirecting to dashboard');
+      router.push('/dashboard');
     }
-  }, [token, navigate]);
+  }, [user, token, isLoading, router]);
 
   const handleLogin = () => {
     // Redirect to backend AuthSCH login
-    window.location.href = 'http://localhost:3000/auth/login';
+    window.location.href = 'http://localhost:3001/auth/login';
   };
 
   return (
@@ -79,6 +84,4 @@ const Login = () => {
       </div>
     </div>
   );
-};
-
-export default Login;
+}

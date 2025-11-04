@@ -1,9 +1,11 @@
+'use client';
+
 import React, {
-    createContext,
-    ReactNode,
-    useContext,
-    useEffect,
-    useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
 
 interface User {
@@ -53,27 +55,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const fetchUser = async (authToken: string) => {
+    console.log('🔍 Fetching user with token:', authToken.substring(0, 20) + '...');
     try {
-      const response = await fetch('http://localhost:3000/auth/me', {
+      const response = await fetch('/api/auth/me', {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
       });
 
+      console.log('📡 Response status:', response.status);
+      
       if (response.ok) {
         const userData = await response.json();
+        console.log('✅ User data loaded:', userData);
         setUser(userData);
       } else {
+        console.error('❌ Token invalid, status:', response.status);
         // Token invalid, clear it
         localStorage.removeItem('jwt');
         setToken(null);
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error('❌ Error fetching user:', error);
       localStorage.removeItem('jwt');
       setToken(null);
     } finally {
       setIsLoading(false);
+      console.log('✓ isLoading set to false');
     }
   };
 

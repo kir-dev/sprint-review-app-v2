@@ -60,3 +60,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 improvements.md
 apps/backend/node_modules
 apps/frontend/node_modules
+apps/frontend/.next
