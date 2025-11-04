@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/AuthContext"
 import { cn } from "@/lib/utils"
-import { BarChart3, Calendar, FileText, FolderKanban, LayoutDashboard, LogOut } from "lucide-react"
+import { BarChart3, Calendar, FileText, FolderKanban, LayoutDashboard, LogOut, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -14,6 +14,7 @@ const navigation = [
   { name: "Work Periods", href: "/work-periods", icon: Calendar },
   { name: "Logs", href: "/logs", icon: FileText },
   { name: "Statistics", href: "/statistics", icon: BarChart3 },
+  { name: "Profile", href: "/profile", icon: User },
 ]
 
 export function Sidebar() {
