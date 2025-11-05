@@ -9,11 +9,10 @@ import { LogDialog } from "./components/LogDialog"
 import { LogFilters } from "./components/LogFilters"
 import { LogsHeader } from "./components/LogsHeader"
 import { LogsList } from "./components/LogsList"
-import { StatsCards } from "./components/StatsCards"
 import { useLogData } from "./hooks/useLogData"
 import { useLogForm } from "./hooks/useLogForm"
 import { LogFilters as LogFiltersType } from "./types"
-import { calculateStats, filterLogs } from "./utils/logHelpers"
+import { filterLogs } from "./utils/logHelpers"
 
 export default function LogsPage() {
   const { user, token } = useAuth()
@@ -133,7 +132,6 @@ export default function LogsPage() {
 
   // Computed values
   const filteredLogs = filterLogs(logs, filters)
-  const stats = calculateStats(filteredLogs)
 
   // Loading state
   if (!user) {
@@ -149,12 +147,6 @@ export default function LogsPage() {
       <LogsHeader 
         onToggleFilters={() => setShowFilters(!showFilters)}
         onCreateLog={() => openDialog()}
-      />
-
-      <StatsCards 
-        totalLogs={stats.totalLogs}
-        totalHours={stats.totalHours}
-        avgHours={stats.avgHours}
       />
 
       {isFiltersMounted && (

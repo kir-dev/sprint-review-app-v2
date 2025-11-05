@@ -90,7 +90,7 @@ export class WorkPeriodsService {
     this.logger.log('Fetching current work period');
     try {
       const now = new Date();
-      const workPeriod = await this.prisma.workPeriod.findFirst({
+      let workPeriod = await this.prisma.workPeriod.findFirst({
         where: {
           startDate: {
             lte: now,
@@ -109,18 +109,57 @@ export class WorkPeriodsService {
       });
 
       if (!workPeriod) {
-        this.logger.warn('No current work period found');
-        throw new NotFoundException('No current work period found');
+        this.logger.warn('No current work period found, creating one automatically');
+        
+        // Calculate semester period
+        // Hungarian university semesters:
+        // Fall semester (I. félév): September 1 - January 31
+        // Spring semester (II. félév): February 1 - June 30
+        const year = now.getFullYear();
+        const month = now.getMonth(); // 0-11
+        
+        let name: string;
+        let startDate: Date;
+        let endDate: Date;
+        
+        if (month >= 8 || month <= 0) {
+          // September - January: Fall semester (I. félév)
+          const semesterYear = month >= 8 ? year : year - 1;
+          name = `${semesterYear} nyár + ${semesterYear}/${semesterYear + 1} I. félév`;
+          startDate = new Date(semesterYear, 8, 1); // September 1
+          endDate = new Date(semesterYear + 1, 0, 31); // January 31
+        } else {
+          // February - August: Spring semester (II. félév)
+          name = `${year - 1}/${year} II. félév`;
+          startDate = new Date(year, 1, 1); // February 1
+          endDate = new Date(year, 5, 30); // June 30
+        }
+        
+        this.logger.log(`Creating new work period: ${name}`);
+        workPeriod = await this.prisma.workPeriod.create({
+          data: {
+            name,
+            startDate,
+            endDate,
+          },
+          include: {
+            _count: {
+              select: {
+                logs: true,
+              },
+            },
+          },
+        });
+        
+        this.logger.log(`Work period created automatically: ${workPeriod.name}`);
+      } else {
+        this.logger.log(`Current work period found: ${workPeriod.name}`);
       }
 
-      this.logger.log(`Current work period found: ${workPeriod.name}`);
       return workPeriod;
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
       this.logger.error(
-        'Failed to fetch current work period',
+        'Failed to fetch or create current work period',
         (error as Error).stack,
       );
       throw error;
