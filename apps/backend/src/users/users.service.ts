@@ -9,16 +9,20 @@ export class UsersService {
 
   async create(data: {
     email: string;
+    simonyiEmail?: string;
     githubUsername?: string;
     fullName: string;
+    profileImage?: string;
   }) {
     this.logger.log(`Creating user: ${data.email}`);
     try {
       const user = await this.prisma.user.create({
         data: {
           email: data.email,
+          simonyiEmail: data.simonyiEmail,
           githubUsername: data.githubUsername,
           fullName: data.fullName,
+          profileImage: data.profileImage,
         },
       });
       this.logger.log(`User created successfully: ID ${user.id}`);
@@ -127,8 +131,10 @@ export class UsersService {
     id: number,
     data: {
       email?: string;
+      simonyiEmail?: string;
       githubUsername?: string;
       fullName?: string;
+      profileImage?: string;
     },
   ) {
     this.logger.log(`Updating user with ID: ${id}`);
@@ -137,8 +143,10 @@ export class UsersService {
         where: { id },
         data: {
           email: data.email,
+          simonyiEmail: data.simonyiEmail,
           githubUsername: data.githubUsername,
           fullName: data.fullName,
+          profileImage: data.profileImage,
         },
       });
       this.logger.log(`User updated successfully: ID ${user.id}`);

@@ -10,8 +10,10 @@ datasource db {
 model User {
   id             Int        @id @default(autoincrement())
   email          String     @unique
+  simonyiEmail       String?
   githubUsername String?    @unique
   fullName       String
+  profileImage   String?
   logs           Log[]
   createdAt      DateTime   @default(now())
   managedProjects Project[] @relation("ProjectManager")

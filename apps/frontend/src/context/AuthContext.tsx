@@ -11,9 +11,11 @@ import React, {
 interface User {
   id: number;
   email: string;
+  simonyiEmail?: string;
   fullName: string;
   authschId: string;
   githubUsername?: string;
+  profileImage?: string;
 }
 
 interface AuthContextType {

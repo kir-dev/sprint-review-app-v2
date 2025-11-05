@@ -11,6 +11,15 @@ export class CreateUserDto {
   email: string;
 
   @ApiProperty({
+    description: 'Simonyi BME email address',
+    example: 'john.doe@simonyi.bme.hu',
+    required: false,
+  })
+  @IsEmail()
+  @IsOptional()
+  simonyiEmail?: string;
+
+  @ApiProperty({
     description: 'GitHub username',
     example: 'johndoe',
     required: false,
@@ -26,4 +35,13 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   fullName: string;
+
+  @ApiProperty({
+    description: 'Profile image as base64 string',
+    example: 'data:image/png;base64,iVBORw0KGgoAAAANS...',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  profileImage?: string;
 }

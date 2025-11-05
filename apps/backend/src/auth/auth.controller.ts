@@ -1,12 +1,16 @@
 import { CurrentUser } from '@kir-dev/passport-authsch';
-import { Controller, Get, Redirect, UseGuards } from '@nestjs/common';
+import { Controller, Get, Logger, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
+import { AuthSchDedupGuard } from './authsch-dedup.guard';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(private authService: AuthService) {}
 
   /**
@@ -30,14 +34,15 @@ export class AuthController {
     status: 302,
     description: 'Redirects to frontend with JWT token',
   })
-  @UseGuards(AuthGuard('authsch'))
-  @Redirect()
-  oauthRedirect(@CurrentUser() user: any) {
+  @UseGuards(AuthSchDedupGuard)
+  oauthRedirect(@CurrentUser() user: any, @Res() res: Response) {
+    this.logger.log(`🔵 Controller: Processing successful auth for ${user?.email}`);
+    
     const jwt = this.authService.login(user);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    return {
-      url: `${frontendUrl}/login?jwt=${jwt}`,
-    };
+    
+    this.logger.log(`🚀 Redirecting to: ${frontendUrl}/login?jwt=...`);
+    return res.redirect(`${frontendUrl}/login?jwt=${jwt}`);
   }
 
   /**
@@ -48,7 +53,9 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Return current user' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(AuthGuard('jwt'))
-  getProfile(@CurrentUser() user: any) {
-    return user;
+  async getProfile(@CurrentUser() user: any) {
+    // Fetch fresh user data from database to include latest updates
+    const freshUser = await this.authService.getUserById(user.id);
+    return freshUser || user;
   }
 }
