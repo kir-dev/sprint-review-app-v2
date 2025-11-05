@@ -7,12 +7,12 @@ async function main() {
 
   const periods = [
     {
-      name: `${year} I. félév`,
+      name: `${year - 1}/${year} II. félév`,
       startDate: new Date(`${year}-01-01`),
       endDate: new Date(`${year}-05-31`),
     },
     {
-      name: `${year} II. félév`,
+      name: `${year}-nyár ${year}/${year + 1} I. félév`,
       startDate: new Date(`${year}-06-01`),
       endDate: new Date(`${year}-12-31`),
     },

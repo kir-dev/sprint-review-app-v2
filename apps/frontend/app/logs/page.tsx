@@ -20,8 +20,8 @@ export default function LogsPage() {
   const router = useRouter()
   
   // Custom hooks
-  const { logs, setLogs, projects, workPeriods, isLoading, error, setError, loadData } = useLogData(token, user?.id)
-  const { isDialogOpen, editingLog, formData, setFormData, openDialog, closeDialog } = useLogForm(workPeriods)
+  const { logs, setLogs, projects, workPeriods, currentWorkPeriod, isLoading, error, setError, loadData } = useLogData(token, user?.id)
+  const { isDialogOpen, editingLog, formData, setFormData, openDialog, closeDialog } = useLogForm(workPeriods, currentWorkPeriod)
 
   // Filter states
   const [showFilters, setShowFilters] = useState(false)

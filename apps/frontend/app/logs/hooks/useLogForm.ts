@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Difficulty, Log, LogCategory, LogFormData, WorkPeriod } from "../types"
 
-export function useLogForm(workPeriods: WorkPeriod[]) {
+export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPeriod | null) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingLog, setEditingLog] = useState<Log | null>(null)
   const [formData, setFormData] = useState<LogFormData>({
@@ -35,7 +35,8 @@ export function useLogForm(workPeriods: WorkPeriod[]) {
         difficulty: Difficulty.MEDIUM,
         timeSpent: '',
         projectId: '',
-        workPeriodId: workPeriods[0]?.id.toString() || '',
+        // Use current work period if available, otherwise fall back to first work period
+        workPeriodId: currentWorkPeriod?.id.toString() || workPeriods[0]?.id.toString() || '',
       })
     }
     setIsDialogOpen(true)

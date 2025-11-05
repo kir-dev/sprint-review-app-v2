@@ -5,6 +5,7 @@ export function useLogData(token: string | null, userId: number | undefined) {
   const [logs, setLogs] = useState<Log[]>([])
   const [projects, setProjects] = useState<Project[]>([])
   const [workPeriods, setWorkPeriods] = useState<WorkPeriod[]>([])
+  const [currentWorkPeriod, setCurrentWorkPeriod] = useState<WorkPeriod | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -14,10 +15,11 @@ export function useLogData(token: string | null, userId: number | undefined) {
       
       const headers = { Authorization: `Bearer ${token}` }
       
-      const [logsRes, projectsRes, workPeriodsRes] = await Promise.all([
+      const [logsRes, projectsRes, workPeriodsRes, currentWorkPeriodRes] = await Promise.all([
         fetch(`/api/logs${userId ? `?userId=${userId}` : ''}`, { headers }),
         fetch('/api/projects', { headers }),
         fetch('/api/work-periods', { headers }),
+        fetch('/api/work-periods/current', { headers }),
       ])
 
       if (logsRes.ok) {
@@ -33,6 +35,11 @@ export function useLogData(token: string | null, userId: number | undefined) {
       if (workPeriodsRes.ok) {
         const workPeriodsData = await workPeriodsRes.json()
         setWorkPeriods(workPeriodsData)
+      }
+      
+      if (currentWorkPeriodRes.ok) {
+        const currentWorkPeriodData = await currentWorkPeriodRes.json()
+        setCurrentWorkPeriod(currentWorkPeriodData)
       }
       
       setError(null)
@@ -55,6 +62,7 @@ export function useLogData(token: string | null, userId: number | undefined) {
     setLogs,
     projects,
     workPeriods,
+    currentWorkPeriod,
     isLoading,
     error,
     setError,
