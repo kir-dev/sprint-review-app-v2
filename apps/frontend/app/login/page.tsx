@@ -15,9 +15,10 @@ export default function LoginPage() {
     if (jwtFromUrl) {
       console.log('🔑 JWT found in URL, calling login()');
       login(jwtFromUrl);
-      // Don't redirect here - wait for user to be loaded
+      // Immediately redirect to dashboard
+      router.push('/dashboard');
     }
-  }, [searchParams, login]);
+  }, [searchParams, login, router]);
 
   // Redirect to dashboard when user is loaded
   useEffect(() => {
@@ -27,6 +28,19 @@ export default function LoginPage() {
       router.push('/dashboard');
     }
   }, [user, token, isLoading, router]);
+
+  // If JWT is in URL, show loading instead of login form
+  const jwtFromUrl = searchParams.get('jwt');
+  if (jwtFromUrl || (token && user)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-dark px-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-400">Bejelentkezés...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = () => {
     // Redirect to backend AuthSCH login

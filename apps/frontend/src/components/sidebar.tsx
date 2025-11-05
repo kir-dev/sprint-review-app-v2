@@ -112,15 +112,19 @@ export function Sidebar() {
             title={isCollapsed ? "Profile" : undefined}
           >
             <div className={cn(
-              "rounded-full bg-primary/10 flex items-center justify-center shrink-0",
+              "rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden",
               isCollapsed ? "h-10 w-10" : "h-8 w-8"
             )}>
-              <span className={cn(
-                "font-semibold text-primary",
-                isCollapsed ? "text-sm" : "text-xs"
-              )}>
-                {user?.fullName?.charAt(0).toUpperCase() || "U"}
-              </span>
+              {user?.profileImage ? (
+                <img src={user.profileImage} alt={user.fullName} className="w-full h-full object-cover" />
+              ) : (
+                <span className={cn(
+                  "font-semibold text-primary",
+                  isCollapsed ? "text-sm" : "text-xs"
+                )}>
+                  {user?.fullName?.charAt(0).toUpperCase() || "U"}
+                </span>
+              )}
             </div>
             {!isCollapsed && (
               <div className="flex flex-col flex-1 min-w-0">
