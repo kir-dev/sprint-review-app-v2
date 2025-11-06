@@ -1,0 +1,145 @@
+"use client"
+
+import { useAuth } from "@/context/AuthContext"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { DeleteConfirmDialog } from "./components/DeleteConfirmDialog"
+import { ErrorAlert } from "./components/ErrorAlert"
+import { ProjectDialog } from "./components/ProjectDialog"
+import { ProjectsHeader } from "./components/ProjectsHeader"
+import { ProjectsList } from "./components/ProjectsList"
+import { useProjectData } from "./hooks/useProjectData"
+import { useProjectForm } from "./hooks/useProjectForm"
+
+export default function ProjectsPage() {
+  const { user, token } = useAuth()
+  const router = useRouter()
+  
+  // Custom hooks
+  const { projects, setProjects, users, isLoading, error, setError, loadData } = useProjectData(token)
+  const { isDialogOpen, editingProject, formData, setFormData, openDialog, closeDialog } = useProjectForm()
+
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [projectToDelete, setProjectToDelete] = useState<number | null>(null)
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!token) {
+      router.push('/login')
+    }
+  }, [token, router])
+
+  // Handlers
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    
+    const payload = {
+      name: formData.name,
+      description: formData.description || undefined,
+      githubUrl: formData.githubUrl || undefined,
+      projectManagerId: formData.projectManagerId ? parseInt(formData.projectManagerId) : undefined,
+      memberIds: formData.memberIds.map(id => parseInt(id)),
+    }
+
+    try {
+      const url = editingProject ? `/api/projects/${editingProject.id}` : '/api/projects'
+      const method = editingProject ? 'PATCH' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (response.ok) {
+        await loadData()
+        closeDialog()
+      } else {
+        const error = await response.json()
+        setError(error.message || 'Failed to save project')
+      }
+    } catch (err) {
+      console.error('Error saving project:', err)
+      setError('Failed to save project. Please try again.')
+    }
+  }
+
+  function handleDeleteClick(id: number) {
+    setProjectToDelete(id)
+    setDeleteConfirmOpen(true)
+  }
+
+  async function handleDeleteConfirm() {
+    if (!projectToDelete) return
+
+    try {
+      const response = await fetch(`/api/projects/${projectToDelete}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (response.ok) {
+        setProjects(projects.filter(project => project.id !== projectToDelete))
+        setDeleteConfirmOpen(false)
+        setProjectToDelete(null)
+      } else {
+        setError('Failed to delete project')
+      }
+    } catch (err) {
+      console.error('Error deleting project:', err)
+      setError('Failed to delete project. Please try again.')
+    }
+  }
+
+  function handleDeleteCancel() {
+    setDeleteConfirmOpen(false)
+    setProjectToDelete(null)
+  }
+
+  // Loading state
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
+      <ProjectsHeader 
+        onCreateProject={() => openDialog()}
+      />
+
+      <ErrorAlert error={error} onClose={() => setError(null)} />
+
+      <ProjectsList
+        projects={projects}
+        isLoading={isLoading}
+        onCreateProject={() => openDialog()}
+        onEditProject={openDialog}
+        onDeleteProject={handleDeleteClick}
+      />
+
+      <ProjectDialog
+        isOpen={isDialogOpen}
+        editingProject={editingProject}
+        formData={formData}
+        users={users}
+        onFormDataChange={setFormData}
+        onSubmit={handleSubmit}
+        onClose={closeDialog}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+    </div>
+  )
+}
