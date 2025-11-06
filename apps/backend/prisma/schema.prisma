@@ -10,7 +10,7 @@ datasource db {
 model User {
   id             Int        @id @default(autoincrement())
   email          String     @unique
-  simonyiEmail       String?
+  simonyiEmail   String?    @unique
   githubUsername String?    @unique
   fullName       String
   profileImage   String?
@@ -57,7 +57,7 @@ model Log {
 enum LogCategory {
   RESPONSIBILITY
   PROJECT
-  OPERATIONS
+  EVENT
   MAINTENANCE
   SIMONYI
   OTHER
