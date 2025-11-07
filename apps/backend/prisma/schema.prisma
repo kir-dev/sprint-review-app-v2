@@ -14,6 +14,7 @@ model User {
   githubUsername String?    @unique
   fullName       String
   profileImage   String?
+  position       Position   @default(UJONC)
   logs           Log[]
   createdAt      DateTime   @default(now())
   managedProjects Project[] @relation("ProjectManager")
@@ -39,6 +40,14 @@ model Project {
   members          User[]   @relation("ProjectMembers")
 }
 
+model Event {
+  id        Int      @id @default(autoincrement())
+  name      String
+  date      DateTime
+  type      EventType
+  logs      Log[]
+}
+
 model Log {
   id           Int        @id @default(autoincrement())
   date         DateTime
@@ -48,10 +57,12 @@ model Log {
   timeSpent    Int?
   user         User       @relation(fields: [userId], references: [id])
   userId       Int
-  project      Project?   @relation(fields: [projectId], references: [id])
-  projectId    Int?
   workPeriod   WorkPeriod @relation(fields: [workPeriodId], references: [id])
   workPeriodId Int
+
+  Event Event[]
+
+  Project Project[]
 }
 
 enum LogCategory {
@@ -67,4 +78,22 @@ enum Difficulty {
   SMALL
   MEDIUM
   LARGE
+}
+
+enum EventType {
+  KIR_DEV
+  SIMONYI
+}
+
+enum Position {
+  UJONC
+  TAG
+  HR_FELELOS
+  PR_FELELOS
+  TANFOLYAMFELELOS
+  GAZDASAGIS
+  KORVEZETO_HELYETTES
+  KORVEZETO
+  OREGTAG
+  ARCHIVALT
 }

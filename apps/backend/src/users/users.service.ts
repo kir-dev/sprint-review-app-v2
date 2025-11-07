@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Position } from './dto/position.enum';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,7 @@ export class UsersService {
     githubUsername?: string;
     fullName: string;
     profileImage?: string;
+    position?: Position;
   }) {
     this.logger.log(`Creating user: ${data.email}`);
     try {
@@ -23,6 +25,7 @@ export class UsersService {
           githubUsername: data.githubUsername,
           fullName: data.fullName,
           profileImage: data.profileImage,
+          position: data.position || Position.UJONC,
         },
       });
       this.logger.log(`User created successfully: ID ${user.id}`);
@@ -66,7 +69,7 @@ export class UsersService {
         include: {
           logs: {
             include: {
-              project: true,
+              Project: true,
               workPeriod: true,
             },
           },
@@ -135,6 +138,7 @@ export class UsersService {
       githubUsername?: string;
       fullName?: string;
       profileImage?: string;
+      position?: Position;
     },
   ) {
     this.logger.log(`Updating user with ID: ${id}`);
@@ -147,6 +151,7 @@ export class UsersService {
           githubUsername: data.githubUsername,
           fullName: data.fullName,
           profileImage: data.profileImage,
+          position: data.position,
         },
       });
       this.logger.log(`User updated successfully: ID ${user.id}`);
@@ -223,7 +228,7 @@ export class UsersService {
         include: {
           logs: {
             include: {
-              project: true,
+              Project: true,
               workPeriod: true,
             },
             orderBy: {

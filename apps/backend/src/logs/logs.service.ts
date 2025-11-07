@@ -28,12 +28,16 @@ export class LogsService {
           difficulty: data.difficulty,
           timeSpent: data.timeSpent,
           userId: data.userId,
-          projectId: data.projectId,
           workPeriodId: data.workPeriodId,
+          ...(data.projectId && {
+            Project: {
+              connect: { id: data.projectId },
+            },
+          }),
         },
         include: {
           user: true,
-          project: true,
+          Project: true,
           workPeriod: true,
         },
       });
@@ -64,7 +68,11 @@ export class LogsService {
         where.userId = filters.userId;
       }
       if (filters?.projectId) {
-        where.projectId = filters.projectId;
+        where.Project = {
+          some: {
+            id: filters.projectId,
+          },
+        };
       }
       if (filters?.workPeriodId) {
         where.workPeriodId = filters.workPeriodId;
@@ -92,7 +100,7 @@ export class LogsService {
               email: true,
             },
           },
-          project: {
+          Project: {
             select: {
               id: true,
               name: true,
@@ -124,7 +132,7 @@ export class LogsService {
         where: { id },
         include: {
           user: true,
-          project: true,
+          Project: true,
           workPeriod: true,
         },
       });
@@ -179,7 +187,9 @@ export class LogsService {
       }
 
       if (data.projectId) {
-        updateData.project = { connect: { id: data.projectId } };
+        updateData.Project = { 
+          set: [{ id: data.projectId }]
+        };
       }
 
       if (data.workPeriodId) {
@@ -191,7 +201,7 @@ export class LogsService {
         data: updateData,
         include: {
           user: true,
-          project: true,
+          Project: true,
           workPeriod: true,
         },
       });
@@ -236,7 +246,7 @@ export class LogsService {
       const logs = await this.prisma.log.findMany({
         where,
         include: {
-          project: true,
+          Project: true,
         },
       });
 
@@ -266,8 +276,10 @@ export class LogsService {
 
       const logsByProject = logs.reduce(
         (acc, log) => {
-          if (log.project) {
-            acc[log.project.name] = (acc[log.project.name] || 0) + 1;
+          if (log.Project && log.Project.length > 0) {
+            log.Project.forEach((project) => {
+              acc[project.name] = (acc[project.name] || 0) + 1;
+            });
           }
           return acc;
         },
@@ -295,7 +307,13 @@ export class LogsService {
       `Fetching stats for project ID: ${projectId}, work period: ${workPeriodId || 'all'}`,
     );
     try {
-      const where: Prisma.LogWhereInput = { projectId };
+      const where: Prisma.LogWhereInput = { 
+        Project: { 
+          some: { 
+            id: projectId 
+          } 
+        } 
+      };
       if (workPeriodId) {
         where.workPeriodId = workPeriodId;
       }

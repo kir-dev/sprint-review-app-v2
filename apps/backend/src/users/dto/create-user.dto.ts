@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Position } from './position.enum';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -44,4 +45,15 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   profileImage?: string;
+
+  @ApiProperty({
+    description: 'User position in the organization',
+    enum: Position,
+    example: Position.UJONC,
+    required: false,
+    default: Position.UJONC,
+  })
+  @IsEnum(Position)
+  @IsOptional()
+  position?: Position;
 }
