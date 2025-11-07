@@ -1,10 +1,10 @@
 "use client"
 
+import { ErrorAlert } from "@/components/ErrorAlert"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Position } from "../logs/types"
-import { ErrorAlert } from "./components/ErrorAlert"
 import { UsersHeader } from "./components/UsersHeader"
 import { UsersList } from "./components/UsersList"
 import { useUserData } from "./hooks/useUserData"

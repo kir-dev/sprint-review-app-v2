@@ -14,8 +14,8 @@ export function DeleteConfirmDialog({
   isOpen,
   onConfirm,
   onCancel,
-  title = "Delete Project",
-  description = "Are you sure you want to delete this project? This action cannot be undone.",
+  title = "Delete Item",
+  description = "Are you sure you want to delete this item? This action cannot be undone.",
 }: DeleteConfirmDialogProps) {
   if (!isOpen) return null
 

@@ -4,7 +4,7 @@ import { useTheme } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/context/AuthContext"
 import { cn } from "@/lib/utils"
-import { BarChart3, Calendar, ChevronLeft, ChevronRight, FileText, FolderKanban, LayoutDashboard, Users } from "lucide-react"
+import { BarChart3, Calendar, CalendarDays, ChevronLeft, ChevronRight, FileText, FolderKanban, LayoutDashboard, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
@@ -12,6 +12,7 @@ import { useState } from "react"
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Projects", href: "/projects", icon: FolderKanban },
+  { name: "Events", href: "/events", icon: CalendarDays },
   { name: "Users", href: "/users", icon: Users },
   { name: "Work Periods", href: "/work-periods", icon: Calendar },
   { name: "Logs", href: "/logs", icon: FileText },

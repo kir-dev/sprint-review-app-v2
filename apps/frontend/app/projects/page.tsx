@@ -1,10 +1,10 @@
 "use client"
 
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
+import { ErrorAlert } from "@/components/ErrorAlert"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { DeleteConfirmDialog } from "./components/DeleteConfirmDialog"
-import { ErrorAlert } from "./components/ErrorAlert"
 import { ProjectDialog } from "./components/ProjectDialog"
 import { ProjectsHeader } from "./components/ProjectsHeader"
 import { ProjectsList } from "./components/ProjectsList"
@@ -139,6 +139,8 @@ export default function ProjectsPage() {
         isOpen={deleteConfirmOpen}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+        title="Delete Project"
+        description="Are you sure you want to delete this project? This action cannot be undone."
       />
     </div>
   )

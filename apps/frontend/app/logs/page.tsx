@@ -1,10 +1,10 @@
 "use client"
 
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
+import { ErrorAlert } from "@/components/ErrorAlert"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { DeleteConfirmDialog } from "./components/DeleteConfirmDialog"
-import { ErrorAlert } from "./components/ErrorAlert"
 import { LogDialog } from "./components/LogDialog"
 import { LogFilters } from "./components/LogFilters"
 import { LogsHeader } from "./components/LogsHeader"
@@ -185,6 +185,8 @@ export default function LogsPage() {
         isOpen={deleteConfirmOpen}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+        title="Delete Log"
+        description="Are you sure you want to delete this log? This action cannot be undone."
       />
     </div>
   )
