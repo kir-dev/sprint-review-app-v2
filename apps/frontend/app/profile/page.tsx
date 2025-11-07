@@ -205,28 +205,28 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex justify-center items-start max-w-7xl min-h-screen p-8">
-      <div className="flex flex-col gap-6 w-full max-w-4xl">
-        {/* Header */}
-        <div className="flex items-center gap-3 animate-fade-in">
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
-            <p className="text-muted-foreground">Manage your account information</p>
-          </div>
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="hidden"
-        />
+    <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageChange}
+        className="hidden"
+      />
 
-        {/* Profile Picture */}
-        <Card className="animate-slide-in-top hover:shadow-lg transition-shadow">
+      {/* Header */}
+      <div className="flex items-center gap-3 animate-fade-in">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <User className="h-6 w-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
+          <p className="text-muted-foreground">Manage your account information</p>
+        </div>
+      </div>
+
+      {/* Profile Picture */}
+      <Card className="animate-slide-in-top hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Profile Picture</CardTitle>
             <CardDescription>
@@ -440,7 +440,6 @@ export default function ProfilePage() {
             </Button>
           </CardContent>
         </Card>
-      </div>
     </div>
   )
 }

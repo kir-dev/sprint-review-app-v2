@@ -13,6 +13,19 @@ export enum Difficulty {
   LARGE = "LARGE",
 }
 
+export enum Position {
+  UJONC = "UJONC",
+  TAG = "TAG",
+  HR_FELELOS = "HR_FELELOS",
+  PR_FELELOS = "PR_FELELOS",
+  TANFOLYAMFELELOS = "TANFOLYAMFELELOS",
+  GAZDASAGIS = "GAZDASAGIS",
+  KORVEZETO_HELYETTES = "KORVEZETO_HELYETTES",
+  KORVEZETO = "KORVEZETO",
+  OREGTAG = "OREGTAG",
+  ARCHIVALT = "ARCHIVALT",
+}
+
 export interface Log {
   id: number
   date: string

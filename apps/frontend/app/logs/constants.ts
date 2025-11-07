@@ -1,4 +1,4 @@
-import { Difficulty, LogCategory } from "./types"
+import { Difficulty, LogCategory, Position } from "./types"
 
 export const categoryLabels: Record<LogCategory, string> = {
   RESPONSIBILITY: "Felelősség",
@@ -13,6 +13,19 @@ export const difficultyLabels: Record<Difficulty, string> = {
   SMALL: "Kicsi",
   MEDIUM: "Közepes",
   LARGE: "Nagy",
+}
+
+export const positionLabels: Record<Position, string> = {
+  UJONC: "Újonc",
+  TAG: "Tag",
+  HR_FELELOS: "HR-felelős",
+  PR_FELELOS: "PR-felelős",
+  TANFOLYAMFELELOS: "Tanfolyamfelelős",
+  GAZDASAGIS: "Gazdaságis",
+  KORVEZETO_HELYETTES: "Körvezető helyettes",
+  KORVEZETO: "Körvezető",
+  OREGTAG: "Öregtag",
+  ARCHIVALT: "Archivált",
 }
 
 export const categoryColors: Record<LogCategory, string> = {

@@ -12,7 +12,7 @@ import { useProjectData } from "./hooks/useProjectData"
 import { useProjectForm } from "./hooks/useProjectForm"
 
 export default function ProjectsPage() {
-  const { user, token } = useAuth()
+  const { user, token, isLoading: isAuthLoading } = useAuth()
   const router = useRouter()
   
   // Custom hooks
@@ -25,10 +25,10 @@ export default function ProjectsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!token) {
+    if (!isAuthLoading && !token) {
       router.push('/login')
     }
-  }, [token, router])
+  }, [token, isAuthLoading, router])
 
   // Handlers
   async function handleSubmit(e: React.FormEvent) {
@@ -101,7 +101,7 @@ export default function ProjectsPage() {
   }
 
   // Loading state
-  if (!user) {
+  if (isAuthLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Loading...</p>

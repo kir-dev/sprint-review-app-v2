@@ -15,7 +15,7 @@ import { LogFilters as LogFiltersType } from "./types"
 import { filterLogs } from "./utils/logHelpers"
 
 export default function LogsPage() {
-  const { user, token } = useAuth()
+  const { user, token, isLoading: isAuthLoading } = useAuth()
   const router = useRouter()
   
   // Custom hooks
@@ -37,10 +37,10 @@ export default function LogsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!token) {
+    if (!isAuthLoading && !token) {
       router.push('/login')
     }
-  }, [token, router])
+  }, [token, isAuthLoading, router])
 
   // Handle filter animation and mounting
   useEffect(() => {
@@ -134,7 +134,7 @@ export default function LogsPage() {
   const filteredLogs = filterLogs(logs, filters)
 
   // Loading state
-  if (!user) {
+  if (isAuthLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Loading...</p>

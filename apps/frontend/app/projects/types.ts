@@ -1,3 +1,5 @@
+import { Position } from "../logs/types"
+
 export interface Project {
   id: number
   name: string
@@ -18,6 +20,7 @@ export interface User {
   email: string
   fullName: string
   profileImage?: string
+  position: Position
 }
 
 export interface ProjectFormData {
