@@ -9,6 +9,7 @@
     "apps/*"
   ],
   "scripts": {
+    "dev": "docker-compose up -d && concurrently \"yarn:start:*\"",
     "start:backend": "yarn workspace backend start:dev",
     "start:frontend": "yarn workspace frontend dev",
     "build:backend": "yarn workspace backend build",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
     "postcss": "^8.5.6",
     "prettier": "^3.4.2"
   },
