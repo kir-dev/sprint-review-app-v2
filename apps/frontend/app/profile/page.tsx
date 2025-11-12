@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/context/AuthContext"
+import { positionColors, positionLabels } from "@/lib/positions"
 import { Camera, Github, LogOut, Mail, Save, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
@@ -298,6 +299,23 @@ export default function ProfilePage() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Managed by AuthSCH
+                </p>
+              </div>
+            </div>
+
+            {/* Position Badge */}
+            <div className="space-y-2 pt-2 border-t">
+              <label className="text-sm font-medium">
+                Position
+              </label>
+              <div className="flex items-center gap-2">
+                <span 
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium border ${positionColors[user.position]}`}
+                >
+                  {positionLabels[user.position]}
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  Your current position in the organization
                 </p>
               </div>
             </div>

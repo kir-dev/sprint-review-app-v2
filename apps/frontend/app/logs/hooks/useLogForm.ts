@@ -14,6 +14,29 @@ export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPer
     workPeriodId: '',
   })
 
+  function findWorkPeriodIdForDate(date: string): string {
+    if (!date) {
+      return currentWorkPeriod?.id.toString() || workPeriods[0]?.id.toString() || ''
+    }
+
+    const target = new Date(date)
+    target.setHours(0, 0, 0, 0)
+
+    const matching = workPeriods.find(period => {
+      const start = new Date(period.startDate)
+      const end = new Date(period.endDate)
+      start.setHours(0, 0, 0, 0)
+      end.setHours(23, 59, 59, 999)
+      return target >= start && target <= end
+    })
+
+    if (matching) {
+      return matching.id.toString()
+    }
+
+    return currentWorkPeriod?.id.toString() || workPeriods[0]?.id.toString() || ''
+  }
+
   function openDialog(log?: Log) {
     if (log) {
       setEditingLog(log)
@@ -28,15 +51,16 @@ export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPer
       })
     } else {
       setEditingLog(null)
+      const today = new Date().toISOString().split('T')[0]
       setFormData({
-        date: new Date().toISOString().split('T')[0],
+        date: today,
         category: LogCategory.PROJECT,
         description: '',
         difficulty: Difficulty.MEDIUM,
         timeSpent: '',
         projectId: '',
-        // Use current work period if available, otherwise fall back to first work period
-        workPeriodId: currentWorkPeriod?.id.toString() || workPeriods[0]?.id.toString() || '',
+        // Automatically assign work period based on date
+        workPeriodId: findWorkPeriodIdForDate(today),
       })
     }
     setIsDialogOpen(true)

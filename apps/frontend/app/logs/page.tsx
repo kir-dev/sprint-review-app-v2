@@ -35,6 +35,29 @@ export default function LogsPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [logToDelete, setLogToDelete] = useState<number | null>(null)
 
+  function findWorkPeriodIdForDate(date: string): number | null {
+    if (!date) {
+      return currentWorkPeriod?.id ?? workPeriods[0]?.id ?? null
+    }
+
+    const target = new Date(date)
+    target.setHours(0, 0, 0, 0)
+
+    const match = workPeriods.find((period) => {
+      const start = new Date(period.startDate)
+      const end = new Date(period.endDate)
+      start.setHours(0, 0, 0, 0)
+      end.setHours(23, 59, 59, 999)
+      return target >= start && target <= end
+    })
+
+    if (match) {
+      return match.id
+    }
+
+    return currentWorkPeriod?.id ?? workPeriods[0]?.id ?? null
+  }
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthLoading && !token) {
@@ -61,6 +84,15 @@ export default function LogsPage() {
     
     if (!user?.id) return
 
+    const resolvedWorkPeriodId = formData.workPeriodId
+      ? parseInt(formData.workPeriodId)
+      : findWorkPeriodIdForDate(formData.date) ?? undefined
+
+    if (!resolvedWorkPeriodId) {
+      setError('Ehhez a dátumhoz nem található work period')
+      return
+    }
+
     const payload = {
       date: formData.date,
       category: formData.category,
@@ -69,7 +101,7 @@ export default function LogsPage() {
       timeSpent: formData.timeSpent ? parseInt(formData.timeSpent) : undefined,
       userId: user.id,
       projectId: formData.projectId ? parseInt(formData.projectId) : undefined,
-      workPeriodId: parseInt(formData.workPeriodId),
+      workPeriodId: resolvedWorkPeriodId,
     }
 
     try {

@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { Position } from '../../app/logs/types';
 
 interface User {
   id: number;
@@ -16,6 +17,7 @@ interface User {
   authschId: string;
   githubUsername?: string;
   profileImage?: string;
+  position: Position;
 }
 
 interface AuthContextType {

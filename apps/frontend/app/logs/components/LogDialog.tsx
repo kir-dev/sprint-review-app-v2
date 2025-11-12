@@ -58,10 +58,6 @@ export function LogDialog({
         if (value.trim().length > 500) return 'A leírás maximum 500 karakter hosszú lehet'
         return undefined
 
-      case 'workPeriodId':
-        if (!value || value === '') return 'Work Period kiválasztása kötelező'
-        return undefined
-
       case 'timeSpent':
         if (value !== '' && value !== undefined) {
           const num = parseFloat(value)
@@ -83,10 +79,49 @@ export function LogDialog({
     setErrors({ ...errors, [field]: error })
   }
 
+  function findWorkPeriodForDate(dateString: string) {
+    if (!dateString) return null
+    const target = new Date(dateString)
+    target.setHours(0, 0, 0, 0)
+
+    return workPeriods.find(period => {
+      const start = new Date(period.startDate)
+      const end = new Date(period.endDate)
+      start.setHours(0, 0, 0, 0)
+      end.setHours(23, 59, 59, 999)
+      return target >= start && target <= end
+    }) || null
+  }
+
   function handleChange(field: string, value: any) {
+    if (field === 'date') {
+      const matchingPeriod = findWorkPeriodForDate(value)
+      const updatedForm = {
+        ...formData,
+        date: value,
+        workPeriodId: matchingPeriod ? matchingPeriod.id.toString() : '',
+      }
+      onFormDataChange(updatedForm)
+
+      if (touched.workPeriodId && !matchingPeriod) {
+        setErrors((prev) => ({ ...prev, workPeriodId: 'Ehhez a dátumhoz nem található work period' }))
+      } else {
+        setErrors((prev) => {
+          if (!prev.workPeriodId) return prev
+          const { workPeriodId, ...rest } = prev
+          return rest
+        })
+      }
+
+      if (touched[field]) {
+        const error = validateField(field, value)
+        setErrors({ ...errors, [field]: error })
+      }
+      return
+    }
+
     onFormDataChange({ ...formData, [field]: value })
-    
-    // Ha már érintve volt a mező, azonnal validáljuk
+
     if (touched[field]) {
       const error = validateField(field, value)
       setErrors({ ...errors, [field]: error })
@@ -98,12 +133,21 @@ export function LogDialog({
 
     // Validáljuk az összes kötelező mezőt
     const newErrors: ValidationErrors = {}
-    const requiredFields: (keyof ValidationErrors)[] = ['date', 'category', 'description', 'workPeriodId']
+    const requiredFields: (keyof ValidationErrors)[] = ['date', 'category', 'description']
     
     requiredFields.forEach(field => {
       const error = validateField(field, (formData as any)[field])
       if (error) newErrors[field] = error
     })
+
+    if (!formData.workPeriodId) {
+      const matchingPeriod = findWorkPeriodForDate(formData.date)
+      if (matchingPeriod) {
+        onFormDataChange({ ...formData, workPeriodId: matchingPeriod.id.toString() })
+      } else {
+        newErrors.workPeriodId = 'Ehhez a dátumhoz nem található work period'
+      }
+    }
 
     // Opcionális mező validálása
     if (formData.timeSpent !== '' && formData.timeSpent !== undefined) {
@@ -121,6 +165,9 @@ export function LogDialog({
       })
       if (formData.timeSpent !== '' && formData.timeSpent !== undefined) {
         newTouched.timeSpent = true
+      }
+      if (newErrors.workPeriodId) {
+        newTouched.workPeriodId = true
       }
       setTouched(newTouched)
       return
@@ -221,26 +268,6 @@ export function LogDialog({
                 {errors.timeSpent && touched.timeSpent && (
                   <p className="text-sm text-destructive animate-fade-in">{errors.timeSpent}</p>
                 )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="workPeriodId" className="text-sm font-medium">
-                  Work Period <span className="text-destructive">*</span>
-                </label>
-                <select
-                  id="workPeriodId"
-                  value={formData.workPeriodId}
-                  onChange={(e) => handleChange('workPeriodId', e.target.value)}
-                  onBlur={() => handleBlur('workPeriodId')}
-                  className={`flex h-10 w-full rounded-md border ${
-                    errors.workPeriodId && touched.workPeriodId ? 'border-destructive' : 'border-input'
-                  } bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
-                >
-                  <option value="">Válassz work period-ot</option>
-                  {workPeriods.map((period) => (
-                    <option key={period.id} value={period.id}>{period.name}</option>
-                  ))}
-                </select>
                 {errors.workPeriodId && touched.workPeriodId && (
                   <p className="text-sm text-destructive animate-fade-in">{errors.workPeriodId}</p>
                 )}

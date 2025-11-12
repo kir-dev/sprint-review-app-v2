@@ -19,6 +19,7 @@ export class AuthService {
       simonyiEmail: user.simonyiEmail,
       fullName: user.fullName,
       githubUsername: user.githubUsername,
+      position: user.position,
       // NOTE: profileImage is NOT included in JWT to keep token size small
       // Profile image should be fetched separately via /auth/me endpoint
     };
@@ -36,6 +37,7 @@ export class AuthService {
         fullName: true,
         githubUsername: true,
         profileImage: true,
+        position: true,
       },
     });
   }
