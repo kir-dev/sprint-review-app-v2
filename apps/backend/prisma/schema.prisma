@@ -8,17 +8,17 @@ datasource db {
 }
 
 model User {
-  id             Int        @id @default(autoincrement())
-  email          String     @unique
-  simonyiEmail   String?    @unique
-  githubUsername String?    @unique
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  simonyiEmail   String?   @unique
+  githubUsername String?   @unique
   fullName       String
   profileImage   String?
-  position       Position   @default(UJONC)
+  position       Position  @default(UJONC)
   logs           Log[]
-  createdAt      DateTime   @default(now())
+  createdAt      DateTime  @default(now())
   managedProjects Project[] @relation("ProjectManager")
-  projects       Project[]  @relation("ProjectMembers")
+  projects       Project[] @relation("ProjectMembers")
 }
 
 model WorkPeriod {
@@ -41,28 +41,28 @@ model Project {
 }
 
 model Event {
-  id        Int      @id @default(autoincrement())
-  name      String
-  date      DateTime
-  type      EventType
-  logs      Log[]
+  id   Int       @id @default(autoincrement())
+  name String
+  date DateTime
+  type EventType
+  logs Log[]
 }
 
 model Log {
-  id           Int        @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   date         DateTime
   category     LogCategory
   description  String
   difficulty   Difficulty?
   timeSpent    Int?
-  user         User       @relation(fields: [userId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
   userId       Int
-  workPeriod   WorkPeriod @relation(fields: [workPeriodId], references: [id])
+  workPeriod   WorkPeriod  @relation(fields: [workPeriodId], references: [id])
   workPeriodId Int
-
-  Event Event[]
-
-  Project Project[]
+  project      Project?    @relation(fields: [projectId], references: [id])
+  projectId    Int?
+  event        Event?      @relation(fields: [eventId], references: [id])
+  eventId      Int?
 }
 
 enum LogCategory {

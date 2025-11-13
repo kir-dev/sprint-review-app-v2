@@ -1,6 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Difficulty, LogCategory, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CreateLogDto } from './dto/create-log.dto';
+import { UpdateLogDto } from './dto/update-log.dto';
 
 @Injectable()
 export class LogsService {
@@ -8,36 +10,33 @@ export class LogsService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(data: {
-    date: string;
-    category: LogCategory;
-    description: string;
-    difficulty?: Difficulty;
-    timeSpent?: number;
-    userId: number;
-    projectId?: number;
-    workPeriodId: number;
-  }) {
-    this.logger.log(`Creating log for user ID: ${data.userId}`);
+  async create(dto: CreateLogDto) {
+    this.logger.log(`Creating log for user ID: ${dto.userId}`);
     try {
       const log = await this.prisma.log.create({
         data: {
-          date: new Date(data.date),
-          category: data.category,
-          description: data.description,
-          difficulty: data.difficulty,
-          timeSpent: data.timeSpent,
-          userId: data.userId,
-          workPeriodId: data.workPeriodId,
-          ...(data.projectId && {
-            Project: {
-              connect: { id: data.projectId },
+          date: new Date(dto.date),
+          category: dto.category,
+          description: dto.description,
+          difficulty: dto.difficulty,
+          timeSpent: dto.timeSpent,
+          user: { connect: { id: dto.userId } },
+          workPeriod: { connect: { id: dto.workPeriodId } },
+          ...(dto.projectId && {
+            project: {
+              connect: { id: dto.projectId },
+            },
+          }),
+          ...(dto.eventId && {
+            event: {
+              connect: { id: dto.eventId },
             },
           }),
         },
         include: {
           user: true,
-          Project: true,
+          project: true,
+          event: true,
           workPeriod: true,
         },
       });
@@ -45,7 +44,7 @@ export class LogsService {
       return log;
     } catch (error) {
       this.logger.error(
-        `Failed to create log for user ID: ${data.userId}`,
+        `Failed to create log for user ID: ${dto.userId}`,
         (error as Error).stack,
       );
       throw error;
@@ -55,6 +54,7 @@ export class LogsService {
   async findAll(filters?: {
     userId?: number;
     projectId?: number;
+    eventId?: number;
     workPeriodId?: number;
     category?: LogCategory;
     startDate?: string;
@@ -68,11 +68,10 @@ export class LogsService {
         where.userId = filters.userId;
       }
       if (filters?.projectId) {
-        where.Project = {
-          some: {
-            id: filters.projectId,
-          },
-        };
+        where.projectId = filters.projectId;
+      }
+      if (filters?.eventId) {
+        where.eventId = filters.eventId;
       }
       if (filters?.workPeriodId) {
         where.workPeriodId = filters.workPeriodId;
@@ -100,7 +99,13 @@ export class LogsService {
               email: true,
             },
           },
-          Project: {
+          project: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          event: {
             select: {
               id: true,
               name: true,
@@ -132,7 +137,8 @@ export class LogsService {
         where: { id },
         include: {
           user: true,
-          Project: true,
+          project: true,
+          event: true,
           workPeriod: true,
         },
       });
@@ -156,52 +162,39 @@ export class LogsService {
     }
   }
 
-  async update(
-    id: number,
-    data: {
-      date?: string;
-      category?: LogCategory;
-      description?: string;
-      difficulty?: Difficulty;
-      timeSpent?: number;
-      userId?: number;
-      projectId?: number;
-      workPeriodId?: number;
-    },
-  ) {
+  async update(id: number, dto: UpdateLogDto) {
     this.logger.log(`Updating log with ID: ${id}`);
     try {
+      const { projectId, eventId, userId, workPeriodId, ...rest } = dto;
+  
       const updateData: Prisma.LogUpdateInput = {
-        category: data.category,
-        description: data.description,
-        difficulty: data.difficulty,
-        timeSpent: data.timeSpent,
+        ...rest,
+        ...(dto.date && { date: new Date(dto.date) }),
+        ...(userId && { user: { connect: { id: userId } } }),
+        ...(workPeriodId && {
+          workPeriod: { connect: { id: workPeriodId } },
+        }),
       };
-
-      if (data.date) {
-        updateData.date = new Date(data.date);
+  
+      if (dto.hasOwnProperty('projectId')) {
+        updateData.project = dto.projectId
+          ? { connect: { id: dto.projectId } }
+          : { disconnect: true };
       }
-
-      if (data.userId) {
-        updateData.user = { connect: { id: data.userId } };
+  
+      if (dto.hasOwnProperty('eventId')) {
+        updateData.event = dto.eventId
+          ? { connect: { id: dto.eventId } }
+          : { disconnect: true };
       }
-
-      if (data.projectId) {
-        updateData.Project = { 
-          set: [{ id: data.projectId }]
-        };
-      }
-
-      if (data.workPeriodId) {
-        updateData.workPeriod = { connect: { id: data.workPeriodId } };
-      }
-
+  
       const log = await this.prisma.log.update({
         where: { id },
         data: updateData,
         include: {
           user: true,
-          Project: true,
+          project: true,
+          event: true,
           workPeriod: true,
         },
       });
@@ -246,7 +239,7 @@ export class LogsService {
       const logs = await this.prisma.log.findMany({
         where,
         include: {
-          Project: true,
+          project: true,
         },
       });
 
@@ -276,10 +269,8 @@ export class LogsService {
 
       const logsByProject = logs.reduce(
         (acc, log) => {
-          if (log.Project && log.Project.length > 0) {
-            log.Project.forEach((project) => {
-              acc[project.name] = (acc[project.name] || 0) + 1;
-            });
+          if (log.project) {
+            acc[log.project.name] = (acc[log.project.name] || 0) + 1;
           }
           return acc;
         },
@@ -307,13 +298,7 @@ export class LogsService {
       `Fetching stats for project ID: ${projectId}, work period: ${workPeriodId || 'all'}`,
     );
     try {
-      const where: Prisma.LogWhereInput = { 
-        Project: { 
-          some: { 
-            id: projectId 
-          } 
-        } 
-      };
+      const where: Prisma.LogWhereInput = { projectId };
       if (workPeriodId) {
         where.workPeriodId = workPeriodId;
       }

@@ -106,8 +106,8 @@ export default function LogsPage() {
       difficulty: formData.difficulty || undefined,
       timeSpent: formData.timeSpent ? parseInt(formData.timeSpent) : undefined,
       userId: user.id,
-      projectId: formData.projectId ? parseInt(formData.projectId) : undefined,
-      eventId: formData.eventId ? parseInt(formData.eventId) : undefined,
+      projectId: formData.projectId ? parseInt(formData.projectId) : null,
+      eventId: formData.eventId ? parseInt(formData.eventId) : null,
       workPeriodId: resolvedWorkPeriodId,
     }
 

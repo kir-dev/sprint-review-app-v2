@@ -92,6 +92,16 @@ export class CreateLogDto {
   projectId?: number;
 
   @ApiProperty({
+    description: 'Event ID associated with the log',
+    example: 1,
+    required: false,
+  })
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  eventId?: number;
+
+  @ApiProperty({
     description: 'Work period ID associated with the log',
     example: 1,
   })

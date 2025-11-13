@@ -69,7 +69,8 @@ export class UsersService {
         include: {
           logs: {
             include: {
-              Project: true,
+              project: true,
+              event: true,
               workPeriod: true,
             },
           },
@@ -228,7 +229,8 @@ export class UsersService {
         include: {
           logs: {
             include: {
-              Project: true,
+              project: true,
+              event: true,
               workPeriod: true,
             },
             orderBy: {

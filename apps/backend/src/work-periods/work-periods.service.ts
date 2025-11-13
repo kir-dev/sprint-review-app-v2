@@ -61,7 +61,8 @@ export class WorkPeriodsService {
           logs: {
             include: {
               user: true,
-              Project: true,
+              project: true,
+              event: true,
             },
           },
         },
@@ -228,7 +229,8 @@ export class WorkPeriodsService {
           logs: {
             include: {
               user: true,
-              Project: true,
+              project: true,
+              event: true,
             },
             orderBy: {
               date: 'desc',
@@ -264,7 +266,8 @@ export class WorkPeriodsService {
           logs: {
             include: {
               user: true,
-              Project: true,
+              project: true,
+              event: true,
             },
           },
         },
@@ -284,7 +287,7 @@ export class WorkPeriodsService {
       const uniqueUsers = new Set(workPeriod.logs.map((log) => log.userId))
         .size;
       const uniqueProjects = new Set(
-        workPeriod.logs.map((log) => log.Project).filter((id) => id !== null),
+        workPeriod.logs.map((log) => log.projectId).filter((id) => id !== null),
       ).size;
 
       const logsByCategory = workPeriod.logs.reduce(
