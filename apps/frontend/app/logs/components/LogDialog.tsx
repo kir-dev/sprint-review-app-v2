@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Calendar22 } from "@/components/ui/datepicker"
 import { useState } from "react"
 import { categoryLabels, difficultyLabels } from "../constants"
 import { Log, LogCategory, LogFormData, Project, WorkPeriod } from "../types"
@@ -193,24 +194,20 @@ export function LogDialog({
         <CardContent>
           <form onSubmit={handleSubmitWithValidation} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor="date" className="text-sm font-medium">
-                  Dátum <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => handleChange('date', e.target.value)}
-                  onBlur={() => handleBlur('date')}
-                  className={`flex h-10 w-full rounded-md border ${
-                    errors.date && touched.date ? 'border-destructive' : 'border-input'
-                  } bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
-                />
-                {errors.date && touched.date && (
-                  <p className="text-sm text-destructive animate-fade-in">{errors.date}</p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Calendar22
+                    id="date"
+                    value={formData.date}
+                    className="w-full"
+                    popoverClassName="w-80"
+                    required
+                    onChange={(val) => handleChange('date', val)}
+                    onBlur={() => handleBlur('date')}
+                  />
+                  {errors.date && touched.date && (
+                    <p className="text-sm text-destructive animate-fade-in">{errors.date}</p>
+                  )}
+                </div>
 
               <div className="space-y-2">
                 <label htmlFor="category" className="text-sm font-medium">
