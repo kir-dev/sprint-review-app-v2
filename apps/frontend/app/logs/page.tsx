@@ -5,22 +5,28 @@ import { ErrorAlert } from "@/components/ErrorAlert"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useEventData } from "../events/hooks/useEventData"
 import { LogDialog } from "./components/LogDialog"
 import { LogFilters } from "./components/LogFilters"
 import { LogsHeader } from "./components/LogsHeader"
 import { LogsList } from "./components/LogsList"
 import { useLogData } from "./hooks/useLogData"
 import { useLogForm } from "./hooks/useLogForm"
-import { LogFilters as LogFiltersType } from "./types"
+import { Event, LogFilters as LogFiltersType } from "./types"
 import { filterLogs } from "./utils/logHelpers"
 
 export default function LogsPage() {
   const { user, token, isLoading: isAuthLoading } = useAuth()
   const router = useRouter()
-  
+
   // Custom hooks
-  const { logs, setLogs, projects, workPeriods, currentWorkPeriod, isLoading, error, setError, loadData } = useLogData(token, user?.id)
-  const { isDialogOpen, editingLog, formData, setFormData, openDialog, closeDialog } = useLogForm(workPeriods, currentWorkPeriod)
+  const { logs, setLogs, projects, workPeriods, currentWorkPeriod, isLoading, error, setError, loadData } =
+    useLogData(token, user?.id)
+  const { isDialogOpen, editingLog, formData, setFormData, openDialog, closeDialog } = useLogForm(
+    workPeriods,
+    currentWorkPeriod,
+  )
+  const { events } = useEventData(token)
 
   // Filter states
   const [showFilters, setShowFilters] = useState(false)
@@ -81,7 +87,7 @@ export default function LogsPage() {
   // Handlers
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    
+
     if (!user?.id) return
 
     const resolvedWorkPeriodId = formData.workPeriodId
@@ -101,13 +107,14 @@ export default function LogsPage() {
       timeSpent: formData.timeSpent ? parseInt(formData.timeSpent) : undefined,
       userId: user.id,
       projectId: formData.projectId ? parseInt(formData.projectId) : undefined,
+      eventId: formData.eventId ? parseInt(formData.eventId) : undefined,
       workPeriodId: resolvedWorkPeriodId,
     }
 
     try {
       const url = editingLog ? `/api/logs/${editingLog.id}` : '/api/logs'
       const method = editingLog ? 'PATCH' : 'POST'
-      
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -145,7 +152,7 @@ export default function LogsPage() {
       })
 
       if (response.ok) {
-        setLogs(logs.filter(log => log.id !== logToDelete))
+        setLogs(logs.filter((log) => log.id !== logToDelete))
         setDeleteConfirmOpen(false)
         setLogToDelete(null)
       } else {
@@ -176,10 +183,7 @@ export default function LogsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
-      <LogsHeader 
-        onToggleFilters={() => setShowFilters(!showFilters)}
-        onCreateLog={() => openDialog()}
-      />
+      <LogsHeader onCreateLog={() => openDialog()} onToggleFilters={() => setShowFilters(!showFilters)} />
 
       {isFiltersMounted && (
         <LogFilters
@@ -207,6 +211,7 @@ export default function LogsPage() {
         editingLog={editingLog}
         formData={formData}
         projects={projects}
+        events={events}
         workPeriods={workPeriods}
         onFormDataChange={setFormData}
         onSubmit={handleSubmit}

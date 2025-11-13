@@ -4,15 +4,19 @@ import { Difficulty, Log, LogCategory, LogFormData, WorkPeriod } from "../types"
 export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPeriod | null) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingLog, setEditingLog] = useState<Log | null>(null)
-  const [formData, setFormData] = useState<LogFormData>({
+  
+  const initialFormData: LogFormData = {
     date: new Date().toISOString().split('T')[0],
     category: LogCategory.PROJECT,
     description: '',
     difficulty: Difficulty.MEDIUM,
     timeSpent: '',
     projectId: '',
+    eventId: '',
     workPeriodId: '',
-  })
+  }
+
+  const [formData, setFormData] = useState<LogFormData>(initialFormData)
 
   function findWorkPeriodIdForDate(date: string): string {
     if (!date) {
@@ -47,19 +51,15 @@ export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPer
         difficulty: log.difficulty,
         timeSpent: log.timeSpent?.toString() || '',
         projectId: log.projectId?.toString() || '',
+        eventId: log.eventId?.toString() || '',
         workPeriodId: log.workPeriodId.toString(),
       })
     } else {
       setEditingLog(null)
       const today = new Date().toISOString().split('T')[0]
       setFormData({
+        ...initialFormData,
         date: today,
-        category: LogCategory.PROJECT,
-        description: '',
-        difficulty: Difficulty.MEDIUM,
-        timeSpent: '',
-        projectId: '',
-        // Automatically assign work period based on date
         workPeriodId: findWorkPeriodIdForDate(today),
       })
     }

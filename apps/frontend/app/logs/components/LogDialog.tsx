@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar22 } from "@/components/ui/datepicker"
 import { useState } from "react"
 import { categoryLabels, difficultyLabels } from "../constants"
-import { Log, LogCategory, LogFormData, Project, WorkPeriod } from "../types"
+import { Event, Log, LogCategory, LogFormData, Project, WorkPeriod } from "../types"
 
 interface LogDialogProps {
   isOpen: boolean
   editingLog: Log | null
   formData: LogFormData
   projects: Project[]
+  events: Event[]
   workPeriods: WorkPeriod[]
   onFormDataChange: (formData: LogFormData) => void
   onSubmit: (e: React.FormEvent) => void
@@ -29,6 +30,7 @@ export function LogDialog({
   editingLog,
   formData,
   projects,
+  events,
   workPeriods,
   onFormDataChange,
   onSubmit,
@@ -85,13 +87,15 @@ export function LogDialog({
     const target = new Date(dateString)
     target.setHours(0, 0, 0, 0)
 
-    return workPeriods.find(period => {
-      const start = new Date(period.startDate)
-      const end = new Date(period.endDate)
-      start.setHours(0, 0, 0, 0)
-      end.setHours(23, 59, 59, 999)
-      return target >= start && target <= end
-    }) || null
+    return (
+      workPeriods.find((period) => {
+        const start = new Date(period.startDate)
+        const end = new Date(period.endDate)
+        start.setHours(0, 0, 0, 0)
+        end.setHours(23, 59, 59, 999)
+        return target >= start && target <= end
+      }) || null
+    )
   }
 
   function handleChange(field: string, value: any) {
@@ -129,14 +133,29 @@ export function LogDialog({
     }
   }
 
+  function handleCategoryChange(value: LogCategory) {
+    onFormDataChange({
+      ...formData,
+      category: value,
+      projectId: '',
+      eventId: '',
+      difficulty: undefined,
+    })
+
+    if (touched['category']) {
+      const error = validateField('category', value)
+      setErrors({ ...errors, category: error })
+    }
+  }
+
   function handleSubmitWithValidation(e: React.FormEvent) {
     e.preventDefault()
 
     // Validáljuk az összes kötelező mezőt
     const newErrors: ValidationErrors = {}
     const requiredFields: (keyof ValidationErrors)[] = ['date', 'category', 'description']
-    
-    requiredFields.forEach(field => {
+
+    requiredFields.forEach((field) => {
       const error = validateField(field, (formData as any)[field])
       if (error) newErrors[field] = error
     })
@@ -161,7 +180,7 @@ export function LogDialog({
       setErrors(newErrors)
       // Csak a hibás mezőket touch-oljuk
       const newTouched: Record<string, boolean> = {}
-      requiredFields.forEach(field => {
+      requiredFields.forEach((field) => {
         newTouched[field] = true
       })
       if (formData.timeSpent !== '' && formData.timeSpent !== undefined) {
@@ -194,20 +213,18 @@ export function LogDialog({
         <CardContent>
           <form onSubmit={handleSubmitWithValidation} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Calendar22
-                    id="date"
-                    value={formData.date}
-                    className="w-full"
-                    popoverClassName="w-80"
-                    required
-                    onChange={(val) => handleChange('date', val)}
-                    onBlur={() => handleBlur('date')}
-                  />
-                  {errors.date && touched.date && (
-                    <p className="text-sm text-destructive animate-fade-in">{errors.date}</p>
-                  )}
-                </div>
+              <div className="space-y-2">
+                <Calendar22
+                  id="date"
+                  value={formData.date}
+                  className="w-full"
+                  popoverClassName="w-80"
+                  required
+                  onChange={(val) => handleChange('date', val)}
+                  onBlur={() => handleBlur('date')}
+                />
+                {errors.date && touched.date && <p className="text-sm text-destructive animate-fade-in">{errors.date}</p>}
+              </div>
 
               <div className="space-y-2">
                 <label htmlFor="category" className="text-sm font-medium">
@@ -216,14 +233,16 @@ export function LogDialog({
                 <select
                   id="category"
                   value={formData.category}
-                  onChange={(e) => handleChange('category', e.target.value as LogCategory)}
+                  onChange={(e) => handleCategoryChange(e.target.value as LogCategory)}
                   onBlur={() => handleBlur('category')}
                   className={`flex h-10 w-full rounded-md border ${
                     errors.category && touched.category ? 'border-destructive' : 'border-input'
                   } bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
                 >
                   {Object.entries(categoryLabels).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
                   ))}
                 </select>
                 {errors.category && touched.category && (
@@ -231,23 +250,31 @@ export function LogDialog({
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="difficulty" className="text-sm font-medium">Nehézség</label>
-                <select
-                  id="difficulty"
-                  value={formData.difficulty || ''}
-                  onChange={(e) => handleChange('difficulty', e.target.value as any)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <option value="">Válassz nehézséget</option>
-                  {Object.entries(difficultyLabels).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-              </div>
+              {formData.category === LogCategory.PROJECT && (
+                <div className="space-y-2">
+                  <label htmlFor="difficulty" className="text-sm font-medium">
+                    Nehézség
+                  </label>
+                  <select
+                    id="difficulty"
+                    value={formData.difficulty || ''}
+                    onChange={(e) => handleChange('difficulty', e.target.value as any)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="">Válassz nehézséget</option>
+                    {Object.entries(difficultyLabels).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="space-y-2">
-                <label htmlFor="timeSpent" className="text-sm font-medium">Eltöltött idő (óra)</label>
+                <label htmlFor="timeSpent" className="text-sm font-medium">
+                  Eltöltött idő (óra)
+                </label>
                 <input
                   id="timeSpent"
                   type="number"
@@ -270,20 +297,47 @@ export function LogDialog({
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="projectId" className="text-sm font-medium">Projekt</label>
-                <select
-                  id="projectId"
-                  value={formData.projectId}
-                  onChange={(e) => handleChange('projectId', e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <option value="">Nincs projekt</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>{project.name}</option>
-                  ))}
-                </select>
-              </div>
+              {formData.category === LogCategory.PROJECT && (
+                <div className="space-y-2">
+                  <label htmlFor="projectId" className="text-sm font-medium">
+                    Projekt
+                  </label>
+                  <select
+                    id="projectId"
+                    value={formData.projectId}
+                    onChange={(e) => handleChange('projectId', e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="">Nincs projekt</option>
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {formData.category === LogCategory.EVENT && (
+                <div className="space-y-2">
+                  <label htmlFor="eventId" className="text-sm font-medium">
+                    Esemény
+                  </label>
+                  <select
+                    id="eventId"
+                    value={formData.eventId}
+                    onChange={(e) => handleChange('eventId', e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="">Válassz eseményt</option>
+                    {events.map((event) => (
+                      <option key={event.id} value={event.id}>
+                        {event.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -304,34 +358,22 @@ export function LogDialog({
               {errors.description && touched.description && (
                 <p className="text-sm text-destructive animate-fade-in">{errors.description}</p>
               )}
-              <p className="text-xs text-muted-foreground">
-                {formData.description.length}/500 karakter
-              </p>
+              <p className="text-xs text-muted-foreground">{formData.description.length}/500 karakter</p>
             </div>
 
             {/* Csak akkor mutassuk az alert-et, ha van érintett mező ÉS van hiba azon a mezőn */}
-            {Object.keys(errors).some(key => touched[key] && errors[key as keyof ValidationErrors]) && (
+            {Object.keys(errors).some((key) => touched[key] && errors[key as keyof ValidationErrors]) && (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md animate-fade-in">
-                <p className="text-sm text-destructive font-medium">
-                  Kérlek javítsd a hibákat a form elküldése előtt!
-                </p>
+                <p className="text-sm text-destructive font-medium">Kérlek javítsd a hibákat a form elküldése előtt!</p>
               </div>
             )}
 
             <div className="flex justify-end gap-3">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleClose}
-                className="transition-all hover:scale-105"
-              >
+              <Button type="button" variant="outline" onClick={handleClose} className="transition-all hover:scale-105">
                 Mégse
               </Button>
-              <Button 
-                type="submit"
-                className="transition-all hover:scale-105"
-              >
-                {editingLog ? "Módosítás" : "Létrehozás"}
+              <Button type="submit" className="transition-all hover:scale-105">
+                {editingLog ? 'Módosítás' : 'Létrehozás'}
               </Button>
             </div>
           </form>

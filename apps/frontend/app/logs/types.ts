@@ -1,3 +1,5 @@
+import { EventType } from "../events/types"
+
 export enum LogCategory {
   RESPONSIBILITY = "RESPONSIBILITY",
   PROJECT = "PROJECT",
@@ -26,6 +28,16 @@ export enum Position {
   ARCHIVALT = "ARCHIVALT",
 }
 
+export interface Event {
+  id: number
+  name: string
+  date: string
+  type: EventType
+  _count?: {
+    logs: number
+  }
+}
+
 export interface Log {
   id: number
   date: string
@@ -35,8 +47,10 @@ export interface Log {
   timeSpent?: number
   userId: number
   projectId?: number
+  eventId?: number
   workPeriodId: number
   project?: { id: number; name: string }
+  event?: Event
   workPeriod?: { id: number; name: string }
 }
 
@@ -60,6 +74,7 @@ export interface LogFormData {
   difficulty?: Difficulty
   timeSpent: string
   projectId: string
+  eventId: string
   workPeriodId: string
 }
 
