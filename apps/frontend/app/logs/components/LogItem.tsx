@@ -24,8 +24,13 @@ export function LogItem({ log, onEdit, onDelete }: LogItemProps) {
               </span>
             )}
             {log.project && (
-              <span className="px-2 py-1 text-xs font-medium rounded-md bg-muted transition-all hover:scale-105">
+              <span className="px-2 py-1 text-xs font-medium rounded-md bg-pink-500/10 text-pink-500 transition-all hover:scale-105">
                 {log.project.name}
+              </span>
+            )}
+            {log.event && (
+              <span className="px-2 py-1 text-xs font-medium rounded-md bg-indigo-500/10 text-indigo-500 transition-all hover:scale-105">
+                {log.event.name}
               </span>
             )}
           </div>

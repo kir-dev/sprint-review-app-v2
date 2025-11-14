@@ -14,10 +14,13 @@ import { useEventForm } from "./hooks/useEventForm"
 export default function EventsPage() {
   const { user, token, isLoading: isAuthLoading } = useAuth()
   const router = useRouter()
-  
+
   // Custom hooks
   const { events, setEvents, isLoading, error, setError, loadData } = useEventData(token)
   const { isDialogOpen, editingEvent, formData, setFormData, openDialog, closeDialog } = useEventForm()
+
+  // Action states
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -26,14 +29,15 @@ export default function EventsPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthLoading && !token) {
-      router.push('/login')
+      router.push("/login")
     }
   }, [token, isAuthLoading, router])
 
   // Handlers
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    
+    setIsSubmitting(true)
+
     const payload = {
       name: formData.name,
       date: formData.date,
@@ -41,14 +45,14 @@ export default function EventsPage() {
     }
 
     try {
-      const url = editingEvent ? `/api/events/${editingEvent.id}` : '/api/events'
-      const method = editingEvent ? 'PATCH' : 'POST'
-      
+      const url = editingEvent ? `/api/events/${editingEvent.id}` : "/api/events"
+      const method = editingEvent ? "PATCH" : "POST"
+
       const response = await fetch(url, {
         method,
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       })
@@ -58,11 +62,13 @@ export default function EventsPage() {
         closeDialog()
       } else {
         const error = await response.json()
-        setError(error.message || 'Failed to save event')
+        setError(error.message || "Failed to save event")
       }
     } catch (err) {
-      console.error('Error saving event:', err)
-      setError('Failed to save event. Please try again.')
+      console.error("Error saving event:", err)
+      setError("Failed to save event. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -73,23 +79,23 @@ export default function EventsPage() {
 
   async function handleDeleteConfirm() {
     if (!eventToDelete) return
-
+    // NOTE: We could add a separate isDeleting state here for the confirmation dialog
     try {
       const response = await fetch(`/api/events/${eventToDelete}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
 
       if (response.ok) {
-        setEvents(events.filter(event => event.id !== eventToDelete))
+        setEvents(events.filter((event) => event.id !== eventToDelete))
         setDeleteConfirmOpen(false)
         setEventToDelete(null)
       } else {
-        setError('Failed to delete event')
+        setError("Failed to delete event")
       }
     } catch (err) {
-      console.error('Error deleting event:', err)
-      setError('Failed to delete event. Please try again.')
+      console.error("Error deleting event:", err)
+      setError("Failed to delete event. Please try again.")
     }
   }
 
@@ -109,9 +115,7 @@ export default function EventsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
-      <EventsHeader 
-        onCreateEvent={() => openDialog()}
-      />
+      <EventsHeader onCreateEvent={() => openDialog()} />
 
       <ErrorAlert error={error} onClose={() => setError(null)} />
 
@@ -127,6 +131,7 @@ export default function EventsPage() {
         isOpen={isDialogOpen}
         editingEvent={editingEvent}
         formData={formData}
+        isPending={isSubmitting}
         onFormDataChange={setFormData}
         onSubmit={handleSubmit}
         onClose={closeDialog}

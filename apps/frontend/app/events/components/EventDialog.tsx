@@ -1,117 +1,133 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { X } from "lucide-react"
-import React from "react"
-import { eventTypeLabels } from "../constants"
-import { EventFormData, EventType } from "../types"
+import { Button } from "@/components/ui/button";
+import { Calendar22 } from "@/components/ui/datepicker";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
+import React from "react";
+import { eventTypeLabels } from "../constants";
+import { EventFormData, EventType } from "../types";
+
+// Centralized strings for easier management and future i18n
+const DIALOG_TEXT = {
+  editTitle: "Edit Event",
+  createTitle: "Create New Event",
+  nameLabel: "Event Name",
+  namePlaceholder: "Enter event name",
+  dateLabel: "Date",
+  typeLabel: "Event Type",
+  typePlaceholder: "Select an event type",
+  cancelButton: "Cancel",
+  updateButton: "Update Event",
+  createButton: "Create Event",
+};
 
 interface EventDialogProps {
-  isOpen: boolean
-  editingEvent: { id: number; name: string; date: string; type: EventType } | null
-  formData: EventFormData
-  onFormDataChange: (data: EventFormData) => void
-  onSubmit: (e: React.FormEvent) => void
-  onClose: () => void
+  isOpen: boolean;
+  editingEvent: { id: number; name: string; date: string; type: EventType } | null;
+  formData: EventFormData;
+  isPending: boolean;
+  onFormDataChange: (data: EventFormData) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onClose: () => void;
 }
 
 export function EventDialog({
   isOpen,
   editingEvent,
   formData,
+  isPending,
   onFormDataChange,
   onSubmit,
   onClose,
 }: EventDialogProps) {
-  if (!isOpen) return null
-
+  // The Dialog component handles its own visibility, so no need for `if (!isOpen) return null`
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in p-4">
-      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto my-8 animate-slide-in-bottom">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl">
-              {editingEvent ? 'Edit Event' : 'Create New Event'}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0 transition-all hover:scale-110"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {editingEvent ? DIALOG_TEXT.editTitle : DIALOG_TEXT.createTitle}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="name" className="block text-sm font-medium">
+              {DIALOG_TEXT.nameLabel} <span className="text-destructive">*</span>
+            </label>
+            <Input
+              id="name"
+              required
+              value={formData.name}
+              onChange={(e) => onFormDataChange({ ...formData, name: e.target.value })}
+              placeholder={DIALOG_TEXT.namePlaceholder}
+              disabled={isPending}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="name" className="block text-sm font-medium">
-                Event Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="name"
-                required
-                value={formData.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onFormDataChange({ ...formData, name: e.target.value })
-                }
-                placeholder="Enter event name"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
-              />
-            </div>
 
-            <div className="space-y-2">
-              <label htmlFor="date" className="block text-sm font-medium">
-                Date <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="date"
-                type="date"
-                required
-                value={formData.date}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  onFormDataChange({ ...formData, date: e.target.value })
-                }
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
-              />
-            </div>
+          <div className="space-y-2">
+            <label htmlFor="date" className="block text-sm font-medium">
+              {DIALOG_TEXT.dateLabel} <span className="text-destructive">*</span>
+            </label>
+            <Calendar22
+              id="date"
+              required
+              value={formData.date}
+              popoverClassName="w-64"
+              onChange={(value) => onFormDataChange({ ...formData, date: value })}
+              disabled={isPending}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <label htmlFor="type" className="block text-sm font-medium">
-                Event Type <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="type"
-                required
-                value={formData.type}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  onFormDataChange({ ...formData, type: e.target.value as EventType })
-                }
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
-              >
+          <div className="space-y-2">
+            <label htmlFor="type" className="block text-sm font-medium">
+              {DIALOG_TEXT.typeLabel} <span className="text-destructive">*</span>
+            </label>
+            <Select
+              required
+              value={formData.type}
+              onValueChange={(value) => onFormDataChange({ ...formData, type: value as EventType })}
+              disabled={isPending}
+            >
+              <SelectTrigger id="type">
+                <SelectValue placeholder={DIALOG_TEXT.typePlaceholder} />
+              </SelectTrigger>
+              <SelectContent>
                 {Object.values(EventType).map((type) => (
-                  <option key={type} value={type}>
+                  <SelectItem key={type} value={type}>
                     {eventTypeLabels[type]}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-            </div>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-              >
-                Cancel
+          <DialogFooter className="pt-4">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" disabled={isPending}>
+                {DIALOG_TEXT.cancelButton}
               </Button>
-              <Button type="submit">
-                {editingEvent ? "Update Event" : "Create Event"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  )
+            </DialogClose>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {editingEvent ? DIALOG_TEXT.updateButton : DIALOG_TEXT.createButton}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }

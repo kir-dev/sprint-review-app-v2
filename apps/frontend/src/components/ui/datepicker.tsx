@@ -43,15 +43,12 @@ export function Calendar22({ value, onChange, onBlur, id, className, popoverClas
 
   return (
     <div className="flex flex-col gap-3">
-      <Label htmlFor={id ?? "date"} className="px-1">
-        Dátum
-      </Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             id={id ?? "date"}
-            className={`${className ?? 'w-48'} justify-between font-normal`}
+            className={`${className ?? 'w-60'} justify-between font-normal`}
           >
             {date ? date.toLocaleDateString() : "Select date"}
             <ChevronDownIcon />

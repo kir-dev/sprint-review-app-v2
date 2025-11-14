@@ -214,11 +214,14 @@ export function LogDialog({
           <form onSubmit={handleSubmitWithValidation} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
+                <label htmlFor="date" className="text-sm font-medium">
+                  Dátum <span className="text-destructive">*</span>
+                </label>
                 <Calendar22
                   id="date"
                   value={formData.date}
                   className="w-full"
-                  popoverClassName="w-80"
+                  popoverClassName="w-64"
                   required
                   onChange={(val) => handleChange('date', val)}
                   onBlur={() => handleBlur('date')}
