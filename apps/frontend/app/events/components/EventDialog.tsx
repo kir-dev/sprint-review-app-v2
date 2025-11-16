@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Calendar22 } from "@/components/ui/datepicker";
+import { DateRangePicker } from "@/components/ui/daterangepicker";
 import {
   Dialog,
   DialogContent,
@@ -16,8 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import React from "react";
+import { DateRange } from "react-day-picker";
 import { eventTypeLabels } from "../constants";
 import { EventFormData, EventType } from "../types";
 
@@ -37,7 +39,7 @@ const DIALOG_TEXT = {
 
 interface EventDialogProps {
   isOpen: boolean;
-  editingEvent: { id: number; name: string; date: string; type: EventType } | null;
+  editingEvent: { id: number; name: string; startDate: string; endDate: string; type: EventType } | null;
   formData: EventFormData;
   isPending: boolean;
   onFormDataChange: (data: EventFormData) => void;
@@ -82,13 +84,20 @@ export function EventDialog({
             <label htmlFor="date" className="block text-sm font-medium">
               {DIALOG_TEXT.dateLabel} <span className="text-destructive">*</span>
             </label>
-            <Calendar22
-              id="date"
-              required
-              value={formData.date}
+            <DateRangePicker
+              className="w-full"
               popoverClassName="w-64"
-              onChange={(value) => onFormDataChange({ ...formData, date: value })}
-              disabled={isPending}
+              date={{
+                from: formData.startDate ? new Date(`${formData.startDate}T00:00:00`) : undefined,
+                to: formData.endDate ? new Date(`${formData.endDate}T00:00:00`) : undefined,
+              }}
+              onDateChange={(range: DateRange | undefined) => {
+                onFormDataChange({
+                  ...formData,
+                  startDate: range?.from ? format(range.from, "yyyy-MM-dd") : "",
+                  endDate: range?.to ? format(range.to, "yyyy-MM-dd") : "",
+                });
+              }}
             />
           </div>
 

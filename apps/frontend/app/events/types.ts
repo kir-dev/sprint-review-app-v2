@@ -6,7 +6,8 @@ export enum EventType {
 export interface Event {
   id: number
   name: string
-  date: string
+  startDate: string
+  endDate: string
   type: EventType
   _count?: {
     logs: number
@@ -15,6 +16,7 @@ export interface Event {
 
 export interface EventFormData {
   name: string
-  date: string
+  startDate: string
+  endDate: string
   type: string
 }

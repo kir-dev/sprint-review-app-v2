@@ -41,11 +41,12 @@ model Project {
 }
 
 model Event {
-  id   Int       @id @default(autoincrement())
-  name String
-  date DateTime
-  type EventType
-  logs Log[]
+  id        Int       @id @default(autoincrement())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  type      EventType
+  logs      Log[]
 }
 
 model Log {

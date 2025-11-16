@@ -9,14 +9,11 @@ export class Event {
   name: string;
 
   @ApiProperty()
-  date: Date;
+  startDate: Date;
+
+  @ApiProperty()
+  endDate: Date;
 
   @ApiProperty({ enum: EventType })
   type: EventType;
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
 }

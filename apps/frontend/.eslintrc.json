@@ -3,8 +3,7 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2024,
-    "sourceType": "module",
-    "project": ["./tsconfig.json"]
+    "sourceType": "module"
   },
   "plugins": ["@typescript-eslint", "react", "react-hooks"],
   "extends": [
@@ -15,7 +14,8 @@
   ],
   "settings": {
     "react": {
-      "version": "detect"
+      "version": "detect",
+      "jsxRuntime": "automatic"
     }
   },
   "env": {
@@ -24,6 +24,7 @@
     "node": true
   },
   "rules": {
+    "react/react-in-jsx-scope": "off",
     "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
   }

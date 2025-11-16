@@ -6,7 +6,8 @@ export function useEventForm() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
   const [formData, setFormData] = useState<EventFormData>({
     name: '',
-    date: '',
+    startDate: '',
+    endDate: '',
     type: '',
   })
 
@@ -15,14 +16,16 @@ export function useEventForm() {
       setEditingEvent(event)
       setFormData({
         name: event.name,
-        date: event.date.split('T')[0],
+        startDate: event.startDate.split('T')[0],
+        endDate: event.endDate.split('T')[0],
         type: event.type,
       })
     } else {
       setEditingEvent(null)
       setFormData({
         name: '',
-        date: new Date().toISOString().split('T')[0],
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '',
         type: 'KIR_DEV',
       })
     }
@@ -34,7 +37,8 @@ export function useEventForm() {
     setEditingEvent(null)
     setFormData({
       name: '',
-      date: '',
+      startDate: '',
+      endDate: '',
       type: '',
     })
   }

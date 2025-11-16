@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { ErrorAlert } from "@/components/ErrorAlert"
 import { useAuth } from "@/context/AuthContext"
@@ -36,11 +37,18 @@ export default function EventsPage() {
   // Handlers
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (formData.endDate && formData.startDate > formData.endDate) {
+      setError("End date cannot be earlier than start date.")
+      return
+    }
+
     setIsSubmitting(true)
 
     const payload = {
       name: formData.name,
-      date: formData.date,
+      startDate: formData.startDate,
+      endDate: formData.endDate || formData.startDate,
       type: formData.type,
     }
 

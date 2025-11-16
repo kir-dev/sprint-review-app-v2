@@ -51,12 +51,25 @@ export function EventsList({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {events.map((event, index) => {
-        const eventDate = new Date(event.date)
-        const formattedDate = eventDate.toLocaleDateString('hu-HU', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
+        const startDate = new Date(event.startDate)
+        const endDate = new Date(event.endDate)
+        
+        const formattedDate =
+          startDate.getTime() === endDate.getTime()
+            ? startDate.toLocaleDateString('hu-HU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })
+            : `${startDate.toLocaleDateString('hu-HU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })} - ${endDate.toLocaleDateString('hu-HU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}`
 
         return (
           <Card

@@ -8,13 +8,19 @@ export class EventService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(data: { name: string; date: string; type: EventType }) {
+  async create(data: {
+    name: string;
+    startDate: string;
+    endDate: string;
+    type: EventType;
+  }) {
     this.logger.log(`Creating event: ${data.name}`);
     try {
       const event = await this.prisma.event.create({
         data: {
           name: data.name,
-          date: new Date(data.date),
+          startDate: new Date(data.startDate),
+          endDate: new Date(data.endDate),
           type: data.type,
         },
         include: {
@@ -44,7 +50,7 @@ export class EventService {
           },
         },
         orderBy: {
-          date: 'desc',
+          startDate: 'desc',
         },
       });
       this.logger.log(`Found ${events.length} events`);
@@ -84,7 +90,12 @@ export class EventService {
 
   async update(
     id: number,
-    data: { name?: string; date?: string; type?: EventType },
+    data: {
+      name?: string;
+      startDate?: string;
+      endDate?: string;
+      type?: EventType;
+    },
   ) {
     this.logger.log(`Updating event with ID: ${id}`);
     try {
@@ -92,7 +103,8 @@ export class EventService {
         where: { id },
         data: {
           ...(data.name && { name: data.name }),
-          ...(data.date && { date: new Date(data.date) }),
+          ...(data.startDate && { startDate: new Date(data.startDate) }),
+          ...(data.endDate && { endDate: new Date(data.endDate) }),
           ...(data.type && { type: data.type }),
         },
         include: {
