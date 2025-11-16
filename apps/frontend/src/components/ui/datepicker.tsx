@@ -61,6 +61,7 @@ export function Calendar22({ value, onChange, onBlur, id, className, popoverClas
             captionLayout="dropdown"
             className="w-full"
             classNames={{ root: 'w-full' }}
+            weekStartsOn={1}
             onSelect={(selected: Date | undefined) => {
               setDate(selected)
               setOpen(false)
