@@ -13,6 +13,19 @@ export const positionLabels: Record<Position, string> = {
   ARCHIVALT: "Archivált",
 }
 
+export const positionSortOrder: Position[] = [
+  "KORVEZETO",
+  "KORVEZETO_HELYETTES",
+  "GAZDASAGIS",
+  "TANFOLYAMFELELOS",
+  "PR_FELELOS",
+  "HR_FELELOS",
+  "TAG",
+  "UJONC",
+  "OREGTAG",
+  "ARCHIVALT",
+]
+
 export const positionColors: Record<Position, string> = {
   UJONC: "bg-slate-500/10 text-slate-900 border-slate-500/20 dark:bg-slate-500/20 dark:text-slate-100 dark:border-slate-500/40",
   TAG: "bg-orange-500/10 text-orange-900 border-orange-500/20 dark:bg-orange-500/20 dark:text-orange-100 dark:border-orange-500/40",
