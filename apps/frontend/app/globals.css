@@ -20,6 +20,7 @@
   --color-border: hsl(0 0% 92.2%);
   --color-input: hsl(0 0% 92.2%);
   --color-ring: hsl(14 100% 60%);
+  --color-highlight: hsl(48 96% 94%);
   
   --radius-sm: calc(0.5rem - 4px);
   --radius-md: calc(0.5rem - 2px);
@@ -56,6 +57,7 @@
     --color-border: hsl(0 0% 22%);
     --color-input: hsl(0 0% 22%);
     --color-ring: hsl(14 100% 60%);
+    --color-highlight: hsl(48 96% 94% / 0.1);
   }
   
   * {

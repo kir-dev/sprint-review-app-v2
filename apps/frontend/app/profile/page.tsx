@@ -1,12 +1,16 @@
 "use client"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { useAuth } from "@/context/AuthContext"
-import { positionColors, positionLabels } from "@/lib/positions"
-import { Camera, Github, LogOut, Mail, Save, User } from "lucide-react"
+import { positionLabels } from "@/lib/positions"
+import { Camera, Github, Loader2, LogOut, Mail, Save, User } from "lucide-react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
 
 export default function ProfilePage() {
   const { user, token, isLoading, refreshUser, logout } = useAuth()
@@ -15,8 +19,6 @@ export default function ProfilePage() {
   const [simonyiEmail, setSimonyiEmail] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [isValidatingGithub, setIsValidatingGithub] = useState(false)
-  const [githubValidationMessage, setGithubValidationMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [githubChanged, setGithubChanged] = useState(false)
@@ -43,13 +45,13 @@ export default function ProfilePage() {
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        setSaveMessage({ type: 'error', text: 'Please select an image file' })
+        toast.error('Please select an image file')
         return
       }
       
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        setSaveMessage({ type: 'error', text: 'Image size must be less than 5MB' })
+        toast.error('Image size must be less than 5MB')
         return
       }
 
@@ -61,7 +63,6 @@ export default function ProfilePage() {
         setProfileImage(reader.result as string)
       }
       reader.readAsDataURL(file)
-      setSaveMessage(null)
     }
   }
 
@@ -71,45 +72,27 @@ export default function ProfilePage() {
 
   async function validateGithubUsername(username: string): Promise<boolean> {
     if (!username.trim()) {
-      setGithubValidationMessage(null)
       return true
     }
 
     setIsValidatingGithub(true)
-    setGithubValidationMessage(null)
 
     try {
       const response = await fetch(`https://api.github.com/users/${username.trim()}`)
       
       if (response.ok) {
-        setGithubValidationMessage({ type: 'success', text: '✓ GitHub user found' })
-        // Clear message after 3 seconds
-        setTimeout(() => {
-          setGithubValidationMessage(null)
-        }, 3000)
+        toast.success('✓ GitHub user found')
         return true
       } else if (response.status === 404) {
-        setGithubValidationMessage({ type: 'error', text: 'GitHub user not found' })
-        // Clear message after 3 seconds
-        setTimeout(() => {
-          setGithubValidationMessage(null)
-        }, 3000)
+        toast.error('GitHub user not found')
         return false
       } else {
-        setGithubValidationMessage({ type: 'error', text: 'Could not verify GitHub username' })
-        // Clear message after 3 seconds
-        setTimeout(() => {
-          setGithubValidationMessage(null)
-        }, 3000)
+        toast.error('Could not verify GitHub username')
         return false
       }
     } catch (error) {
       console.error('Error validating GitHub username:', error)
-      setGithubValidationMessage({ type: 'error', text: 'Error checking GitHub username' })
-      // Clear message after 3 seconds
-      setTimeout(() => {
-        setGithubValidationMessage(null)
-      }, 3000)
+      toast.error('Error checking GitHub username')
       return false
     } finally {
       setIsValidatingGithub(false)
@@ -121,11 +104,7 @@ export default function ProfilePage() {
 
     // Validate Simonyi email if provided
     if (simonyiEmail.trim() && !simonyiEmail.endsWith('@simonyi.bme.hu')) {
-      setSaveMessage({ type: 'error', text: 'Simonyi email must end with @simonyi.bme.hu' })
-      // Clear error message after 5 seconds
-      setTimeout(() => {
-        setSaveMessage(null)
-      }, 8000)
+      toast.error('Simonyi email must end with @simonyi.bme.hu')
       return
     }
 
@@ -133,18 +112,13 @@ export default function ProfilePage() {
     if (githubUsername.trim()) {
       const isValidGithub = await validateGithubUsername(githubUsername)
       if (!isValidGithub) {
-        setSaveMessage({ type: 'error', text: 'Please enter a valid GitHub username' })
-        // Clear error message after 5 seconds
-        setTimeout(() => {
-          setSaveMessage(null)
-        }, 8000)
+        toast.error('Please enter a valid GitHub username')
         return
       }
     }
 
 
     setIsSaving(true)
-    setSaveMessage(null)
 
     try {
       const response = await fetch(`/api/users/${user.id}`, {
@@ -161,11 +135,7 @@ export default function ProfilePage() {
       })
 
       if (response.ok) {
-        setSaveMessage({ type: 'success', text: 'Profile updated successfully!' })
-        // Clear message after 5 seconds
-        setTimeout(() => {
-          setSaveMessage(null)
-        }, 5000)
+        toast.success('Profile updated successfully!')
         // Refresh user data from backend
         await refreshUser()
         // Clear the imageFile after successful save
@@ -175,19 +145,11 @@ export default function ProfilePage() {
         setSimonyiEmailChanged(false)
       } else {
         const error = await response.json()
-        setSaveMessage({ type: 'error', text: error.message || 'Failed to update profile' })
-        // Clear error message after 5 seconds
-        setTimeout(() => {
-          setSaveMessage(null)
-        }, 5000)
+        toast.error(error.message || 'Failed to update profile')
       }
     } catch (err) {
       console.error('Error updating profile:', err)
-      setSaveMessage({ type: 'error', text: 'Failed to update profile. Please try again.' })
-      // Clear error message after 5 seconds
-      setTimeout(() => {
-        setSaveMessage(null)
-      }, 5000)
+      toast.error('Failed to update profile. Please try again.')
     } finally {
       setIsSaving(false)
     }
@@ -239,7 +201,7 @@ export default function ProfilePage() {
               <div className="relative h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden cursor-pointer group hover:ring-2 hover:ring-primary transition-all"
                    onClick={handleImageClick}>
                 {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  <Image src={profileImage} alt="Profile" fill className="object-cover" />
                 ) : (
                   <User className="h-10 w-10 text-primary" />
                 )}
@@ -280,9 +242,7 @@ export default function ProfilePage() {
                   <User className="h-4 w-4 text-muted-foreground" />
                   Full Name
                 </label>
-                <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm">
-                  {user.fullName}
-                </div>
+                <Input value={user.fullName} readOnly disabled />
                 <p className="text-xs text-muted-foreground">
                   Managed by AuthSCH
                 </p>
@@ -294,9 +254,7 @@ export default function ProfilePage() {
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   Email
                 </label>
-                <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm">
-                  {user.email}
-                </div>
+                <Input value={user.email} readOnly disabled />
                 <p className="text-xs text-muted-foreground">
                   Managed by AuthSCH
                 </p>
@@ -309,11 +267,9 @@ export default function ProfilePage() {
                 Position
               </label>
               <div className="flex items-center gap-2">
-                <span 
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium border ${positionColors[user.position]}`}
-                >
+                <Badge variant="outline">
                   {positionLabels[user.position]}
-                </span>
+                </Badge>
                 <p className="text-xs text-muted-foreground">
                   Your current position in the organization
                 </p>
@@ -337,7 +293,7 @@ export default function ProfilePage() {
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 Simonyi Email
               </label>
-              <input
+              <Input
                 id="simonyiEmail"
                 type="email"
                 placeholder="your.name@simonyi.bme.hu"
@@ -346,8 +302,8 @@ export default function ProfilePage() {
                   setSimonyiEmail(e.target.value)
                   setSimonyiEmailChanged(true)
                 }}
-                className={`flex h-10 w-full rounded-md border border-input px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                  simonyiEmailChanged ? 'bg-yellow-50 dark:bg-yellow-950/20' : 'bg-background'
+                className={`${
+                  simonyiEmailChanged ? 'bg-highlight' : ''
                 }`}
               />
               <p className="text-xs text-muted-foreground">
@@ -362,18 +318,17 @@ export default function ProfilePage() {
                 GitHub Username
               </label>
               <div className="flex gap-2">
-                <input
+                <Input
                   id="github"
                   type="text"
                   placeholder="Enter your GitHub username"
                   value={githubUsername}
                   onChange={(e) => {
                     setGithubUsername(e.target.value)
-                    setGithubValidationMessage(null)
                     setGithubChanged(true)
                   }}
-                  className={`flex h-10 w-full rounded-md border border-input px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                    githubChanged ? 'bg-yellow-50 dark:bg-yellow-950/20' : 'bg-background'
+                  className={`${
+                    githubChanged ? 'bg-highlight' : ''
                   }`}
                 />
                 <Button
@@ -386,30 +341,10 @@ export default function ProfilePage() {
                   {isValidatingGithub ? 'Checking...' : 'Verify'}
                 </Button>
               </div>
-              {githubValidationMessage && (
-                <p className={`text-xs ${
-                  githubValidationMessage.type === 'success' 
-                    ? 'text-green-500' 
-                    : 'text-destructive'
-                }`}>
-                  {githubValidationMessage.text}
-                </p>
-              )}
               <p className="text-xs text-muted-foreground">
                 Your GitHub username for project integration
               </p>
             </div>
-
-            {/* Save Message */}
-            {saveMessage && (
-              <div className={`p-4 rounded-lg animate-slide-in-top ${
-                saveMessage.type === 'success' 
-                  ? 'bg-green-500/10 text-green-500 border border-green-500/20' 
-                  : 'bg-destructive/10 text-destructive border border-destructive/20'
-              }`}>
-                {saveMessage.text}
-              </div>
-            )}
 
             {/* Save Button */}
             <div className="flex justify-end gap-3">
@@ -432,7 +367,11 @@ export default function ProfilePage() {
                 disabled={isSaving}
                 className="gap-2 hover:scale-105 transition-transform"
               >
-                <Save className="h-4 w-4" />
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
