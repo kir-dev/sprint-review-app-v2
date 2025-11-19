@@ -1,5 +1,5 @@
-import { AppLayout } from "@/components/app-layout"
-import { ThemeProvider } from "@/components/theme-provider"
+import { AppLayout } from "@/components/AppLayout"
+import { ThemeProvider } from "@/components/ThemeProvider"
 import { AuthProvider } from "@/context/AuthContext"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"

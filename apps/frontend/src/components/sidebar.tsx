@@ -1,7 +1,7 @@
 "use client"
 
-import { useTheme } from "@/components/theme-provider"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { useTheme } from "@/components/ThemeProvider"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import { useAuth } from "@/context/AuthContext"
 import { cn } from "@/lib/utils"
 import { BarChart3, Calendar, CalendarDays, ChevronLeft, ChevronRight, FileText, FolderKanban, LayoutDashboard, Users } from "lucide-react"

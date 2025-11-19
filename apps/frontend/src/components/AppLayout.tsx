@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import type React from "react"
-import { Sidebar } from "./sidebar"
+import { Sidebar } from "./Sidebar"
 
 // Pages that should NOT show the sidebar
 const pagesWithoutSidebar = ["/login"]

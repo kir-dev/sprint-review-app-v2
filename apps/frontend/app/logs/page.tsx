@@ -13,7 +13,7 @@ import { LogsList } from "./components/LogsList"
 import { useLogData } from "./hooks/useLogData"
 import { useLogForm } from "./hooks/useLogForm"
 import { Event, LogFilters as LogFiltersType } from "./types"
-import { filterLogs } from "./utils/logHelpers"
+import { filterLogs } from "./utils/log-helpers"
 
 export default function LogsPage() {
   const { user, token, isLoading: isAuthLoading } = useAuth()

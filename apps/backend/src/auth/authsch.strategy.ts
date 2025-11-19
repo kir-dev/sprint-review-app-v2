@@ -39,7 +39,7 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
       const existingUser = await this.usersService.findByEmail(profile.email);
       this.logger.log(`✅ Found existing user: ${existingUser.email}`);
       return existingUser;
-    } catch (error) {
+    } catch {
       // User doesn't exist, create new one
       this.logger.log('📝 Creating new user from profile');
       const newUser = await this.usersService.create({

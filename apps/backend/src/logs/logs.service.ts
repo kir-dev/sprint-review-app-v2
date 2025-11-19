@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Difficulty, LogCategory, Prisma } from '@prisma/client';
+import { LogCategory, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateLogDto } from './dto/create-log.dto';
 import { UpdateLogDto } from './dto/update-log.dto';
@@ -165,7 +165,7 @@ export class LogsService {
   async update(id: number, dto: UpdateLogDto) {
     this.logger.log(`Updating log with ID: ${id}`);
     try {
-      const { projectId, eventId, userId, workPeriodId, ...rest } = dto;
+      const { userId, workPeriodId, ...rest } = dto;
   
       const updateData: Prisma.LogUpdateInput = {
         ...rest,

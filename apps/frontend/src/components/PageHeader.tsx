@@ -11,7 +11,7 @@ export function PageHeader({ title, description, icon: Icon, children }: PageHea
   return (
     <div className="flex items-start justify-between animate-fade-in">
       <div className="flex items-start gap-4">
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 hover:scale-110 transition-transform">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 hover:scale-110 transition-transform">
           <Icon className="h-6 w-6 text-primary" />
         </div>
         <div>
@@ -19,7 +19,7 @@ export function PageHeader({ title, description, icon: Icon, children }: PageHea
           <p className="text-muted-foreground">{description}</p>
         </div>
       </div>
-      {children && <div className="flex gap-3 flex-shrink-0">{children}</div>}
+      {children && <div className="flex gap-3 shrink-0">{children}</div>}
     </div>
   );
 }
