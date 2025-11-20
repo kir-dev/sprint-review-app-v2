@@ -1,25 +1,31 @@
-"use client"
+'use client';
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Github, Mail } from "lucide-react"
-import { Control, Controller, FieldState } from "react-hook-form"
-import { ProfileFormData } from "../types"
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Github, Mail } from 'lucide-react';
+import { Control, Controller, FieldState } from 'react-hook-form';
+import { ProfileFormData } from '../types';
 
 interface AdditionalInfoCardProps {
-  control: Control<ProfileFormData>
-  isValidatingGithub: boolean
-  onVerifyGithub: (username: string) => void
-  githubUsernameValue: string
+  control: Control<ProfileFormData>;
+  isValidatingGithub: boolean;
+  onVerifyGithub: (username: string) => void;
+  githubUsernameValue: string;
 }
 
 const getFieldClass = (fieldState: FieldState) => {
   if (fieldState.isDirty) {
-    return 'bg-yellow-100/30 dark:bg-yellow-800/20'
+    return 'bg-amber-500/10 dark:bg-amber-500/20';
   }
-  return ''
-}
+  return '';
+};
 
 export function AdditionalInfoCard({
   control,
@@ -31,9 +37,7 @@ export function AdditionalInfoCard({
     <Card className="animate-slide-in-right hover:shadow-lg transition-shadow">
       <CardHeader>
         <CardTitle>Additional Information</CardTitle>
-        <CardDescription>
-          Update your optional profile details
-        </CardDescription>
+        <CardDescription>Update your optional profile details</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Simonyi Email */}
@@ -42,7 +46,10 @@ export function AdditionalInfoCard({
           control={control}
           render={({ field, fieldState }) => (
             <div className="space-y-2">
-              <label htmlFor="simonyiEmail" className="text-sm font-medium flex items-center gap-2">
+              <label
+                htmlFor="simonyiEmail"
+                className="text-sm font-medium flex items-center gap-2"
+              >
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 Simonyi Email
               </label>
@@ -55,11 +62,15 @@ export function AdditionalInfoCard({
                 value={field.value ?? ''}
               />
               {fieldState.error && (
-                <p className="text-sm text-destructive">{fieldState.error.message}</p>
+                <p className="text-sm text-destructive">
+                  {fieldState.error.message}
+                </p>
               )}
-              {!fieldState.error && <p className="text-xs text-muted-foreground">
-                Your @simonyi.bme.hu email address
-              </p>}
+              {!fieldState.error && (
+                <p className="text-xs text-muted-foreground">
+                  Your @simonyi.bme.hu email address
+                </p>
+              )}
             </div>
           )}
         />
@@ -70,7 +81,10 @@ export function AdditionalInfoCard({
           control={control}
           render={({ field, fieldState }) => (
             <div className="space-y-2">
-              <label htmlFor="github" className="text-sm font-medium flex items-center gap-2">
+              <label
+                htmlFor="github"
+                className="text-sm font-medium flex items-center gap-2"
+              >
                 <Github className="h-4 w-4 text-muted-foreground" />
                 GitHub Username
               </label>
@@ -90,7 +104,7 @@ export function AdditionalInfoCard({
                   disabled={isValidatingGithub || !githubUsernameValue?.trim()}
                   className="shrink-0"
                 >
-                  {isValidatingGithub ? "Checking..." : "Verify"}
+                  {isValidatingGithub ? 'Checking...' : 'Verify'}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -101,5 +115,5 @@ export function AdditionalInfoCard({
         />
       </CardContent>
     </Card>
-  )
+  );
 }

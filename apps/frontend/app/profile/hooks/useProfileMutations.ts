@@ -39,7 +39,7 @@ export function useProfileMutations() {
     try {
       const response = await fetch(`${GITHUB_API_BASE_URL}/users/${username.trim()}`)
       if (response.ok) {
-        toast.success("✓ GitHub user found")
+        toast.success("GitHub user found")
         return true
       }
       if (response.status === 404) {

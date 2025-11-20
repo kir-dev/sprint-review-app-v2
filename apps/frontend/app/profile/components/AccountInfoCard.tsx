@@ -1,14 +1,20 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Mail, User } from "lucide-react"
-import { UserProfile } from "../types"
-import { positionLabels } from "@/lib/positions"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Mail, User } from 'lucide-react';
+import { UserProfile } from '../types';
+import { positionLabels, positionColors } from '@/lib/positions';
 
 interface AccountInfoCardProps {
-  user: UserProfile
+  user: UserProfile;
 }
 
 export function AccountInfoCard({ user }: AccountInfoCardProps) {
@@ -28,9 +34,7 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
               Full Name
             </label>
             <Input value={user.fullName} readOnly disabled />
-            <p className="text-xs text-muted-foreground">
-              Managed by AuthSCH
-            </p>
+            <p className="text-xs text-muted-foreground">Managed by AuthSCH</p>
           </div>
 
           <div className="space-y-2">
@@ -39,18 +43,14 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
               Email
             </label>
             <Input value={user.email} readOnly disabled />
-            <p className="text-xs text-muted-foreground">
-              Managed by AuthSCH
-            </p>
+            <p className="text-xs text-muted-foreground">Managed by AuthSCH</p>
           </div>
         </div>
 
         <div className="space-y-2 pt-2 border-t">
-          <label className="text-sm font-medium">
-            Position
-          </label>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">
+          <label className="text-sm font-medium">Position</label>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge className={positionColors[user.position]}>
               {positionLabels[user.position]}
             </Badge>
             <p className="text-xs text-muted-foreground">
@@ -60,5 +60,5 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
