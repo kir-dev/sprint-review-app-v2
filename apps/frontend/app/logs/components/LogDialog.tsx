@@ -1,28 +1,33 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar22 } from "@/components/ui/datepicker"
-import { useState } from "react"
-import { categoryLabels, difficultyLabels } from "../constants"
-import { Event, Log, LogCategory, LogFormData, Project, WorkPeriod } from "../types"
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar22 } from '@/components/ui/datepicker';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+import { logFormSchema } from '../form-schema';
+import { categoryLabels } from '../constants';
+import { Event, Log, LogFormData, Project, WorkPeriod } from '../types';
+import { findWorkPeriodForDate } from '../utils/log-helpers';
+import { FormField } from './FormField';
+import { CategorySpecificFields } from './CategorySpecificFields';
 
 interface LogDialogProps {
-  isOpen: boolean
-  editingLog: Log | null
-  formData: LogFormData
-  projects: Project[]
-  events: Event[]
-  workPeriods: WorkPeriod[]
-  onFormDataChange: (formData: LogFormData) => void
-  onSubmit: (e: React.FormEvent) => void
-  onClose: () => void
-}
-
-interface ValidationErrors {
-  date?: string
-  category?: string
-  description?: string
-  workPeriodId?: string
-  timeSpent?: string
+  isOpen: boolean;
+  editingLog: Log | null;
+  formData: LogFormData;
+  projects: Project[];
+  events: Event[];
+  workPeriods: WorkPeriod[];
+  onSubmit: (data: LogFormData) => void;
+  onClose: () => void;
 }
 
 export function LogDialog({
@@ -32,347 +37,170 @@ export function LogDialog({
   projects,
   events,
   workPeriods,
-  onFormDataChange,
-  onSubmit,
   onClose,
+  onSubmit,
 }: LogDialogProps) {
-  const [errors, setErrors] = useState<ValidationErrors>({})
-  const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    reset,
+    setValue,
+  } = useForm<LogFormData>({
+    resolver: zodResolver(logFormSchema),
+    defaultValues: formData,
+  });
 
-  if (!isOpen) return null
+  const category = watch('category');
+  const description = watch('description');
 
-  function validateField(field: string, value: any): string | undefined {
-    switch (field) {
-      case 'date':
-        if (!value) return 'A dátum megadása kötelező'
-        const selectedDate = new Date(value)
-        const today = new Date()
-        today.setHours(23, 59, 59, 999)
-        if (selectedDate > today) return 'A dátum nem lehet jövőbeli'
-        return undefined
+  useEffect(() => {
+    reset(formData);
+  }, [formData, reset]);
 
-      case 'category':
-        if (!value) return 'Kategória kiválasztása kötelező'
-        return undefined
-
-      case 'description':
-        if (!value || value.trim() === '') return 'A leírás megadása kötelező'
-        if (value.trim().length < 10) return 'A leírás legalább 10 karakter hosszú legyen'
-        if (value.trim().length > 500) return 'A leírás maximum 500 karakter hosszú lehet'
-        return undefined
-
-      case 'timeSpent':
-        if (value !== '' && value !== undefined) {
-          const num = parseFloat(value)
-          if (isNaN(num)) return 'Az óraszám csak szám lehet'
-          if (num < 0) return 'Az óraszám nem lehet negatív'
-          if (num > 24) return 'Az óraszám nem lehet több mint 24'
-        }
-        return undefined
-
-      default:
-        return undefined
+  useEffect(() => {
+    const date = watch('date');
+    const matchingPeriod = findWorkPeriodForDate(date, workPeriods);
+    if (matchingPeriod) {
+      setValue('workPeriodId', matchingPeriod.id.toString());
+    } else {
+      setValue('workPeriodId', '');
     }
-  }
+  }, [watch, workPeriods, setValue]);
 
-  function handleBlur(field: string) {
-    setTouched({ ...touched, [field]: true })
-    const value = (formData as any)[field]
-    const error = validateField(field, value)
-    setErrors({ ...errors, [field]: error })
-  }
-
-  function findWorkPeriodForDate(dateString: string) {
-    if (!dateString) return null
-    const target = new Date(dateString)
-    target.setHours(0, 0, 0, 0)
-
-    return (
-      workPeriods.find((period) => {
-        const start = new Date(period.startDate)
-        const end = new Date(period.endDate)
-        start.setHours(0, 0, 0, 0)
-        end.setHours(23, 59, 59, 999)
-        return target >= start && target <= end
-      }) || null
-    )
-  }
-
-  function handleChange(field: string, value: any) {
-    if (field === 'date') {
-      const matchingPeriod = findWorkPeriodForDate(value)
-      const updatedForm = {
-        ...formData,
-        date: value,
-        workPeriodId: matchingPeriod ? matchingPeriod.id.toString() : '',
-      }
-      onFormDataChange(updatedForm)
-
-      if (touched.workPeriodId && !matchingPeriod) {
-        setErrors((prev) => ({ ...prev, workPeriodId: 'Ehhez a dátumhoz nem található work period' }))
-      } else {
-        setErrors((prev) => {
-          if (!prev.workPeriodId) return prev
-          const { workPeriodId, ...rest } = prev
-          return rest
-        })
-      }
-
-      if (touched[field]) {
-        const error = validateField(field, value)
-        setErrors({ ...errors, [field]: error })
-      }
-      return
-    }
-
-    onFormDataChange({ ...formData, [field]: value })
-
-    if (touched[field]) {
-      const error = validateField(field, value)
-      setErrors({ ...errors, [field]: error })
-    }
-  }
-
-  function handleCategoryChange(value: LogCategory) {
-    onFormDataChange({
-      ...formData,
-      category: value,
-      projectId: '',
-      eventId: '',
-      difficulty: undefined,
-    })
-
-    if (touched['category']) {
-      const error = validateField('category', value)
-      setErrors({ ...errors, category: error })
-    }
-  }
-
-  function handleSubmitWithValidation(e: React.FormEvent) {
-    e.preventDefault()
-
-    // Validáljuk az összes kötelező mezőt
-    const newErrors: ValidationErrors = {}
-    const requiredFields: (keyof ValidationErrors)[] = ['date', 'category', 'description']
-
-    requiredFields.forEach((field) => {
-      const error = validateField(field, (formData as any)[field])
-      if (error) newErrors[field] = error
-    })
-
-    if (!formData.workPeriodId) {
-      const matchingPeriod = findWorkPeriodForDate(formData.date)
-      if (matchingPeriod) {
-        onFormDataChange({ ...formData, workPeriodId: matchingPeriod.id.toString() })
-      } else {
-        newErrors.workPeriodId = 'Ehhez a dátumhoz nem található work period'
-      }
-    }
-
-    // Opcionális mező validálása
-    if (formData.timeSpent !== '' && formData.timeSpent !== undefined) {
-      const error = validateField('timeSpent', formData.timeSpent)
-      if (error) newErrors.timeSpent = error
-    }
-
-    // Ha van hiba, megjelenítjük és nem küldjük el
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      // Csak a hibás mezőket touch-oljuk
-      const newTouched: Record<string, boolean> = {}
-      requiredFields.forEach((field) => {
-        newTouched[field] = true
-      })
-      if (formData.timeSpent !== '' && formData.timeSpent !== undefined) {
-        newTouched.timeSpent = true
-      }
-      if (newErrors.workPeriodId) {
-        newTouched.workPeriodId = true
-      }
-      setTouched(newTouched)
-      return
-    }
-
-    // Ha nincs hiba, töröljük az error state-et és továbbadjuk a submit-ot
-    setErrors({})
-    onSubmit(e)
-  }
-
-  function handleClose() {
-    setErrors({})
-    setTouched({})
-    onClose()
-  }
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4 animate-slide-in-bottom">
         <CardHeader>
-          <CardTitle>{editingLog ? 'Napló Szerkesztése' : 'Új Napló Létrehozása'}</CardTitle>
+          <CardTitle>
+            {editingLog ? 'Napló Szerkesztése' : 'Új Napló Létrehozása'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmitWithValidation} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor="date" className="text-sm font-medium">
-                  Dátum <span className="text-destructive">*</span>
-                </label>
-                <Calendar22
-                  id="date"
-                  value={formData.date}
-                  className="w-full"
-                  popoverClassName="w-64"
-                  required
-                  onChange={(val) => handleChange('date', val)}
-                  onBlur={() => handleBlur('date')}
-                />
-                {errors.date && touched.date && <p className="text-sm text-destructive animate-fade-in">{errors.date}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="category" className="text-sm font-medium">
-                  Kategória <span className="text-destructive">*</span>
-                </label>
-                <select
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => handleCategoryChange(e.target.value as LogCategory)}
-                  onBlur={() => handleBlur('category')}
-                  className={`flex h-10 w-full rounded-md border ${
-                    errors.category && touched.category ? 'border-destructive' : 'border-input'
-                  } bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
-                >
-                  {Object.entries(categoryLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                {errors.category && touched.category && (
-                  <p className="text-sm text-destructive animate-fade-in">{errors.category}</p>
+              <FormField
+                name="date"
+                label="Dátum"
+                control={control}
+                error={errors.date}
+                required
+              >
+                {(field) => (
+                  <Calendar22
+                    id="date"
+                    value={
+                      field.value instanceof Date
+                        ? field.value.toISOString().slice(0, 10)
+                        : field.value
+                    }
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    className="w-full"
+                    popoverClassName="w-64"
+                    required
+                  />
                 )}
-              </div>
+              </FormField>
 
-              {formData.category === LogCategory.PROJECT && (
-                <div className="space-y-2">
-                  <label htmlFor="difficulty" className="text-sm font-medium">
-                    Nehézség
-                  </label>
-                  <select
-                    id="difficulty"
-                    value={formData.difficulty || ''}
-                    onChange={(e) => handleChange('difficulty', e.target.value as any)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              <FormField
+                name="category"
+                label="Kategória"
+                control={control}
+                error={errors.category}
+                required
+              >
+                {(field) => (
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
                   >
-                    <option value="">Válassz nehézséget</option>
-                    {Object.entries(difficultyLabels).map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label htmlFor="timeSpent" className="text-sm font-medium">
-                  Eltöltött idő (óra)
-                </label>
-                <input
-                  id="timeSpent"
-                  type="number"
-                  min="0"
-                  max="24"
-                  step="0.5"
-                  value={formData.timeSpent}
-                  onChange={(e) => handleChange('timeSpent', e.target.value)}
-                  onBlur={() => handleBlur('timeSpent')}
-                  className={`flex h-10 w-full rounded-md border ${
-                    errors.timeSpent && touched.timeSpent ? 'border-destructive' : 'border-input'
-                  } bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
-                  placeholder="pl. 2.5"
-                />
-                {errors.timeSpent && touched.timeSpent && (
-                  <p className="text-sm text-destructive animate-fade-in">{errors.timeSpent}</p>
+                    <SelectTrigger
+                      className={errors.category ? 'border-destructive' : ''}
+                    >
+                      <SelectValue placeholder="Válassz kategóriát" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(categoryLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
-                {errors.workPeriodId && touched.workPeriodId && (
-                  <p className="text-sm text-destructive animate-fade-in">{errors.workPeriodId}</p>
-                )}
-              </div>
+              </FormField>
 
-              {formData.category === LogCategory.PROJECT && (
-                <div className="space-y-2">
-                  <label htmlFor="projectId" className="text-sm font-medium">
-                    Projekt
-                  </label>
-                  <select
-                    id="projectId"
-                    value={formData.projectId}
-                    onChange={(e) => handleChange('projectId', e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    <option value="">Nincs projekt</option>
-                    {projects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {formData.category === LogCategory.EVENT && (
-                <div className="space-y-2">
-                  <label htmlFor="eventId" className="text-sm font-medium">
-                    Esemény
-                  </label>
-                  <select
-                    id="eventId"
-                    value={formData.eventId}
-                    onChange={(e) => handleChange('eventId', e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    <option value="">Válassz eseményt</option>
-                    {events.map((event) => (
-                      <option key={event.id} value={event.id}>
-                        {event.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Leírás <span className="text-destructive">*</span>
-              </label>
-              <textarea
-                id="description"
-                rows={4}
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                onBlur={() => handleBlur('description')}
-                className={`flex w-full rounded-md border ${
-                  errors.description && touched.description ? 'border-destructive' : 'border-input'
-                } bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
-                placeholder="Írd le, mit csináltál... (minimum 10 karakter)"
+              <CategorySpecificFields
+                category={category}
+                control={control}
+                errors={errors}
+                projects={projects}
+                events={events}
               />
-              {errors.description && touched.description && (
-                <p className="text-sm text-destructive animate-fade-in">{errors.description}</p>
-              )}
-              <p className="text-xs text-muted-foreground">{formData.description.length}/500 karakter</p>
+
+              <FormField
+                name="timeSpent"
+                label="Eltöltött idő (óra)"
+                control={control}
+                error={errors.timeSpent}
+              >
+                {(field) => (
+                  <input
+                    id="timeSpent"
+                    type="number"
+                    min="0"
+                    max="24"
+                    step="0.5"
+                    {...field}
+                    className={`flex h-10 w-full rounded-md border ${errors.timeSpent ? 'border-destructive' : 'border-input'} bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
+                    placeholder="pl. 2.5"
+                  />
+                )}
+              </FormField>
             </div>
 
-            {/* Csak akkor mutassuk az alert-et, ha van érintett mező ÉS van hiba azon a mezőn */}
-            {Object.keys(errors).some((key) => touched[key] && errors[key as keyof ValidationErrors]) && (
+            <FormField
+              name="description"
+              label="Leírás"
+              control={control}
+              error={errors.description}
+              required
+            >
+              {(field) => (
+                <>
+                  <Textarea
+                    id="description"
+                    rows={4}
+                    {...field}
+                    className={errors.description ? 'border-destructive' : ''}
+                    placeholder={`Írd le, mit csináltál... (minimum 10 karakter)`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {description?.length || 0}/500 karakter
+                  </p>
+                </>
+              )}
+            </FormField>
+
+            {Object.keys(errors).length > 0 && (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md animate-fade-in">
-                <p className="text-sm text-destructive font-medium">Kérlek javítsd a hibákat a form elküldése előtt!</p>
+                <p className="text-sm text-destructive font-medium">
+                  Kérlek javítsd a hibákat a form elküldése előtt!
+                </p>
               </div>
             )}
 
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={handleClose} className="transition-all hover:scale-105">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="transition-all hover:scale-105"
+              >
                 Mégse
               </Button>
               <Button type="submit" className="transition-all hover:scale-105">
@@ -383,5 +211,5 @@ export function LogDialog({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

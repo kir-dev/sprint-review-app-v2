@@ -18,7 +18,7 @@ export function LogItem({ log, onEdit, onDelete }: LogItemProps) {
             <span className={`px-2 py-1 text-xs font-medium rounded-md border ${categoryColors[log.category]} transition-all hover:scale-105`}>
               {categoryLabels[log.category]}
             </span>
-            {log.difficulty && (
+            {log.difficulty && log.category === 'PROJECT' && (
               <span className="px-2 py-1 text-xs font-medium rounded-md bg-muted transition-all hover:scale-105">
                 {difficultyLabels[log.difficulty]}
               </span>

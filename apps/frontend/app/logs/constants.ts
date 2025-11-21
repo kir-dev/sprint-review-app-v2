@@ -1,5 +1,20 @@
 import { Difficulty, LogCategory, Position } from "./types"
 
+export const DESCRIPTION_MIN_LENGTH = 10;
+export const DESCRIPTION_MAX_LENGTH = 500;
+
+export const validationMessages = {
+  required: (field: string) => `${field} megadása kötelező`,
+  dateInFuture: "A dátum nem lehet jövőbeli",
+  descriptionMinLength: `A leírás legalább ${DESCRIPTION_MIN_LENGTH} karakter hosszú legyen`,
+  descriptionMaxLength: `A leírás maximum ${DESCRIPTION_MAX_LENGTH} karakter hosszú lehet`,
+  timeSpentNaN: "Az óraszám csak szám lehet",
+  timeSpentNegative: "Az óraszám nem lehet negatív",
+  timeSpentTooHigh: "Az óraszám nem lehet több mint 24",
+  noWorkPeriod: "Ehhez a dátumhoz nem található work period",
+};
+
+
 export const categoryLabels: Record<LogCategory, string> = {
   RESPONSIBILITY: "Felelősség",
   PROJECT: "Projekt",

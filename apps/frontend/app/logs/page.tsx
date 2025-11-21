@@ -1,119 +1,107 @@
-"use client"
+'use client';
 
-import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
-import { ErrorAlert } from "@/components/ErrorAlert"
-import { useAuth } from "@/context/AuthContext"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { useEventData } from "../events/hooks/useEventData"
-import { LogDialog } from "./components/LogDialog"
-import { LogFilters } from "./components/LogFilters"
-import { LogsHeader } from "./components/LogsHeader"
-import { LogsList } from "./components/LogsList"
-import { useLogData } from "./hooks/useLogData"
-import { useLogForm } from "./hooks/useLogForm"
-import { Event, LogFilters as LogFiltersType } from "./types"
-import { filterLogs } from "./utils/log-helpers"
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
+import { ErrorAlert } from '@/components/ErrorAlert';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useEventData } from '../events/hooks/useEventData';
+import { LogDialog } from './components/LogDialog';
+import { LogFilters } from './components/LogFilters';
+import { LogsHeader } from './components/LogsHeader';
+import { LogsList } from './components/LogsList';
+import { useLogData } from './hooks/useLogData';
+import { useLogForm } from './hooks/useLogForm';
+import { LogFilters as LogFiltersType, LogFormData } from './types';
+import { filterLogs } from './utils/log-helpers';
 
 export default function LogsPage() {
-  const { user, token, isLoading: isAuthLoading } = useAuth()
-  const router = useRouter()
+  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
 
   // Custom hooks
-  const { logs, setLogs, projects, workPeriods, currentWorkPeriod, isLoading, error, setError, loadData } =
-    useLogData(token, user?.id)
-  const { isDialogOpen, editingLog, formData, setFormData, openDialog, closeDialog } = useLogForm(
+  const {
+    logs,
+    setLogs,
+    projects,
     workPeriods,
     currentWorkPeriod,
-  )
-  const { events } = useEventData(token)
+    isLoading,
+    error,
+    setError,
+    loadData,
+  } = useLogData(token, user?.id);
+  const {
+    isDialogOpen,
+    editingLog,
+    formData,
+    setFormData,
+    openDialog,
+    closeDialog,
+  } = useLogForm(workPeriods, currentWorkPeriod);
+  const { events } = useEventData(token);
 
   // Filter states
-  const [showFilters, setShowFilters] = useState(false)
-  const [isFiltersMounted, setIsFiltersMounted] = useState(false)
+  const [showFilters, setShowFilters] = useState(false);
+  const [isFiltersMounted, setIsFiltersMounted] = useState(false);
   const [filters, setFilters] = useState<LogFiltersType>({
     category: '',
     projectId: '',
     workPeriodId: '',
-  })
+  });
 
   // Delete confirmation state
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [logToDelete, setLogToDelete] = useState<number | null>(null)
-
-  function findWorkPeriodIdForDate(date: string): number | null {
-    if (!date) {
-      return currentWorkPeriod?.id ?? workPeriods[0]?.id ?? null
-    }
-
-    const target = new Date(date)
-    target.setHours(0, 0, 0, 0)
-
-    const match = workPeriods.find((period) => {
-      const start = new Date(period.startDate)
-      const end = new Date(period.endDate)
-      start.setHours(0, 0, 0, 0)
-      end.setHours(23, 59, 59, 999)
-      return target >= start && target <= end
-    })
-
-    if (match) {
-      return match.id
-    }
-
-    return currentWorkPeriod?.id ?? workPeriods[0]?.id ?? null
-  }
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [logToDelete, setLogToDelete] = useState<number | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthLoading && !token) {
-      router.push('/login')
+      router.push('/login');
     }
-  }, [token, isAuthLoading, router])
+  }, [token, isAuthLoading, router]);
 
   // Handle filter animation and mounting
   useEffect(() => {
     if (showFilters) {
-      setIsFiltersMounted(true)
+      setIsFiltersMounted(true);
     } else if (isFiltersMounted) {
       // Wait for slide-out animation to complete before unmounting
       const timer = setTimeout(() => {
-        setIsFiltersMounted(false)
-      }, 200) // Match the slide-out animation duration
-      return () => clearTimeout(timer)
+        setIsFiltersMounted(false);
+      }, 200); // Match the slide-out animation duration
+      return () => clearTimeout(timer);
     }
-  }, [showFilters, isFiltersMounted])
+  }, [showFilters, isFiltersMounted]);
 
   // Handlers
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(data: LogFormData) {
+    if (!user?.id) return;
 
-    if (!user?.id) return
-
-    const resolvedWorkPeriodId = formData.workPeriodId
-      ? parseInt(formData.workPeriodId)
-      : findWorkPeriodIdForDate(formData.date) ?? undefined
+    const resolvedWorkPeriodId = data.workPeriodId
+      ? parseInt(data.workPeriodId)
+      : (findWorkPeriodIdForDate(data.date, workPeriods) ?? undefined);
 
     if (!resolvedWorkPeriodId) {
-      setError('Ehhez a dátumhoz nem található work period')
-      return
+      setError('Ehhez a dátumhoz nem található work period');
+      return;
     }
 
     const payload = {
-      date: formData.date,
-      category: formData.category,
-      description: formData.description,
-      difficulty: formData.difficulty || undefined,
-      timeSpent: formData.timeSpent ? parseInt(formData.timeSpent) : undefined,
+      date: data.date,
+      category: data.category,
+      description: data.description,
+      difficulty: data.difficulty || undefined,
+      timeSpent: data.timeSpent ? data.timeSpent : undefined,
       userId: user.id,
-      projectId: formData.projectId ? parseInt(formData.projectId) : null,
-      eventId: formData.eventId ? parseInt(formData.eventId) : null,
+      projectId: data.projectId ? parseInt(data.projectId) : null,
+      eventId: data.eventId ? parseInt(data.eventId) : null,
       workPeriodId: resolvedWorkPeriodId,
-    }
+    };
 
     try {
-      const url = editingLog ? `/api/logs/${editingLog.id}` : '/api/logs'
-      const method = editingLog ? 'PATCH' : 'POST'
+      const url = editingLog ? `/api/logs/${editingLog.id}` : '/api/logs';
+      const method = editingLog ? 'PATCH' : 'POST';
 
       const response = await fetch(url, {
         method,
@@ -122,55 +110,55 @@ export default function LogsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
-      })
+      });
 
       if (response.ok) {
-        await loadData()
-        closeDialog()
+        await loadData();
+        closeDialog();
       } else {
-        const error = await response.json()
-        setError(error.message || 'Failed to save log')
+        const error = await response.json();
+        setError(error.message || 'Failed to save log');
       }
     } catch (err) {
-      console.error('Error saving log:', err)
-      setError('Failed to save log. Please try again.')
+      console.error('Error saving log:', err);
+      setError('Failed to save log. Please try again.');
     }
   }
 
   function handleDeleteClick(id: number) {
-    setLogToDelete(id)
-    setDeleteConfirmOpen(true)
+    setLogToDelete(id);
+    setDeleteConfirmOpen(true);
   }
 
   async function handleDeleteConfirm() {
-    if (!logToDelete) return
+    if (!logToDelete) return;
 
     try {
       const response = await fetch(`/api/logs/${logToDelete}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
-      })
+      });
 
       if (response.ok) {
-        setLogs(logs.filter((log) => log.id !== logToDelete))
-        setDeleteConfirmOpen(false)
-        setLogToDelete(null)
+        setLogs(logs.filter((log) => log.id !== logToDelete));
+        setDeleteConfirmOpen(false);
+        setLogToDelete(null);
       } else {
-        setError('Failed to delete log')
+        setError('Failed to delete log');
       }
     } catch (err) {
-      console.error('Error deleting log:', err)
-      setError('Failed to delete log. Please try again.')
+      console.error('Error deleting log:', err);
+      setError('Failed to delete log. Please try again.');
     }
   }
 
   function handleDeleteCancel() {
-    setDeleteConfirmOpen(false)
-    setLogToDelete(null)
+    setDeleteConfirmOpen(false);
+    setLogToDelete(null);
   }
 
   // Computed values
-  const filteredLogs = filterLogs(logs, filters)
+  const filteredLogs = filterLogs(logs, filters);
 
   // Loading state
   if (isAuthLoading || !user) {
@@ -178,12 +166,15 @@ export default function LogsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <p>Loading...</p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
-      <LogsHeader onCreateLog={() => openDialog()} onToggleFilters={() => setShowFilters(!showFilters)} />
+      <LogsHeader
+        onCreateLog={() => openDialog()}
+        onToggleFilters={() => setShowFilters(!showFilters)}
+      />
 
       {isFiltersMounted && (
         <LogFilters
@@ -191,7 +182,9 @@ export default function LogsPage() {
           projects={projects}
           workPeriods={workPeriods}
           onFiltersChange={setFilters}
-          onClearFilters={() => setFilters({ category: '', projectId: '', workPeriodId: '' })}
+          onClearFilters={() =>
+            setFilters({ category: '', projectId: '', workPeriodId: '' })
+          }
           isVisible={showFilters}
         />
       )}
@@ -226,5 +219,5 @@ export default function LogsPage() {
         description="Are you sure you want to delete this log? This action cannot be undone."
       />
     </div>
-  )
+  );
 }
