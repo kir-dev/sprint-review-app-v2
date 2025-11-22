@@ -165,7 +165,7 @@ export class LogsService {
   async update(id: number, dto: UpdateLogDto) {
     this.logger.log(`Updating log with ID: ${id}`);
     try {
-      const { userId, workPeriodId, ...rest } = dto;
+      const { userId, workPeriodId, projectId, eventId, ...rest } = dto;
   
       const updateData: Prisma.LogUpdateInput = {
         ...rest,

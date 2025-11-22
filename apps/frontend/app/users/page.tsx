@@ -2,13 +2,13 @@
 
 import { ErrorAlert } from "@/components/ErrorAlert"
 import { useAuth } from "@/context/AuthContext"
+import { updateUserPosition } from "@/lib/api/users"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Position } from "../logs/types"
 import { UsersHeader } from "./components/UsersHeader"
 import { UsersList } from "./components/UsersList"
 import { UsersPageSkeleton } from "./components/UsersPageSkeleton"
-import { updateUserPosition } from "@/lib/api/users"
 import { useUserData } from "./hooks/useUserData"
 
 export default function UsersPage() {
@@ -65,6 +65,7 @@ export default function UsersPage() {
         users={users}
         isLoading={isLoadingUsers}
         onPositionChange={handlePositionChange}
+        currentUser={user}
       />
     </div>
   )

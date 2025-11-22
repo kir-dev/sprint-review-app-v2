@@ -1,28 +1,35 @@
+import { Card, CardContent } from "@/components/ui/card"
 import {
-  positionColors,
-  positionLabels,
-  positionSortOrder,
+    positionColors,
+    positionLabels,
+    positionSortOrder,
 } from "@/lib/positions"
 import { cn } from "@/lib/utils"
 import { ChevronDown, Mail, User as UserIcon } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { Position } from "../../logs/types"
 import { User } from "../types"
-import { Card, CardContent } from "@/components/ui/card"
 
 interface UsersListProps {
   users: User[]
   isLoading: boolean
   onPositionChange: (userId: number, newPosition: Position) => Promise<void>
+  currentUser: { position: Position } | null
 }
 
 export function UsersList({
   users,
   isLoading,
   onPositionChange,
+  currentUser,
 }: UsersListProps) {
   const [changingUserId, setChangingUserId] = useState<number | null>(null)
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null)
+
+  const canEditPosition =
+    currentUser?.position === Position.KORVEZETO ||
+    currentUser?.position === Position.KORVEZETO_HELYETTES
 
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
@@ -108,9 +115,11 @@ export function UsersList({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base leading-tight truncate group-hover:text-primary transition-colors">
-                  {user.fullName}
-                </h3>
+                <Link href={`/users/${user.id}`} className="block">
+                  <h3 className="font-semibold text-base leading-tight truncate group-hover:text-primary transition-colors hover:underline">
+                    {user.fullName}
+                  </h3>
+                </Link>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                   <Mail className="h-3 w-3 shrink-0" />
                   <span className="truncate">{user.email}</span>
@@ -131,13 +140,16 @@ export function UsersList({
                       openDropdownId === user.id ? null : user.id,
                     )
                   }}
-                  disabled={changingUserId === user.id}
+                  disabled={changingUserId === user.id || !canEditPosition}
                   className={cn(
                     "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all",
                     positionColors[user.position],
-                    changingUserId === user.id &&
-                      "opacity-50 cursor-not-allowed animate-pulse",
-                    changingUserId !== user.id && "hover:shadow-md",
+                    (changingUserId === user.id || !canEditPosition) &&
+                      "cursor-not-allowed",
+                    changingUserId === user.id && "animate-pulse",
+                    changingUserId !== user.id &&
+                      canEditPosition &&
+                      "hover:shadow-md",
                   )}
                 >
                   <span>
@@ -145,12 +157,14 @@ export function UsersList({
                       ? "Frissítés..."
                       : positionLabels[user.position]}
                   </span>
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition-transform",
-                      openDropdownId === user.id && "rotate-180",
-                    )}
-                  />
+                  {canEditPosition && (
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 transition-transform",
+                        openDropdownId === user.id && "rotate-180",
+                      )}
+                    />
+                  )}
                 </button>
 
                 {/* Dropdown */}

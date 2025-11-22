@@ -133,9 +133,7 @@ export function Sidebar() {
                 <span className="text-sm font-medium leading-none truncate">
                   {user?.fullName || "User"}
                 </span>
-                <span className="text-xs text-muted-foreground truncate">
-                  {user?.email || "user@sch.bme.hu"}
-                </span>
+
               </div>
             )}
           </Link>
