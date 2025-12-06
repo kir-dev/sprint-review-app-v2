@@ -6,6 +6,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { EventsModule } from './events/events.module';
 import { LogsModule } from './logs/logs.module';
 import { ProjectsModule } from './projects/projects.module';
+import { StatsModule } from './stats/stats.module';
 import { UsersModule } from './users/users.module';
 import { WorkPeriodsModule } from './work-periods/work-periods.module';
 
@@ -21,6 +22,7 @@ import { WorkPeriodsModule } from './work-periods/work-periods.module';
     WorkPeriodsModule,
     LogsModule,
     EventsModule,
+    StatsModule,
   ],
 })
 export class AppModule implements NestModule {
