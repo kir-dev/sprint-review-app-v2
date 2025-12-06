@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { EventsModule } from './events/events.module';
 import { LogsModule } from './logs/logs.module';
 import { ProjectsModule } from './projects/projects.module';
@@ -23,6 +24,7 @@ import { WorkPeriodsModule } from './work-periods/work-periods.module';
     LogsModule,
     EventsModule,
     StatsModule,
+    DashboardModule,
   ],
 })
 export class AppModule implements NestModule {
