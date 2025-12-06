@@ -1,23 +1,70 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActivityHeatmap } from "@/components/dashboard/ActivityHeatmap";
+import { CategoryBreakdown } from "@/components/dashboard/CategoryBreakdown";
+import { DifficultyBreakdown } from "@/components/dashboard/DifficultyBreakdown";
+import { EventList } from "@/components/dashboard/EventList";
+import { PersonalKPI } from "@/components/dashboard/PersonalKPI";
+import { ProjectList } from "@/components/dashboard/ProjectList";
+import { TopUsersList } from "@/components/dashboard/TopUsersList";
+import { WorkPeriodProgress } from "@/components/dashboard/WorkPeriodProgress";
 import { useAuth } from "@/context/AuthContext";
-import { AlertCircle, CheckCircle2, Clock, LayoutDashboard, Plus, TrendingUp } from "lucide-react";
+import { CategoryBreakdownData, DashboardEventStats, DashboardProjectItem, DashboardSummary, DashboardTopUser, HeatmapData } from "@/types/dashboard";
+import { LayoutDashboard } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
-  const { user, token, isLoading } = useAuth();
+  const { user, token, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [projectsStats, setProjectsStats] = useState<{ topProjects: DashboardProjectItem[] } | null>(null);
+  const [topUsers, setTopUsers] = useState<DashboardTopUser[]>([]);
+  const [stats, setStats] = useState<{ categoryBreakdown: CategoryBreakdownData[], heatmapData: HeatmapData[], difficultyBreakdown: {name: string, value: number}[] } | null>(null);
+  const [eventStats, setEventStats] = useState<DashboardEventStats | null>(null);
+  
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    if (!isLoading && !token) {
+    if (!authLoading && !token) {
       router.push('/login');
     }
-  }, [isLoading, token, router]);
+  }, [authLoading, token, router]);
 
-  if (isLoading) {
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!token) return;
+      
+      try {
+        setLoading(true);
+        const [summaryRes, projectsRes, topUsersRes, statsRes, eventsRes] = await Promise.all([
+            fetch('/api/dashboard/summary', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('/api/dashboard/projects', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('/api/dashboard/top-users', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('/api/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } }),
+            fetch('/api/dashboard/events', { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+
+        if (summaryRes.ok) setSummary(await summaryRes.json());
+        if (projectsRes.ok) setProjectsStats(await projectsRes.json());
+        if (topUsersRes.ok) setTopUsers(await topUsersRes.json());
+        if (statsRes.ok) setStats(await statsRes.json());
+        if (eventsRes.ok) setEventStats(await eventsRes.json());
+
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+        fetchData();
+    }
+  }, [token]);
+
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Betöltés...</div>
@@ -30,9 +77,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between animate-fade-in">
+      <div className="flex items-center justify-between animate-fade-in flex-wrap gap-4">
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center hover:scale-110 transition-transform">
             <LayoutDashboard className="h-6 w-6 text-primary" />
@@ -42,115 +89,57 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">Üdv újra, {user.fullName}! Itt az összefoglalód.</p>
           </div>
         </div>
-        <Button className="gap-2 hover:scale-105 transition-transform">
-          <Plus className="h-4 w-4" />
-          New Log Entry
-        </Button>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">142.5</div>
-            <p className="text-xs text-muted-foreground">+12.5 from last period</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 md:grid-cols-12">
+        {/* Left Column (Main Stats) */}
+        <div className="md:col-span-8 space-y-6">
+            <PersonalKPI 
+                summary={summary}
+                loading={loading}
+            />
+            
+            <ActivityHeatmap 
+                data={stats?.heatmapData || []}
+                loading={loading}
+                startDate={summary?.currentPeriod?.startDate}
+                endDate={summary?.currentPeriod?.endDate}
+            />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">8</div>
-            <p className="text-xs text-muted-foreground">3 in current sprint</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">+8 this week</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">Needs attention</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Logs</CardTitle>
-            <CardDescription>Your latest work entries</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { project: "Schönherz Website", hours: 3.5, category: "Development", date: "Today" },
-                { project: "PéK Next", hours: 2.0, category: "Meeting", date: "Yesterday" },
-                { project: "AuthSCH", hours: 4.0, category: "Development", date: "2 days ago" },
-              ].map((log, i) => (
-                <div key={i} className="flex items-center justify-between border-b pb-2 last:border-0">
-                  <div>
-                    <p className="font-medium">{log.project}</p>
-                    <p className="text-sm text-muted-foreground">{log.category} • {log.date}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">{log.hours}h</p>
-                  </div>
-                </div>
-              ))}
+            <div className="grid gap-6 lg:grid-cols-2">
+                <ProjectList 
+                    projects={projectsStats?.topProjects || []}
+                    loading={loading}
+                />
+                <CategoryBreakdown 
+                    data={stats?.categoryBreakdown || []}
+                    loading={loading}
+                />
             </div>
-          </CardContent>
-        </Card>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Active Sprints</CardTitle>
-            <CardDescription>Current work periods</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: "2024 Spring Sprint", progress: 75, daysLeft: 5 },
-                { name: "Q1 Planning", progress: 45, daysLeft: 12 },
-              ].map((sprint, i) => (
-                <div key={i} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium">{sprint.name}</p>
-                    <p className="text-sm text-muted-foreground">{sprint.daysLeft} days left</p>
-                  </div>
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all"
-                      style={{ width: `${sprint.progress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">{sprint.progress}% complete</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Right Column (Side Widgets) */}
+        <div className="md:col-span-4 space-y-6">
+            <WorkPeriodProgress 
+                currentPeriod={summary?.currentPeriod || null}
+                loading={loading}
+            />
+
+            <EventList 
+                stats={eventStats}
+                loading={loading}
+            />
+            
+            <TopUsersList
+                users={topUsers}
+                loading={loading}
+            />
+
+            <DifficultyBreakdown 
+                data={stats?.difficultyBreakdown || []}
+                loading={loading}
+            />
+        </div>
       </div>
     </div>
   );
