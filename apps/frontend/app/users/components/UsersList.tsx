@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import {
-    positionColors,
-    positionLabels,
-    positionSortOrder,
+  positionLabels,
+  positionSortOrder,
 } from "@/lib/positions"
 import { cn } from "@/lib/utils"
 import { ChevronDown, Mail, User as UserIcon } from "lucide-react"
@@ -143,7 +142,6 @@ export function UsersList({
                   disabled={changingUserId === user.id || !canEditPosition}
                   className={cn(
                     "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all",
-                    positionColors[user.position],
                     (changingUserId === user.id || !canEditPosition) &&
                       "cursor-not-allowed",
                     changingUserId === user.id && "animate-pulse",
@@ -181,7 +179,6 @@ export function UsersList({
                           disabled={changingUserId === user.id}
                           className={cn(
                             "w-full text-left px-3 py-2 text-sm font-medium transition-all hover:bg-accent",
-                            positionColors[position],
                             user.position === position && "bg-accent/50",
                           )}
                         >
