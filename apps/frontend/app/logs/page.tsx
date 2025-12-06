@@ -13,7 +13,7 @@ import { LogsList } from './components/LogsList';
 import { useLogData } from './hooks/useLogData';
 import { useLogForm } from './hooks/useLogForm';
 import { LogFilters as LogFiltersType, LogFormData } from './types';
-import { filterLogs } from './utils/log-helpers';
+import { filterLogs, findWorkPeriodForDate } from './utils/log-helpers';
 
 export default function LogsPage() {
   const { user, token, isLoading: isAuthLoading } = useAuth();
@@ -80,7 +80,7 @@ export default function LogsPage() {
 
     const resolvedWorkPeriodId = data.workPeriodId
       ? parseInt(data.workPeriodId)
-      : (findWorkPeriodIdForDate(data.date, workPeriods) ?? undefined);
+      : (findWorkPeriodForDate(data.date, workPeriods)?.id ?? undefined);
 
     if (!resolvedWorkPeriodId) {
       setError('Ehhez a dátumhoz nem található work period');
@@ -204,9 +204,9 @@ export default function LogsPage() {
         editingLog={editingLog}
         formData={formData}
         projects={projects}
-        events={events}
+        events={events as any}
         workPeriods={workPeriods}
-        onFormDataChange={setFormData}
+
         onSubmit={handleSubmit}
         onClose={closeDialog}
       />

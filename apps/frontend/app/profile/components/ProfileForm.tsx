@@ -1,16 +1,16 @@
 "use client"
 
-import { useForm, FormProvider } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useAuth } from "@/context/AuthContext"
-import { profileSchema, ProfileFormData } from "../types"
-import { useProfileMutations } from "../hooks/useProfileMutations"
-import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/context/AuthContext"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2, Save } from "lucide-react"
-import { ProfilePictureCard } from "./ProfilePictureCard"
+import { useEffect } from "react"
+import { FormProvider, useForm } from "react-hook-form"
+import { useProfileMutations } from "../hooks/useProfileMutations"
+import { ProfileFormData, profileSchema } from "../types"
 import { AccountInfoCard } from "./AccountInfoCard"
 import { AdditionalInfoCard } from "./AdditionalInfoCard"
+import { ProfilePictureCard } from "./ProfilePictureCard"
 
 /**
  * Renders the main form content, wired up with react-hook-form.
@@ -25,7 +25,7 @@ export function ProfileForm() {
   } = useProfileMutations()
 
   const methods = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileSchema as any) as any,
     defaultValues: {
       githubUsername: user?.githubUsername || "",
       simonyiEmail: user?.simonyiEmail || "",

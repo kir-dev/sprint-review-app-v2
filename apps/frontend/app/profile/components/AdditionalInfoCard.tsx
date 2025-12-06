@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Github, Mail } from 'lucide-react';
-import { Control, Controller, FieldState } from 'react-hook-form';
+import { Control, Controller, ControllerFieldState } from 'react-hook-form';
 import { ProfileFormData } from '../types';
 
 interface AdditionalInfoCardProps {
@@ -20,7 +20,7 @@ interface AdditionalInfoCardProps {
   githubUsernameValue: string;
 }
 
-const getFieldClass = (fieldState: FieldState) => {
+const getFieldClass = (fieldState: ControllerFieldState) => {
   if (fieldState.isDirty) {
     return 'bg-amber-500/10 dark:bg-amber-500/20';
   }

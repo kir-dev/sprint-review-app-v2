@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { LogCategory, Difficulty } from './types';
+import { Difficulty, LogCategory } from './types';
 
 export const logFormSchema = z.object({
   date: z.coerce
-    .date({ required_error: 'A dátum megadása kötelező' })
+    .date({ message: 'A dátum megadása kötelező' })
     .max(new Date(), { message: 'A dátum nem lehet jövőbeli' }),
   category: z.nativeEnum(LogCategory, {
-    required_error: 'Kategória kiválasztása kötelező',
+    message: 'Kategória kiválasztása kötelező',
   }),
   description: z
     .string()

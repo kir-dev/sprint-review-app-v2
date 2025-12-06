@@ -2,22 +2,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar22 } from '@/components/ui/datepicker';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { logFormSchema } from '../form-schema';
+import { useForm } from 'react-hook-form';
 import { categoryLabels } from '../constants';
+import { logFormSchema } from '../form-schema';
 import { Event, Log, LogFormData, Project, WorkPeriod } from '../types';
 import { findWorkPeriodForDate } from '../utils/log-helpers';
-import { FormField } from './FormField';
 import { CategorySpecificFields } from './CategorySpecificFields';
+import { FormField } from './FormField';
 
 interface LogDialogProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ export function LogDialog({
     reset,
     setValue,
   } = useForm<LogFormData>({
-    resolver: zodResolver(logFormSchema),
+    resolver: zodResolver(logFormSchema as any) as any,
     defaultValues: formData,
   });
 
@@ -93,8 +93,8 @@ export function LogDialog({
                   <Calendar22
                     id="date"
                     value={
-                      field.value instanceof Date
-                        ? field.value.toISOString().slice(0, 10)
+                      (field.value as any) instanceof Date
+                        ? ((field.value as any) as Date).toISOString().slice(0, 10)
                         : field.value
                     }
                     onChange={field.onChange}

@@ -1,12 +1,12 @@
-import { Controller, Control, FieldValues, Path, ControllerRenderProps } from 'react-hook-form';
 import React from 'react';
+import { Control, Controller, ControllerRenderProps, FieldValues, Path } from 'react-hook-form';
 
 interface FormFieldProps<T extends FieldValues> {
   name: Path<T>;
   label: string;
   control: Control<T>;
   error?: { message?: string };
-  children: (field: ControllerRenderProps<T, Path<T>>) => React.ReactNode;
+  children: (field: ControllerRenderProps<T, Path<T>>) => React.ReactElement;
   required?: boolean;
 }
 

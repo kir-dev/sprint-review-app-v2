@@ -1,19 +1,19 @@
-import { Control, DeepMap, FieldError } from 'react-hook-form';
-import { LogCategory, LogFormData, Project, Event } from '../types';
-import { FormField } from './FormField';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
+import { Control, FieldErrors } from 'react-hook-form';
 import { difficultyLabels } from '../constants';
+import { Event, LogCategory, LogFormData, Project } from '../types';
+import { FormField } from './FormField';
 
 interface CategorySpecificFieldsProps {
   category: LogCategory | undefined;
   control: Control<LogFormData>;
-  errors: DeepMap<LogFormData, FieldError>;
+  errors: FieldErrors<LogFormData>;
   projects: Project[];
   events: Event[];
 }
