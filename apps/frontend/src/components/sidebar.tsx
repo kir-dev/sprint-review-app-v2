@@ -4,19 +4,18 @@ import { useTheme } from "@/components/ThemeProvider"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { useAuth } from "@/context/AuthContext"
 import { cn } from "@/lib/utils"
-import { BarChart3, Calendar, CalendarDays, ChevronLeft, ChevronRight, FileText, FolderKanban, LayoutDashboard, Users } from "lucide-react"
+import { BarChart3, CalendarDays, ChevronLeft, ChevronRight, FileText, FolderKanban, LayoutDashboard, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Projects", href: "/projects", icon: FolderKanban },
-  { name: "Events", href: "/events", icon: CalendarDays },
-  { name: "Users", href: "/users", icon: Users },
-  { name: "Work Periods", href: "/work-periods", icon: Calendar },
-  { name: "Logs", href: "/logs", icon: FileText },
-  { name: "Statistics", href: "/statistics", icon: BarChart3 },
+  { name: "Projektek", href: "/projects", icon: FolderKanban },
+  { name: "Események", href: "/events", icon: CalendarDays },
+  { name: "Felhasználók", href: "/users", icon: Users },
+  { name: "Logok", href: "/logs", icon: FileText },
+  { name: "Statisztika", href: "/statistics", icon: BarChart3 },
 ]
 
 export function Sidebar() {
@@ -111,7 +110,7 @@ export function Sidebar() {
               "flex items-center gap-2 flex-1 min-w-0 rounded-lg transition-all hover:bg-accent/50 p-2 -m-2",
               isCollapsed && "flex-col"
             )}
-            title={isCollapsed ? "Profile" : undefined}
+            title={isCollapsed ? "Profil" : undefined}
           >
             <div className={cn(
               "rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden",

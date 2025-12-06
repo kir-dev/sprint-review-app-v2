@@ -1,9 +1,9 @@
 "use client"
 
+import { useAuth } from "@/context/AuthContext"
 import { useState } from "react"
 import { toast } from "sonner"
 import { GITHUB_API_BASE_URL } from "../constants"
-import { useAuth } from "@/context/AuthContext"
 import { ProfileFormData } from "../types"
 
 /**
@@ -39,18 +39,18 @@ export function useProfileMutations() {
     try {
       const response = await fetch(`${GITHUB_API_BASE_URL}/users/${username.trim()}`)
       if (response.ok) {
-        toast.success("GitHub user found")
+        toast.success("GitHub felhasználó megtalálva")
         return true
       }
       if (response.status === 404) {
-        toast.error("GitHub user not found")
+        toast.error("GitHub felhasználó nem található")
         return false
       }
-      toast.error("Could not verify GitHub username")
+      toast.error("Nem sikerült ellenőrizni a GitHub felhasználónevet")
       return false
     } catch (error) {
       console.error("Error validating GitHub username:", error)
-      toast.error("Error checking GitHub username")
+      toast.error("Hiba a GitHub felhasználónév ellenőrzésekor")
       return false
     } finally {
       setIsValidatingGithub(false)
@@ -64,7 +64,7 @@ export function useProfileMutations() {
     if (data.githubUsername?.trim()) {
       const isGithubValid = await validateGithubUsername(data.githubUsername);
       if (!isGithubValid) {
-        toast.error("Please enter a valid GitHub username before saving.");
+        toast.error("Kérjük, adj meg egy érvényes GitHub felhasználónevet a mentés előtt.");
         return false;
       }
     }
@@ -93,17 +93,17 @@ export function useProfileMutations() {
       })
 
       if (response.ok) {
-        toast.success("Profile updated successfully!")
+        toast.success("Profil sikeresen frissítve!")
         await refreshUser()
         return true
       } else {
         const error = await response.json()
-        toast.error(error.message || "Failed to update profile")
+        toast.error(error.message || "Nem sikerült frissíteni a profilt")
         return false
       }
     } catch (err) {
       console.error("Error updating profile:", err)
-      toast.error("Failed to update profile. Please try again.")
+      toast.error("Nem sikerült frissíteni a profilt. Próbáld újra.")
       return false
     } finally {
       setIsSaving(false)

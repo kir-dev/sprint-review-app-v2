@@ -1,20 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/daterangepicker";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
@@ -25,16 +25,16 @@ import { EventFormData, EventType } from "../types";
 
 // Centralized strings for easier management and future i18n
 const DIALOG_TEXT = {
-  editTitle: "Edit Event",
-  createTitle: "Create New Event",
-  nameLabel: "Event Name",
-  namePlaceholder: "Enter event name",
-  dateLabel: "Date",
-  typeLabel: "Event Type",
-  typePlaceholder: "Select an event type",
-  cancelButton: "Cancel",
-  updateButton: "Update Event",
-  createButton: "Create Event",
+  editTitle: "Esemény Szerkesztése",
+  createTitle: "Új Esemény Létrehozása",
+  nameLabel: "Esemény Neve",
+  namePlaceholder: "Add meg az esemény nevét",
+  dateLabel: "Dátum",
+  typeLabel: "Esemény Típus",
+  typePlaceholder: "Válassz esemény típust",
+  cancelButton: "Mégse",
+  updateButton: "Esemény Frissítése",
+  createButton: "Esemény Létrehozása",
 };
 
 interface EventDialogProps {

@@ -34,7 +34,7 @@ export function EventList({ stats, loading }: EventListProps) {
                         <div>
                             <p className="font-medium text-sm">{event.name}</p>
                             <p className="text-xs text-muted-foreground">
-                                {new Date(event.startDate).toLocaleDateString()}
+                                {new Date(event.startDate).toLocaleDateString('hu-HU')}
                             </p>
                         </div>
                         <Badge 

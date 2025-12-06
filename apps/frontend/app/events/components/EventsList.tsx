@@ -24,7 +24,7 @@ export function EventsList({
     return (
       <div className="flex flex-col items-center justify-center py-12 animate-pulse">
         <div className="h-12 w-12 rounded-full bg-primary/20 mb-4" />
-        <p className="text-muted-foreground">Loading events...</p>
+        <p className="text-muted-foreground">Események betöltése...</p>
       </div>
     )
   }
@@ -36,12 +36,12 @@ export function EventsList({
           <div className="p-4 rounded-full bg-primary/10 mb-4">
             <CalendarDays className="h-8 w-8 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">No events yet</h3>
+          <h3 className="text-lg font-semibold mb-2">Nincs még esemény</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Create your first event to get started
+            Hozz létre egy eseményt a kezdéshez
           </p>
           <Button onClick={onCreateEvent} className="transition-all hover:scale-105">
-            Create Event
+            Esemény Létrehozása
           </Button>
         </CardContent>
       </Card>
@@ -122,7 +122,7 @@ export function EventsList({
               {event._count && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
                   <FileText className="h-3 w-3" />
-                  <span>{event._count.logs} logs</span>
+                  <span>{event._count.logs} log</span>
                 </div>
               )}
             </CardContent>

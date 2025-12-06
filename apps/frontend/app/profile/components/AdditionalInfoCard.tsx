@@ -36,8 +36,8 @@ export function AdditionalInfoCard({
   return (
     <Card className="animate-slide-in-right hover:shadow-lg transition-shadow">
       <CardHeader>
-        <CardTitle>Additional Information</CardTitle>
-        <CardDescription>Update your optional profile details</CardDescription>
+        <CardTitle>További Információk</CardTitle>
+        <CardDescription>Opcionális profil adatok frissítése</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Simonyi Email */}
@@ -68,7 +68,7 @@ export function AdditionalInfoCard({
               )}
               {!fieldState.error && (
                 <p className="text-xs text-muted-foreground">
-                  Your @simonyi.bme.hu email address
+                  A @simonyi.bme.hu email címed
                 </p>
               )}
             </div>
@@ -86,14 +86,14 @@ export function AdditionalInfoCard({
                 className="text-sm font-medium flex items-center gap-2"
               >
                 <Github className="h-4 w-4 text-muted-foreground" />
-                GitHub Username
+                GitHub Felhasználónév
               </label>
               <div className="flex gap-2">
                 <Input
                   {...field}
                   id="github"
                   type="text"
-                  placeholder="Enter your GitHub username"
+                  placeholder="Add meg a GitHub felhasználóneved"
                   className={getFieldClass(fieldState)}
                   value={field.value ?? ''}
                 />
@@ -104,11 +104,11 @@ export function AdditionalInfoCard({
                   disabled={isValidatingGithub || !githubUsernameValue?.trim()}
                   className="shrink-0"
                 >
-                  {isValidatingGithub ? 'Checking...' : 'Verify'}
+                  {isValidatingGithub ? 'Ellenőrzés...' : 'Ellenőrzés'}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Your GitHub username for project integration
+                GitHub felhasználóneved a projekt integrációhoz
               </p>
             </div>
           )}

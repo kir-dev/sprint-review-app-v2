@@ -22,7 +22,7 @@ export function ProjectsList({
     return (
       <div className="flex flex-col items-center justify-center py-12 animate-pulse">
         <div className="h-12 w-12 rounded-full bg-primary/20 mb-4" />
-        <p className="text-muted-foreground">Loading projects...</p>
+        <p className="text-muted-foreground">Projektek betöltése...</p>
       </div>
     )
   }
@@ -34,12 +34,12 @@ export function ProjectsList({
           <div className="p-4 rounded-full bg-primary/10 mb-4">
             <Users className="h-8 w-8 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
+          <h3 className="text-lg font-semibold mb-2">Nincs még projekt</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Create your first project to get started
+            Hozz létre egy projektet a kezdéshez
           </p>
           <Button onClick={onCreateProject} className="transition-all hover:scale-105">
-            Create Project
+            Projekt Létrehozása
           </Button>
         </CardContent>
       </Card>
@@ -100,14 +100,14 @@ export function ProjectsList({
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2 border-t">
               {project.projectManager && (
-                <div className="flex items-center gap-1" title="Project Manager">
+                <div className="flex items-center gap-1" title="Projektmenedzser">
                   <User className="h-4 w-4" />
                   <span className="truncate">{project.projectManager.fullName}</span>
                 </div>
               )}
               
               {project._count && (
-                <div className="flex items-center gap-1" title="Team Members">
+                <div className="flex items-center gap-1" title="Csapattagok">
                   <Users className="h-4 w-4" />
                   <span>{project._count.members}</span>
                 </div>

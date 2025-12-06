@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Flame, Target } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface GamificationProps {
   data: {
@@ -17,6 +18,13 @@ interface GamificationProps {
 
 export function Gamification({ data }: GamificationProps) {
   const goalPercent = parseFloat(data.goal.percentage);
+  const [animatedProgress, setAnimatedProgress] = useState(0);
+
+  useEffect(() => {
+    // Small delay to ensure render happens first then animation triggers
+    const timer = setTimeout(() => setAnimatedProgress(goalPercent), 100);
+    return () => clearTimeout(timer);
+  }, [goalPercent]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -43,7 +51,7 @@ export function Gamification({ data }: GamificationProps) {
                 <span className="font-bold">{data.goal.percentage}%</span>
              </div>
           </div>
-          <Progress value={goalPercent} className="h-2" />
+          <Progress value={animatedProgress} className="h-2 transition-all duration-1000 ease-out" />
           <p className="text-xs text-muted-foreground">
             {goalPercent >= 100 ? "Gratulálunk, teljesítetted a célt!" : "Csak így tovább!"}
           </p>

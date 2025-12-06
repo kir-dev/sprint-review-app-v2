@@ -1,17 +1,17 @@
 'use client';
 
+import { Badge } from '@/components/ui/badge';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { positionColors, positionLabels } from '@/lib/positions';
 import { Mail, User } from 'lucide-react';
 import { UserProfile } from '../types';
-import { positionLabels, positionColors } from '@/lib/positions';
 
 interface AccountInfoCardProps {
   user: UserProfile;
@@ -21,9 +21,9 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
   return (
     <Card className="animate-slide-in-left hover:shadow-lg transition-shadow">
       <CardHeader>
-        <CardTitle>Account Information</CardTitle>
+        <CardTitle>Fiók Információk</CardTitle>
         <CardDescription>
-          Information from AuthSCH (cannot be edited here)
+          Adatok az AuthSCH-ból (itt nem szerkeszthető)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -31,10 +31,10 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
           <div className="space-y-2">
             <label className="text-sm font-medium flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              Full Name
+              Teljes Név
             </label>
             <Input value={user.fullName} readOnly disabled />
-            <p className="text-xs text-muted-foreground">Managed by AuthSCH</p>
+            <p className="text-xs text-muted-foreground">AuthSCH által kezelve</p>
           </div>
 
           <div className="space-y-2">
@@ -43,18 +43,18 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
               Email
             </label>
             <Input value={user.email} readOnly disabled />
-            <p className="text-xs text-muted-foreground">Managed by AuthSCH</p>
+            <p className="text-xs text-muted-foreground">AuthSCH által kezelve</p>
           </div>
         </div>
 
         <div className="space-y-2 pt-2 border-t">
-          <label className="text-sm font-medium">Position</label>
+          <label className="text-sm font-medium">Pozíció</label>
           <div className="flex items-center gap-2 mt-2">
             <Badge className={positionColors[user.position]}>
               {positionLabels[user.position]}
             </Badge>
             <p className="text-xs text-muted-foreground">
-              Your current position in the organization
+              Jelenlegi pozíciód a szervezetben
             </p>
           </div>
         </div>

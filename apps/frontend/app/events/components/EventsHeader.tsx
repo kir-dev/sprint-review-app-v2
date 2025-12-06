@@ -1,6 +1,6 @@
+import { PageHeader } from "@/components/PageHeader"
 import { Button } from "@/components/ui/button"
 import { CalendarDays, Plus } from "lucide-react"
-import { PageHeader } from "@/components/PageHeader"
 
 interface EventsHeaderProps {
   onCreateEvent: () => void
@@ -9,8 +9,8 @@ interface EventsHeaderProps {
 export function EventsHeader({ onCreateEvent }: EventsHeaderProps) {
   return (
     <PageHeader
-      title="Events"
-      description="Manage Kir-Dev and Simonyi events"
+      title="Események"
+      description="Kir-Dev és Simonyi események kezelése"
       icon={CalendarDays}
     >
       <Button 
@@ -18,7 +18,7 @@ export function EventsHeader({ onCreateEvent }: EventsHeaderProps) {
         className="gap-2 hover:scale-105 transition-transform"
       >
         <Plus className="h-4 w-4" />
-        New Event
+        Új Esemény
       </Button>
     </PageHeader>
   )

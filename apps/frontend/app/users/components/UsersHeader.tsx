@@ -1,18 +1,16 @@
-import { Users } from "lucide-react"
 import { PageHeader } from "@/components/PageHeader"
+import { Users } from "lucide-react"
 
 interface UsersHeaderProps {
   totalUsers: number
 }
 
 export function UsersHeader({ totalUsers }: UsersHeaderProps) {
-  const description = `Manage user positions and roles (${totalUsers} ${
-    totalUsers === 1 ? "user" : "users"
-  })`
+  const description = `Felhasználói pozíciók és szerepkörök kezelése (${totalUsers} felhasználó)`
 
   return (
     <PageHeader
-      title="Users"
+      title="Felhasználók"
       description={description}
       icon={Users}
     />

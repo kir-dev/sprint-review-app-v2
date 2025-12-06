@@ -2,21 +2,21 @@
 
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import { Camera, User } from 'lucide-react';
 import Image from 'next/image';
-import { useRef, useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { toast } from 'sonner';
 import {
-  ALLOWED_IMAGE_TYPES,
-  MAX_PROFILE_IMAGE_SIZE_BYTES,
-  MAX_PROFILE_IMAGE_SIZE_MB,
+    ALLOWED_IMAGE_TYPES,
+    MAX_PROFILE_IMAGE_SIZE_BYTES,
+    MAX_PROFILE_IMAGE_SIZE_MB,
 } from '../constants';
 import { ProfileFormData } from '../types';
 
@@ -46,14 +46,14 @@ export function ProfilePictureCard() {
     if (file) {
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
         toast.error(
-          `Please select a valid image file (${ALLOWED_IMAGE_TYPES.map((t) => t.split('/')[1]).join(', ')})`,
+          `Kérjük, válassz érvényes képfájlt (${ALLOWED_IMAGE_TYPES.map((t) => t.split('/')[1]).join(', ')})`,
         );
         return;
       }
 
       if (file.size > MAX_PROFILE_IMAGE_SIZE_BYTES) {
         toast.error(
-          `Image size must be less than ${MAX_PROFILE_IMAGE_SIZE_MB}MB`,
+          `A kép mérete nem lehet nagyobb, mint ${MAX_PROFILE_IMAGE_SIZE_MB}MB`,
         );
         return;
       }
@@ -69,8 +69,8 @@ export function ProfilePictureCard() {
   return (
     <Card className="animate-slide-in-top hover:shadow-lg transition-shadow">
       <CardHeader>
-        <CardTitle>Profile Picture</CardTitle>
-        <CardDescription>Upload your profile photo</CardDescription>
+        <CardTitle>Profilkép</CardTitle>
+        <CardDescription>Töltsd fel a profilképed</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <input
@@ -88,7 +88,7 @@ export function ProfilePictureCard() {
             {preview ? (
               <Image
                 src={preview}
-                alt="Profile Preview"
+                alt="Profilkép előnézet"
                 fill
                 className="object-cover"
               />
@@ -107,10 +107,10 @@ export function ProfilePictureCard() {
               className="w-full sm:w-auto"
             >
               <Camera className="h-4 w-4 mr-2" />
-              Upload Photo
+              Fotó Feltöltése
             </Button>
             <p className="text-xs text-muted-foreground mt-2">
-              JPG, PNG, GIF or WEBP. Max {MAX_PROFILE_IMAGE_SIZE_MB}MB.
+              JPG, PNG, GIF vagy WEBP. Max {MAX_PROFILE_IMAGE_SIZE_MB}MB.
             </p>
           </div>
         </div>

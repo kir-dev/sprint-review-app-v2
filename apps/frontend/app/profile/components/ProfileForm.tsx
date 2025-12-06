@@ -94,7 +94,7 @@ export function ProfileForm() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {isSaving ? "Saving..." : "Save Changes"}
+            {isSaving ? "Mentés..." : "Változtatások Mentése"}
           </Button>
         </div>
       </form>

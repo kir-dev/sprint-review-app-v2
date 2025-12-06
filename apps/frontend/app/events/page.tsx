@@ -1,11 +1,10 @@
 "use client"
 
-import React from "react"
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { ErrorAlert } from "@/components/ErrorAlert"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { EventDialog } from "./components/EventDialog"
 import { EventsHeader } from "./components/EventsHeader"
 import { EventsList } from "./components/EventsList"
@@ -39,7 +38,7 @@ export default function EventsPage() {
     e.preventDefault()
 
     if (formData.endDate && formData.startDate > formData.endDate) {
-      setError("End date cannot be earlier than start date.")
+      setError("A befejezés dátuma nem lehet korábbi a kezdés dátumánál.")
       return
     }
 
@@ -70,11 +69,11 @@ export default function EventsPage() {
         closeDialog()
       } else {
         const error = await response.json()
-        setError(error.message || "Failed to save event")
+        setError(error.message || "Nem sikerült menteni az eseményt")
       }
     } catch (err) {
       console.error("Error saving event:", err)
-      setError("Failed to save event. Please try again.")
+      setError("Nem sikerült menteni az eseményt. Próbáld újra.")
     } finally {
       setIsSubmitting(false)
     }
@@ -99,11 +98,11 @@ export default function EventsPage() {
         setDeleteConfirmOpen(false)
         setEventToDelete(null)
       } else {
-        setError("Failed to delete event")
+        setError("Nem sikerült törölni az eseményt")
       }
     } catch (err) {
       console.error("Error deleting event:", err)
-      setError("Failed to delete event. Please try again.")
+      setError("Nem sikerült törölni az eseményt. Próbáld újra.")
     }
   }
 
@@ -116,7 +115,7 @@ export default function EventsPage() {
   if (isAuthLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
+        <p>Betöltés...</p>
       </div>
     )
   }
@@ -149,8 +148,8 @@ export default function EventsPage() {
         isOpen={deleteConfirmOpen}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
-        title="Delete Event"
-        description="Are you sure you want to delete this event? This action cannot be undone."
+        title="Esemény Törlése"
+        description="Biztosan törölni szeretnéd ezt az eseményt? Ez a művelet nem visszavonható."
       />
     </div>
   )

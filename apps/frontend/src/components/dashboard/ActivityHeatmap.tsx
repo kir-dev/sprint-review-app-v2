@@ -72,7 +72,7 @@ export function ActivityHeatmap({ data, loading, startDate, endDate }: ActivityH
                             </TooltipTrigger>
                             <TooltipContent>
                                 <p className="text-xs">
-                                    {date.toLocaleDateString()}: <strong>{count}h</strong>
+                                    {date.toLocaleDateString('hu-HU')}: <strong>{count}ó</strong>
                                 </p>
                             </TooltipContent>
                         </Tooltip>

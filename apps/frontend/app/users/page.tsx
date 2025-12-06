@@ -32,7 +32,7 @@ export default function UsersPage() {
 
   async function handlePositionChange(userId: number, newPosition: Position) {
     if (!token) {
-      setError("Authentication token not found. Please log in again.")
+      setError("Autentikációs token nem található. Jelentkezz be újra.")
       return
     }
     try {
@@ -46,7 +46,7 @@ export default function UsersPage() {
       setError(null)
     } catch (err: any) {
       console.error("Error updating user position:", err)
-      setError(err.message || "Failed to update user position. Please try again.")
+      setError(err.message || "Nem sikerült frissíteni a felhasználó pozícióját. Próbáld újra.")
     }
   }
 

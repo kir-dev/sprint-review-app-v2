@@ -82,7 +82,7 @@ export function ProjectDialog({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl">
-              {editingProject ? 'Edit Project' : 'Create New Project'}
+              {editingProject ? 'Projekt Szerkesztése' : 'Új Projekt Létrehozása'}
             </CardTitle>
             <Button
               variant="ghost"
@@ -98,7 +98,7 @@ export function ProjectDialog({
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="name" className="block text-sm font-medium">
-                Project Name <span className="text-destructive">*</span>
+                Projekt Neve <span className="text-destructive">*</span>
               </label>
               <input
                 id="name"
@@ -107,20 +107,20 @@ export function ProjectDialog({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   onFormDataChange({ ...formData, name: e.target.value })
                 }
-                placeholder="Enter project name"
+                placeholder="Add meg a projekt nevét"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="description" className="block text-sm font-medium">Description</label>
+              <label htmlFor="description" className="block text-sm font-medium">Leírás</label>
               <textarea
                 id="description"
                 value={formData.description}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   onFormDataChange({ ...formData, description: e.target.value })
                 }
-                placeholder="Enter project description"
+                placeholder="Add meg a projekt leírását"
                 rows={3}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all resize-none"
               />
@@ -142,7 +142,7 @@ export function ProjectDialog({
 
             <div className="space-y-2">
               <label className="block text-sm font-medium">
-                Project Manager
+                Projektmenedzser
               </label>
               
               {/* Selected Manager Display */}
@@ -176,7 +176,7 @@ export function ProjectDialog({
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                       type="text"
-                      placeholder="Search for project manager..."
+                      placeholder="Keress projektmenedzsert..."
                       value={managerSearch}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManagerSearch(e.target.value)}
                       className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -187,7 +187,7 @@ export function ProjectDialog({
                   <div className="border rounded-md max-h-60 overflow-y-auto">
                     {filteredManagerUsers.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
-                        No users found
+                        Nem található felhasználó
                       </p>
                     ) : (
                       filteredManagerUsers.map((user) => (
@@ -216,14 +216,14 @@ export function ProjectDialog({
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium">Team Members</label>
+              <label className="block text-sm font-medium">Csapattagok</label>
               
               {/* Member Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search team members..."
+                  placeholder="Keress csapattagokat..."
                   value={memberSearch}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMemberSearch(e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -234,7 +234,7 @@ export function ProjectDialog({
               {selectedMembers.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs font-medium text-muted-foreground px-1">
-                    Selected ({selectedMembers.length})
+                    Kiválasztva ({selectedMembers.length})
                   </p>
                   <div className="space-y-1">
                     {selectedMembers.map((user) => (
@@ -263,7 +263,7 @@ export function ProjectDialog({
                 <div className="space-y-1">
                   {selectedMembers.length > 0 && (
                     <p className="text-xs font-medium text-muted-foreground px-1 pt-2">
-                      Available
+                      Elérhető
                     </p>
                   )}
                   <div className="border rounded-md max-h-48 overflow-y-auto">
@@ -289,13 +289,13 @@ export function ProjectDialog({
 
               {users.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4 border rounded-md">
-                  No users available
+                  Nincs elérhető felhasználó
                 </p>
               )}
 
               {users.length > 0 && selectedMembers.length === 0 && availableMembers.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4 border rounded-md">
-                  No users match your search
+                  Nincs a keresésnek megfelelő felhasználó
                 </p>
               )}
             </div>
@@ -307,13 +307,13 @@ export function ProjectDialog({
                 onClick={onClose}
                 className="transition-all hover:scale-105"
               >
-                Cancel
+                Mégse
               </Button>
               <Button
                 type="submit"
                 className="transition-all hover:scale-105"
               >
-                {editingProject ? 'Update' : 'Create'} Project
+                {editingProject ? 'Projekt Frissítése' : 'Projekt Létrehozása'}
               </Button>
             </div>
           </form>

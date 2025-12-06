@@ -12,7 +12,7 @@ const _geistMono = Geist_Mono({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Sprint Review App - Kir-Dev',
-  description: 'Sprint review and work log management for Kir-Dev',
+  description: 'Sprint review és munkanapló kezelő a Kir-Dev számára',
 };
 
 export default function RootLayout({

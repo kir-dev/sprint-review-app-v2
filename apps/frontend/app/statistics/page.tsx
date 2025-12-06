@@ -1,11 +1,11 @@
 'use client';
 
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/context/AuthContext';
 import { EventStatistics } from '@/components/statistics/EventStatistics';
 import { Gamification } from '@/components/statistics/Gamification';
 import { LogStatistics } from '@/components/statistics/LogStatistics';
 import { Visualizations } from '@/components/statistics/Visualizations';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
 
 export default function StatisticsPage() {
@@ -55,12 +55,12 @@ export default function StatisticsPage() {
   }
 
   if (!user) {
-    return <div className="p-10 text-center">Please log in to view statistics.</div>;
+    return <div className="p-10 text-center">Kérjük, jelentkezz be a statisztikák megtekintéséhez.</div>;
   }
 
   // Fallback if APIs failed
   if (!breakdown || !history || !gamification) {
-      return <div className="p-10 text-center">Could not load statistics data.</div>;
+      return <div className="p-10 text-center">Nem sikerült betölteni a statisztikai adatokat.</div>;
   }
 
   return (

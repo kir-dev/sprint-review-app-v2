@@ -58,7 +58,7 @@ export function UsersList({
     return (
       <div className="flex flex-col items-center justify-center py-12 animate-pulse">
         <div className="h-12 w-12 rounded-full bg-primary/20 mb-4" />
-        <p className="text-muted-foreground">Loading users...</p>
+        <p className="text-muted-foreground">Felhasználók betöltése...</p>
       </div>
     )
   }
@@ -70,9 +70,9 @@ export function UsersList({
           <div className="p-4 rounded-full bg-primary/10 mb-4">
             <UserIcon className="h-8 w-8 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">No users found</h3>
+          <h3 className="text-lg font-semibold mb-2">Nem található felhasználó</h3>
           <p className="text-sm text-muted-foreground">
-            Users will appear here once they register
+            A felhasználók itt jelennek meg regisztráció után
           </p>
         </CardContent>
       </Card>
@@ -129,7 +129,7 @@ export function UsersList({
             {/* Position Selector */}
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground">
-                Position
+                Pozíció
               </label>
               <div className="relative">
                 <button
@@ -194,8 +194,8 @@ export function UsersList({
             {user._count && (
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
                 <div className="flex items-center gap-4">
-                  <span>{user._count.logs} logs</span>
-                  <span>{user._count.projects} projects</span>
+                  <span>{user._count.logs} log</span>
+                  <span>{user._count.projects} projekt</span>
                 </div>
               </div>
             )}

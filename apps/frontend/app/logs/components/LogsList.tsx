@@ -22,25 +22,25 @@ export function LogsList({
   return (
     <Card className="animate-fade-in">
       <CardHeader>
-        <CardTitle>Your Logs</CardTitle>
+        <CardTitle>Bejegyzéseid</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="text-center mt-4 text-muted-foreground animate-pulse">Loading logs...</p>
+            <p className="text-center mt-4 text-muted-foreground animate-pulse">Bejegyzések betöltése...</p>
           </div>
         ) : logs.length === 0 ? (
           <div className="text-center py-12 animate-fade-in">
             <p className="text-muted-foreground mb-4">
-              No logs found. Create your first log to get started!
+              Nincs bejegyzés. Készítsd el az elsőt!
             </p>
             <Button 
               onClick={onCreateLog}
               className="transition-all hover:scale-105"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create First Log
+              Első Bejegyzés Létrehozása
             </Button>
           </div>
         ) : (

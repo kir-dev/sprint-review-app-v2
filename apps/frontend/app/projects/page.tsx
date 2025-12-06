@@ -60,11 +60,11 @@ export default function ProjectsPage() {
         closeDialog()
       } else {
         const error = await response.json()
-        setError(error.message || 'Failed to save project')
+        setError(error.message || 'Nem sikerült menteni a projektet')
       }
     } catch (err) {
       console.error('Error saving project:', err)
-      setError('Failed to save project. Please try again.')
+      setError('Nem sikerült menteni a projektet. Próbáld újra.')
     }
   }
 
@@ -87,11 +87,11 @@ export default function ProjectsPage() {
         setDeleteConfirmOpen(false)
         setProjectToDelete(null)
       } else {
-        setError('Failed to delete project')
+        setError('Nem sikerült törölni a projektet')
       }
     } catch (err) {
       console.error('Error deleting project:', err)
-      setError('Failed to delete project. Please try again.')
+      setError('Nem sikerült törölni a projektet. Próbáld újra.')
     }
   }
 
@@ -104,7 +104,7 @@ export default function ProjectsPage() {
   if (isAuthLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
+        <p>Betöltés...</p>
       </div>
     )
   }
@@ -139,8 +139,8 @@ export default function ProjectsPage() {
         isOpen={deleteConfirmOpen}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
-        title="Delete Project"
-        description="Are you sure you want to delete this project? This action cannot be undone."
+        title="Projekt Törlése"
+        description="Biztosan törölni szeretnéd ezt a projektet? Ez a művelet nem visszavonható."
       />
     </div>
   )

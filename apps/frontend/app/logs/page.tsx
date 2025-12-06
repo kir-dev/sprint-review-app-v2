@@ -117,11 +117,11 @@ export default function LogsPage() {
         closeDialog();
       } else {
         const error = await response.json();
-        setError(error.message || 'Failed to save log');
+        setError(error.message || 'Nem sikerült menteni a bejegyzést');
       }
     } catch (err) {
       console.error('Error saving log:', err);
-      setError('Failed to save log. Please try again.');
+      setError('Nem sikerült menteni a bejegyzést. Próbáld újra.');
     }
   }
 
@@ -144,11 +144,11 @@ export default function LogsPage() {
         setDeleteConfirmOpen(false);
         setLogToDelete(null);
       } else {
-        setError('Failed to delete log');
+        setError('Nem sikerült törölni a bejegyzést');
       }
     } catch (err) {
       console.error('Error deleting log:', err);
-      setError('Failed to delete log. Please try again.');
+      setError('Nem sikerült törölni a bejegyzést. Próbáld újra.');
     }
   }
 
@@ -164,7 +164,7 @@ export default function LogsPage() {
   if (isAuthLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Loading...</p>
+        <p>Betöltés...</p>
       </div>
     );
   }
@@ -215,8 +215,8 @@ export default function LogsPage() {
         isOpen={deleteConfirmOpen}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
-        title="Delete Log"
-        description="Are you sure you want to delete this log? This action cannot be undone."
+        title="Bejegyzés Törlése"
+        description="Biztosan törölni szeretnéd ezt a bejegyzést? Ez a művelet nem visszavonható."
       />
     </div>
   );

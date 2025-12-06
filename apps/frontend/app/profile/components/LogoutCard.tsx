@@ -12,9 +12,9 @@ export function LogoutCard({ onLogout }: LogoutCardProps) {
   return (
     <Card className="animate-slide-in-bottom hover:shadow-lg transition-shadow">
       <CardHeader>
-        <CardTitle>Sign Out</CardTitle>
+        <CardTitle>Kijelentkezés</CardTitle>
         <CardDescription>
-          Sign out from your account
+          Jelentkezz ki a fiókodból
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -24,7 +24,7 @@ export function LogoutCard({ onLogout }: LogoutCardProps) {
           className="w-full gap-2 transition-colors"
         >
           <LogOut className="h-4 w-4" />
-          Sign Out
+          Kijelentkezés
         </Button>
       </CardContent>
     </Card>
