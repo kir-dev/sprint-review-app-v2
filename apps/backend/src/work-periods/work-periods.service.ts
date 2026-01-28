@@ -123,17 +123,19 @@ export class WorkPeriodsService {
         let startDate: Date;
         let endDate: Date;
         
-        if (month >= 8 || month <= 0) {
-          // September - January: Fall semester (I. félév)
-          const semesterYear = month >= 8 ? year : year - 1;
-          name = `${semesterYear} nyár + ${semesterYear}/${semesterYear + 1} I. félév`;
-          startDate = new Date(semesterYear, 8, 1); // September 1
-          endDate = new Date(semesterYear + 1, 0, 31); // January 31
+        if (month < 5) {
+          // January - May: Spring semester (II. félév)
+          // E.g., in Jan 2026, it is 2025/2026 II. félév
+          const semesterYear = year - 1;
+          name = `${semesterYear}/${year} II. félév`;
+          startDate = new Date(year, 0, 1); // January 1
+          endDate = new Date(year, 4, 31); // May 31
         } else {
-          // February - August: Spring semester (II. félév)
-          name = `${year - 1}/${year} II. félév`;
-          startDate = new Date(year, 1, 1); // February 1
-          endDate = new Date(year, 5, 30); // June 30
+          // June - December: Fall semester (I. félév)
+          // E.g., in June 2026, it is 2026/2027 I. félév
+          name = `${year} nyár + ${year}/${year + 1} I. félév`;
+          startDate = new Date(year, 5, 1); // June 1
+          endDate = new Date(year, 11, 31); // December 31
         }
         
         this.logger.log(`Creating new work period: ${name}`);
