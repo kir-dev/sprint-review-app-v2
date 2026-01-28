@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsDateString,
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsPositive,
-  IsString,
+    IsDateString,
+    IsEnum,
+    IsInt,
+    IsNotEmpty,
+    IsNumber,
+    IsOptional,
+    IsPositive,
+    IsString,
 } from 'class-validator';
 
 export enum LogCategory {
@@ -67,7 +68,7 @@ export class CreateLogDto {
     example: 120,
     required: false,
   })
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   @IsOptional()
   timeSpent?: number;

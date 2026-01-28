@@ -2,11 +2,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar22 } from '@/components/ui/datepicker';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -100,7 +100,6 @@ export function LogDialog({
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                     className="w-full"
-                    popoverClassName="w-64"
                     required
                   />
                 )}
@@ -154,7 +153,7 @@ export function LogDialog({
                     type="number"
                     min="0"
                     max="24"
-                    step="0.5"
+                    step="0.1"
                     {...field}
                     className={`flex h-10 w-full rounded-md border ${errors.timeSpent ? 'border-destructive' : 'border-input'} bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
                     placeholder="pl. 2.5"
@@ -177,7 +176,7 @@ export function LogDialog({
                     rows={4}
                     {...field}
                     className={errors.description ? 'border-destructive' : ''}
-                    placeholder={`Írd le, mit csináltál... (minimum 10 karakter)`}
+                    placeholder={`Írd le, mit csináltál...`}
                   />
                   <p className="text-xs text-muted-foreground">
                     {description?.length || 0}/500 karakter

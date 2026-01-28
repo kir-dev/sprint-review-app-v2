@@ -1,18 +1,18 @@
 "use client"
 
-import * as React from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
+import * as React from "react"
 import { DateRange } from "react-day-picker"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 interface DateRangePickerProps extends React.ComponentProps<"div"> {
   date?: DateRange;
@@ -53,7 +53,7 @@ export function DateRangePicker({
           )}
         </Button>
       </PopoverTrigger>
-                    <PopoverContent className={cn("w-auto p-0 overflow-hidden", popoverClassName)} align="start">
+                    <PopoverContent className={cn("w-auto min-w-[300px] p-0", popoverClassName)} align="start">
                       <Calendar
                         initialFocus
                         mode="range"

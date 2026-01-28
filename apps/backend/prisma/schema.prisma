@@ -55,7 +55,7 @@ model Log {
   category     LogCategory
   description  String
   difficulty   Difficulty?
-  timeSpent    Int?
+  timeSpent    Float?
   user         User        @relation(fields: [userId], references: [id])
   userId       Int
   workPeriod   WorkPeriod  @relation(fields: [workPeriodId], references: [id])

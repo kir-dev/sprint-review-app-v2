@@ -5,11 +5,10 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import { Label } from "@/components/ui/label"
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from "@/components/ui/popover"
 
 type Calendar22Props = {
@@ -54,7 +53,7 @@ export function Calendar22({ value, onChange, onBlur, id, className, popoverClas
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>
-  <PopoverContent className={`${popoverClassName ?? 'w-auto'} overflow-hidden p-0`} align="start">
+  <PopoverContent className={`${popoverClassName ?? 'w-auto'} min-w-[300px] p-0`} align="start">
           <Calendar
             mode="single"
             selected={date}

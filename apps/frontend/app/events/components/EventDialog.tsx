@@ -84,9 +84,8 @@ export function EventDialog({
             <label htmlFor="date" className="block text-sm font-medium">
               {DIALOG_TEXT.dateLabel} <span className="text-destructive">*</span>
             </label>
-            <DateRangePicker
+              <DateRangePicker
               className="w-full"
-              popoverClassName="w-64"
               date={{
                 from: formData.startDate ? new Date(`${formData.startDate}T00:00:00`) : undefined,
                 to: formData.endDate ? new Date(`${formData.endDate}T00:00:00`) : undefined,

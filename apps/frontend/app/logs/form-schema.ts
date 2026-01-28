@@ -10,10 +10,10 @@ export const logFormSchema = z.object({
   }),
   description: z
     .string()
-    .min(10, 'A leírás legalább 10 karakter hosszú legyen')
     .max(500, 'A leírás maximum 500 karakter hosszú lehet'),
   timeSpent: z.preprocess(
-    (val) => (val === '' ? undefined : Number(val)),
+    (val) =>
+      val === '' ? undefined : Number(String(val).replace(',', '.')),
     z
       .number()
       .min(0, 'Az óraszám nem lehet negatív')
