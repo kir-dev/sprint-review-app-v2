@@ -1,7 +1,7 @@
 import {
-    AuthSchProfile,
-    AuthSchScope,
-    Strategy,
+  AuthSchProfile,
+  AuthSchScope,
+  Strategy,
 } from '@kir-dev/passport-authsch';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -24,7 +24,10 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
         AuthSchScope.EMAIL,
         AuthSchScope.SCHACC_ID,
       ],
-      callbackURL: `http://localhost:${configService.get<string>('PORT') || '3000'}/auth/callback`,
+      callbackURL:
+        process.env.BACKEND_PUBLIC_URL
+          ? `${process.env.BACKEND_PUBLIC_URL}/auth/callback`
+          : `http://localhost:${configService.get<string>('PORT') || '3000'}/auth/callback`,
     } as any);
   }
 
