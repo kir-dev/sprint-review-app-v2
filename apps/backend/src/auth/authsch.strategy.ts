@@ -29,6 +29,12 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
           ? `${process.env.BACKEND_PUBLIC_URL}/auth/callback`
           : `http://localhost:${configService.get<string>('PORT') || '3000'}/auth/callback`,
     } as any);
+
+    this.logger.log(`🔧 Strategy initialized with callbackURL: ${
+      process.env.BACKEND_PUBLIC_URL
+        ? `${process.env.BACKEND_PUBLIC_URL}/auth/callback`
+        : `http://localhost:${configService.get<string>('PORT') || '3000'}/auth/callback`
+    }`);
   }
 
   async validate(profile: AuthSchProfile): Promise<any> {
