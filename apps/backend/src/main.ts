@@ -11,6 +11,9 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   logger.log('Starting application...');
+  logger.log('Starting application...');
+  logger.log(`DEBUG: FRONTEND_URL=${process.env.FRONTEND_URL}`);
+  logger.log(`DEBUG: BACKEND_PUBLIC_URL=${process.env.BACKEND_PUBLIC_URL}`);
   const app = await NestFactory.create(AppModule);
 
   // Increase body size limit for image uploads (10MB)
