@@ -176,15 +176,16 @@ export class StatsService {
         const today = format(new Date(), 'yyyy-MM-dd');
         const yesterday = format(new Date(Date.now() - 86400000), 'yyyy-MM-dd');
         
-        let lastDate = uniqueDates[0];
+        const lastDate = uniqueDates[0]; // Explicit const
         
-        if (lastDate === today || lastDate === yesterday) {
+        if (lastDate && (lastDate === today || lastDate === yesterday)) {
+            let currentStreakDate = new Date(lastDate);
+            
             currentStreak = 1;
-            let checkDate = new Date(lastDate);
             
             for (let i = 1; i < uniqueDates.length; i++) {
-                checkDate.setDate(checkDate.getDate() - 1);
-                const expectedDate = format(checkDate, 'yyyy-MM-dd');
+                currentStreakDate.setDate(currentStreakDate.getDate() - 1);
+                const expectedDate = format(currentStreakDate, 'yyyy-MM-dd');
                 if (uniqueDates[i] === expectedDate) {
                     currentStreak++;
                 } else {

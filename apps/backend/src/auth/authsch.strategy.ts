@@ -24,7 +24,8 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
         AuthSchScope.EMAIL,
         AuthSchScope.SCHACC_ID,
       ],
-    });
+      callbackURL: `http://localhost:${configService.get<string>('PORT') || '3000'}/auth/callback`,
+    } as any);
   }
 
   async validate(profile: AuthSchProfile): Promise<any> {
