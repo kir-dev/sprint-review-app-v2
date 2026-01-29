@@ -41,6 +41,8 @@ export class AuthController {
     const jwt = this.authService.login(user);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     
+    this.logger.log(`🔍 DEBUG: process.env.FRONTEND_URL = "${process.env.FRONTEND_URL}"`);
+    this.logger.log(`🔍 DEBUG: Resolved frontendUrl = "${frontendUrl}"`);
     this.logger.log(`🚀 Redirecting to: ${frontendUrl}/login?jwt=...`);
     return res.redirect(`${frontendUrl}/login?jwt=${jwt}`);
   }
