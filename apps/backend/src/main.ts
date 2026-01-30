@@ -20,6 +20,16 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
+  // Session configuration for Passport (AuthSCH)
+  const session = require('express-session');
+  app.use(
+    session({
+      secret: process.env.JWT_SECRET || 'secret',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
