@@ -28,6 +28,20 @@ async function bootstrap() {
     }),
   );
 
+  // Enable Trust Proxy for Nginx/K8s Ingress
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', 1);
+
+  // Enable CORS
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://sprint-review.kir-dev.hu',
+      process.env.FRONTEND_URL,
+    ].filter(Boolean),
+    credentials: true,
+  });
+
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Sprint Review App API')
