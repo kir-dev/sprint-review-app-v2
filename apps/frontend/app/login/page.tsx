@@ -44,7 +44,8 @@ function LoginContent() {
 
   const handleLogin = () => {
     // Redirect to backend AuthSCH login
-    window.location.href = 'http://localhost:3001/auth/login';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    window.location.href = `${backendUrl}/auth/login`;
   };
 
   return (
