@@ -11,7 +11,7 @@
     "start": "NODE_PATH=../../node_modules:./node_modules nest start",
     "start:dev": "NODE_PATH=../../node_modules:./node_modules nest start --watch",
     "start:debug": "NODE_PATH=../../node_modules:./node_modules nest start --debug --watch",
-    "start:prod": "NODE_PATH=../../node_modules:./node_modules node dist/src/main",
+    "start:prod": "NODE_PATH=../../node_modules:./node_modules node --max-http-header-size=81920 dist/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
