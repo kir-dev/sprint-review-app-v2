@@ -13,9 +13,17 @@ async function bootstrap() {
   logger.log('Starting application...');
   logger.log('Starting application...');
   logger.log(`DEBUG: FRONTEND_URL=${process.env.FRONTEND_URL}`);
-  logger.log(`DEBUG: BACKEND_PUBLIC_URL=${process.env.BACKEND_PUBLIC_URL}`);
-  logger.log(`DEBUG: BACKEND_PUBLIC_URL=${process.env.BACKEND_PUBLIC_URL}`);
   const app = await NestFactory.create(AppModule);
+
+  // Session configuration for Passport (AuthSCH)
+  const session = require('express-session');
+  app.use(
+    session({
+      secret: process.env.JWT_SECRET || 'secret',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
 
   // Raw request logger
   app.use((req, res, next) => {
