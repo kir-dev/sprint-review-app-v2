@@ -25,6 +25,7 @@ export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPer
       return currentWorkPeriod?.id.toString() || workPeriods[0]?.id.toString() || ''
     }
 
+    
     const target = new Date(date)
     target.setHours(0, 0, 0, 0)
 
