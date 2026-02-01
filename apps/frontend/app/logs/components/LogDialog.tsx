@@ -2,11 +2,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar22 } from '@/components/ui/datepicker';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -94,7 +94,13 @@ export function LogDialog({
                     id="date"
                     value={
                       (field.value as any) instanceof Date
-                        ? ((field.value as any) as Date).toISOString().slice(0, 10)
+                        ? new Date(
+                            ((field.value as any) as Date).getTime() -
+                              ((field.value as any) as Date).getTimezoneOffset() *
+                                60000,
+                          )
+                            .toISOString()
+                            .slice(0, 10)
                         : field.value
                     }
                     onChange={field.onChange}

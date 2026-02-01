@@ -6,7 +6,9 @@ export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPer
   const [editingLog, setEditingLog] = useState<Log | null>(null)
   
   const initialFormData: LogFormData = {
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+      .toISOString()
+      .split('T')[0],
     category: LogCategory.PROJECT,
     description: '',
     difficulty: Difficulty.MEDIUM,
@@ -45,7 +47,9 @@ export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPer
     if (log) {
       setEditingLog(log)
       setFormData({
-        date: log.date.split('T')[0],
+        date: new Date(new Date(log.date).getTime() - new Date(log.date).getTimezoneOffset() * 60000)
+          .toISOString()
+          .split('T')[0],
         category: log.category,
         description: log.description,
         difficulty: log.difficulty,
@@ -56,7 +60,9 @@ export function useLogForm(workPeriods: WorkPeriod[], currentWorkPeriod: WorkPer
       })
     } else {
       setEditingLog(null)
-      const today = new Date().toISOString().split('T')[0]
+      const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+        .toISOString()
+        .split('T')[0];
       setFormData({
         ...initialFormData,
         date: today,

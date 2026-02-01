@@ -6,9 +6,9 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover"
 
 type Calendar22Props = {
@@ -64,10 +64,14 @@ export function Calendar22({ value, onChange, onBlur, id, className, popoverClas
             onSelect={(selected: Date | undefined) => {
               setDate(selected)
               setOpen(false)
-              const iso = selected ? selected.toISOString().slice(0, 10) : ''
-              onChange?.(iso)
+              const localDate = selected
+                ? new Date(selected.getTime() - selected.getTimezoneOffset() * 60000)
+                    .toISOString()
+                    .slice(0, 10)
+                : '';
+              onChange?.(localDate);
               // notify parent that the field lost focus (behaves like onBlur)
-              onBlur?.()
+              onBlur?.();
             }}
           />
         </PopoverContent>
