@@ -15,7 +15,7 @@ export function ProjectsHeader({ onCreateProject }: ProjectsHeaderProps) {
     >
       <Button 
         onClick={onCreateProject}
-        className="gap-2 transition-all hover:scale-105 shadow-lg"
+        className="gap-2 transition-all hover:scale-105 shadow-lg hidden md:flex"
       >
         <Plus className="h-4 w-4" />
         Új Projekt

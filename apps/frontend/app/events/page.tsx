@@ -2,7 +2,9 @@
 
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { ErrorAlert } from "@/components/ErrorAlert"
+import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton"
 import { useAuth } from "@/context/AuthContext"
+import { CalendarDays } from "lucide-react"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { EventDialog } from "./components/EventDialog"
@@ -121,7 +123,7 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 md:p-8 max-w-7xl mx-auto">
       <EventsHeader onCreateEvent={() => openDialog()} />
 
       <ErrorAlert error={error} onClose={() => setError(null)} />
@@ -151,6 +153,9 @@ export default function EventsPage() {
         title="Esemény Törlése"
         description="Biztosan törölni szeretnéd ezt az eseményt? Ez a művelet nem visszavonható."
       />
+
+      <MobileFloatingActionButton onClick={() => openDialog()} icon={CalendarDays} />
     </div>
+
   )
 }

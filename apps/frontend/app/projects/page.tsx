@@ -2,6 +2,7 @@
 
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { ErrorAlert } from "@/components/ErrorAlert"
+import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -110,7 +111,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 md:p-8 max-w-7xl mx-auto">
       <ProjectsHeader 
         onCreateProject={() => openDialog()}
       />
@@ -142,6 +143,8 @@ export default function ProjectsPage() {
         title="Projekt Törlése"
         description="Biztosan törölni szeretnéd ezt a projektet? Ez a művelet nem visszavonható."
       />
+
+      <MobileFloatingActionButton onClick={() => openDialog()} />
     </div>
   )
 }

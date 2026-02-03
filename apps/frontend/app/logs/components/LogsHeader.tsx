@@ -24,7 +24,7 @@ export function LogsHeader({ onToggleFilters, onCreateLog }: LogsHeaderProps) {
       </Button>
       <Button 
         onClick={onCreateLog}
-        className="transition-all hover:scale-105"
+        className="transition-all hover:scale-105 hidden md:flex"
       >
         <Plus className="h-4 w-4 mr-2" />
         Új Bejegyzés

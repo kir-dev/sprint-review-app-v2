@@ -15,7 +15,7 @@ export function EventsHeader({ onCreateEvent }: EventsHeaderProps) {
     >
       <Button 
         onClick={onCreateEvent}
-        className="gap-2 hover:scale-105 transition-transform"
+        className="gap-2 hover:scale-105 transition-transform hidden md:flex"
       >
         <Plus className="h-4 w-4" />
         Új Esemény

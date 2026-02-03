@@ -2,7 +2,9 @@
 
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { ErrorAlert } from '@/components/ErrorAlert';
+import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton";
 import { useAuth } from '@/context/AuthContext';
+import { Plus } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useEventData } from '../events/hooks/useEventData';
@@ -170,7 +172,7 @@ export default function LogsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 md:p-8 max-w-7xl mx-auto">
       <LogsHeader
         onCreateLog={() => openDialog()}
         onToggleFilters={() => setShowFilters(!showFilters)}
@@ -218,6 +220,8 @@ export default function LogsPage() {
         title="Bejegyzés Törlése"
         description="Biztosan törölni szeretnéd ezt a bejegyzést? Ez a művelet nem visszavonható."
       />
+
+      <MobileFloatingActionButton onClick={() => openDialog()} icon={Plus} />
     </div>
   );
 }

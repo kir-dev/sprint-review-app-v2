@@ -50,7 +50,7 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark px-4">
-      <div className="bg-dark-lighter border border-dark rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
+      <div className="bg-dark-lighter border border-dark rounded-3xl shadow-2xl p-6 md:p-12 max-w-md w-full text-center">
         <div className="flex justify-center mb-6">
           <img src="Kir-Dev-White.png" alt="Kir-Dev Logo" className="max-w-48 h-auto" />
         </div>
