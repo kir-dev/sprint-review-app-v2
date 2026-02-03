@@ -114,7 +114,10 @@ export function UsersList({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <Link href={`/users/${user.id}`} className="block">
+                <Link 
+                  href={`/users/${user.id}?name=${encodeURIComponent(user.fullName)}&position=${user.position}`} 
+                  className="block"
+                >
                   <h3 className="font-semibold text-base leading-tight truncate group-hover:text-primary transition-colors hover:underline">
                     {user.fullName}
                   </h3>
