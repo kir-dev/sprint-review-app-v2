@@ -18,7 +18,7 @@ const navigation = [
   { name: "Statisztika", href: "/statistics", icon: BarChart3 },
 ]
 
-export function Sidebar() {
+export function Sidebar({ className, onClose }: { className?: string; onClose?: () => void }) {
   const pathname = usePathname()
   const { user } = useAuth()
   const { theme } = useTheme()
@@ -26,10 +26,17 @@ export function Sidebar() {
 
   const logoSrc = theme === "light" ? "/Kir-Dev-Black.png" : "/Kir-Dev-White.png"
 
+  const handleLinkClick = () => {
+    if (onClose) {
+      onClose()
+    }
+  }
+
   return (
     <div className={cn(
       "flex h-full flex-col border-r border-border bg-card animate-slide-in-left transition-all duration-300",
-      isCollapsed ? "w-16" : "w-64"
+      isCollapsed ? "w-16" : "w-64",
+      className
     )}>
       {/* Logo */}
       <div className={cn(
@@ -56,7 +63,11 @@ export function Sidebar() {
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
             "absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full border border-border bg-card hover:bg-accent transition-colors flex items-center justify-center",
-            "shadow-md hover:shadow-lg"
+            "shadow-md hover:shadow-lg",
+            // Hide collapse button on mobile/sheet view if needed, or keeping it is fine.
+            // But if className includes w-full (mobile), collapsing might not be desired.
+            // For now keeping it simple.
+             className?.includes("w-full") && "hidden"
           )}
         >
           {isCollapsed ? (
@@ -75,6 +86,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={handleLinkClick}
               style={{ animationDelay: `${index * 50}ms` }}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all animate-fade-in",
@@ -106,6 +118,7 @@ export function Sidebar() {
         )}>
           <Link 
             href="/profile"
+            onClick={handleLinkClick}
             className={cn(
               "flex items-center gap-2 flex-1 min-w-0 rounded-lg transition-all hover:bg-accent/50 p-2 -m-2",
               isCollapsed && "flex-col"
