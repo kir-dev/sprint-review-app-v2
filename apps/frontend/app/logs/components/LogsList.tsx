@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { Log } from "../types"
 import { LogItem } from "./LogItem"
@@ -20,18 +19,18 @@ export function LogsList({
   onDeleteLog,
 }: LogsListProps) {
   return (
-    <Card className="animate-fade-in border-none shadow-none md:border md:shadow-sm bg-transparent md:bg-card">
-      <CardHeader className="hidden md:block">
-        <CardTitle>Bejegyzéseid</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0 md:p-6">
+      <div className="space-y-4 md:space-y-6 animate-fade-in">
+        <div className="flex items-center justify-between md:hidden">
+          <h2 className="text-xl font-semibold">Bejegyzéseid</h2>
+        </div>
+
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-8">
+          <div className="flex flex-col items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <p className="text-center mt-4 text-muted-foreground animate-pulse">Bejegyzések betöltése...</p>
           </div>
         ) : logs.length === 0 ? (
-          <div className="text-center py-12 animate-fade-in">
+          <div className="text-center py-16 animate-fade-in border rounded-xl border-dashed bg-card/50">
             <p className="text-muted-foreground mb-4">
               Nincs bejegyzés. Készítsd el az elsőt!
             </p>
@@ -44,7 +43,7 @@ export function LogsList({
             </Button>
           </div>
         ) : (
-          <div className="space-y-2 md:space-y-3">
+          <div className="grid gap-4">
             {logs.map((log, index) => (
               <div
                 key={log.id}
@@ -60,7 +59,6 @@ export function LogsList({
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
   )
 }
