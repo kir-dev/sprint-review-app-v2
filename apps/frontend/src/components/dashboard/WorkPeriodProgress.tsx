@@ -11,7 +11,25 @@ interface WorkPeriodProgressProps {
 }
 
 export function WorkPeriodProgress({ currentPeriod, loading }: WorkPeriodProgressProps) {
-    if (loading) {
+  // Animation state - Always call hooks at the top level!
+  const [animatedProgress, setAnimatedProgress] = React.useState(0);
+  
+  const start = currentPeriod ? new Date(currentPeriod.startDate).getTime() : 0;
+  const end = currentPeriod ? new Date(currentPeriod.endDate).getTime() : 0;
+  const now = new Date().getTime();
+  
+  const totalDuration = end - start;
+  const elapsed = now - start;
+  const progress = currentPeriod && totalDuration > 0 ? Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)) : 0;
+
+  React.useEffect(() => {
+    if (currentPeriod && !loading) {
+        const timer = setTimeout(() => setAnimatedProgress(progress), 100);
+        return () => clearTimeout(timer);
+    }
+  }, [progress, currentPeriod, loading]);
+  
+  if (loading) {
      return <div className="animate-pulse h-24 bg-secondary rounded-lg" />;
   }
   
@@ -19,22 +37,6 @@ export function WorkPeriodProgress({ currentPeriod, loading }: WorkPeriodProgres
     return null;
   }
 
-  // Animation state
-  const [animatedProgress, setAnimatedProgress] = React.useState(0);
-  
-  const start = new Date(currentPeriod.startDate).getTime();
-  const end = new Date(currentPeriod.endDate).getTime();
-  const now = new Date().getTime();
-  
-  const totalDuration = end - start;
-  const elapsed = now - start;
-  const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => setAnimatedProgress(progress), 100);
-    return () => clearTimeout(timer);
-  }, [progress]);
-  
   const daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
 
   return (

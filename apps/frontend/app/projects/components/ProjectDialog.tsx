@@ -300,18 +300,18 @@ export function ProjectDialog({
               )}
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="transition-all hover:scale-105"
+                className="transition-all hover:scale-105 order-2 sm:order-1"
               >
                 Mégse
               </Button>
               <Button
                 type="submit"
-                className="transition-all hover:scale-105"
+                className="transition-all hover:scale-105 order-1 sm:order-2"
               >
                 {editingProject ? 'Projekt Frissítése' : 'Projekt Létrehozása'}
               </Button>
