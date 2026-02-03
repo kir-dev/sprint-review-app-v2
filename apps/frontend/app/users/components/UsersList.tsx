@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import {
-  positionLabels,
-  positionSortOrder,
+    positionLabels,
+    positionSortOrder,
 } from "@/lib/positions"
 import { cn } from "@/lib/utils"
 import { ChevronDown, Mail, User as UserIcon } from "lucide-react"
@@ -97,10 +97,10 @@ export function UsersList({
           className="animate-slide-in-bottom hover:shadow-lg transition-all duration-300 group"
           style={{ animationDelay: `${index * 50}ms` }}
         >
-          <CardContent className="space-y-4 pt-6">
+          <CardContent className="space-y-4 p-4 py-2">
             {/* User Avatar and Info */}
             <div className="flex items-start gap-3">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
                 {user.profileImage ? (
                   <img
                     src={user.profileImage}

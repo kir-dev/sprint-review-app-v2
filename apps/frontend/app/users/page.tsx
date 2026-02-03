@@ -56,7 +56,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 md:p-8 max-w-7xl mx-auto">
       <UsersHeader totalUsers={users.length} />
 
       <ErrorAlert error={error} onClose={() => setError(null)} />
