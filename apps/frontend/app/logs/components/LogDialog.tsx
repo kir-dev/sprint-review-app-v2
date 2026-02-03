@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader2 } from "lucide-react";
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { categoryLabels } from '../constants';
@@ -43,7 +44,7 @@ export function LogDialog({
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     watch,
     reset,
     setValue,
@@ -208,7 +209,8 @@ export function LogDialog({
               >
                 Mégse
               </Button>
-              <Button type="submit" className="transition-all hover:scale-105">
+              <Button type="submit" className="transition-all hover:scale-105" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingLog ? 'Módosítás' : 'Létrehozás'}
               </Button>
             </div>

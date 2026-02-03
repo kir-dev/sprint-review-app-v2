@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, Search, User as UserIcon, X } from "lucide-react"
+import { Check, Loader2, Search, User as UserIcon, X } from "lucide-react"
 import React, { useMemo, useState } from "react"
 import { Project, ProjectFormData, User } from "../types"
 
@@ -8,6 +8,7 @@ interface ProjectDialogProps {
   isOpen: boolean
   editingProject: Project | null
   formData: ProjectFormData
+  isPending: boolean
   users: User[]
   onFormDataChange: (data: ProjectFormData) => void
   onSubmit: (e: React.FormEvent) => void
@@ -18,6 +19,7 @@ export function ProjectDialog({
   isOpen,
   editingProject,
   formData,
+  isPending,
   users,
   onFormDataChange,
   onSubmit,
@@ -108,6 +110,7 @@ export function ProjectDialog({
                   onFormDataChange({ ...formData, name: e.target.value })
                 }
                 placeholder="Add meg a projekt nevét"
+                disabled={isPending}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all"
               />
             </div>
@@ -305,14 +308,17 @@ export function ProjectDialog({
                 type="button"
                 variant="outline"
                 onClick={onClose}
+                disabled={isPending}
                 className="transition-all hover:scale-105 order-2 sm:order-1"
               >
                 Mégse
               </Button>
               <Button
                 type="submit"
+                disabled={isPending}
                 className="transition-all hover:scale-105 order-1 sm:order-2"
               >
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingProject ? 'Projekt Frissítése' : 'Projekt Létrehozása'}
               </Button>
             </div>

@@ -13,8 +13,30 @@ interface LogItemProps {
 export function LogItem({ log, onEdit, onDelete }: LogItemProps) {
   return (
     <Card className="hover:bg-accent/50 transition-all duration-300 hover:shadow-md hover:scale-[1.01] animate-fade-in group relative overflow-hidden">
-      <CardHeader className="pr-12 md:pr-14">
-        <CardTitle className="text-lg md:text-xl font-semibold leading-tight">{log.description}</CardTitle>
+      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pr-2 md:pr-14">
+        <CardTitle className="text-lg md:text-xl font-semibold leading-tight pt-1 wrap-break-word min-w-0">
+          {log.description}
+        </CardTitle>
+        
+        {/* Actions */}
+        <div className="flex shrink-0 gap-1 md:absolute md:top-4 md:right-4 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onEdit(log)}
+            className="h-8 w-8 p-0 hover:scale-110 transition-transform"
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onDelete(log.id)}
+            className="h-8 w-8 p-0 hover:scale-110 transition-transform"
+          >
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </Button>
+        </div>
       </CardHeader>
       
       <CardContent className="space-y-4">
@@ -55,25 +77,7 @@ export function LogItem({ log, onEdit, onDelete }: LogItemProps) {
         </div>
       </CardContent>
 
-      {/* Actions - Absolute positioned top right */}
-      <div className="absolute top-4 right-4 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 bg-card/80 backdrop-blur-sm rounded-md p-0.5 shadow-sm md:bg-transparent md:backdrop-blur-none md:shadow-none">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onEdit(log)}
-          className="transition-all hover:scale-110 h-8 w-8 p-0"
-        >
-          <Edit2 className="h-4 w-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onDelete(log.id)}
-          className="transition-all hover:scale-110 h-8 w-8 p-0"
-        >
-          <Trash2 className="h-4 w-4 text-destructive" />
-        </Button>
-      </div>
+
     </Card>
   )
 }

@@ -23,6 +23,7 @@ export default function ProjectsPage() {
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<number | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -42,6 +43,8 @@ export default function ProjectsPage() {
       projectManagerId: formData.projectManagerId ? parseInt(formData.projectManagerId) : undefined,
       memberIds: formData.memberIds.map(id => parseInt(id)),
     }
+
+    setIsSubmitting(true)
 
     try {
       const url = editingProject ? `/api/projects/${editingProject.id}` : '/api/projects'
@@ -66,6 +69,8 @@ export default function ProjectsPage() {
     } catch (err) {
       console.error('Error saving project:', err)
       setError('Nem sikerült menteni a projektet. Próbáld újra.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -130,6 +135,7 @@ export default function ProjectsPage() {
         isOpen={isDialogOpen}
         editingProject={editingProject}
         formData={formData}
+        isPending={isSubmitting}
         users={users}
         onFormDataChange={setFormData}
         onSubmit={handleSubmit}

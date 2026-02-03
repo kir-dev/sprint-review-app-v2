@@ -4,7 +4,6 @@ import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { ErrorAlert } from "@/components/ErrorAlert"
 import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton"
 import { useAuth } from "@/context/AuthContext"
-import { CalendarDays } from "lucide-react"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { EventDialog } from "./components/EventDialog"
@@ -155,7 +154,7 @@ export default function EventsPage() {
       />
 
       {!isDialogOpen && !deleteConfirmOpen && (
-        <MobileFloatingActionButton onClick={() => openDialog()} icon={CalendarDays} />
+        <MobileFloatingActionButton onClick={() => openDialog()} />
       )}
     </div>
 
