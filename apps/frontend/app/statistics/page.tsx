@@ -1,11 +1,13 @@
 'use client';
 
+import { PageHeader } from '@/components/PageHeader';
 import { EventStatistics } from '@/components/statistics/EventStatistics';
 import { Gamification } from '@/components/statistics/Gamification';
 import { LogStatistics } from '@/components/statistics/LogStatistics';
 import { Visualizations } from '@/components/statistics/Visualizations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
+import { BarChart3 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function StatisticsPage() {
@@ -45,47 +47,53 @@ export default function StatisticsPage() {
     fetchData();
   }, [user, token]);
 
-  if (authLoading || (loading && !breakdown)) {
+  if (!user && !authLoading) {
     return (
-        <div className="container mx-auto py-10 space-y-8">
-            <Skeleton className="h-[200px] w-full" />
-            <Skeleton className="h-[300px] w-full" />
+        <div className="container mx-auto py-10 px-4 md:px-0 space-y-8 max-w-7xl">
+            <PageHeader
+                title="Személyes Statisztikák"
+                description="Részletes áttekintés a logjaidról, eseményeidről és előrehaladásodról."
+                icon={BarChart3}
+            />
+            <div className="p-10 text-center border rounded-lg bg-muted/50">Kérjük, jelentkezz be a statisztikák megtekintéséhez.</div>
         </div>
     );
   }
 
-  if (!user) {
-    return <div className="p-10 text-center">Kérjük, jelentkezz be a statisztikák megtekintéséhez.</div>;
-  }
-
-  // Fallback if APIs failed
-  if (!breakdown || !history || !gamification) {
-      return <div className="p-10 text-center">Nem sikerült betölteni a statisztikai adatokat.</div>;
-  }
-
   return (
-    <div className="container mx-auto py-10 space-y-8 max-w-7xl">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Személyes Statisztikák</h2>
-        <p className="text-muted-foreground">
-          Részletes áttekintés a logjaidról, eseményeidről és előrehaladásodról.
-        </p>
-      </div>
-
-      <LogStatistics data={breakdown} />
-      
-      <Visualizations 
-        breakdownData={breakdown} 
-        historyData={history} 
+    <div className="container mx-auto py-10 px-4 md:px-0 md:pt-4 space-y-8 max-w-7xl">
+      <PageHeader
+        title="Személyes Statisztikák"
+        description="Részletes áttekintés a logjaidról, eseményeidről és előrehaladásodról."
+        icon={BarChart3}
       />
 
-      <div className="grid gap-6 md:grid-cols-2">
-         {/* Layout adjustment: Gamification takes full width or half */}
-      </div>
+      {(authLoading || (loading && !breakdown)) ? (
+        <div className="space-y-8 animate-pulse">
+             <Skeleton className="h-[200px] w-full" />
+             <Skeleton className="h-[300px] w-full" />
+             <Skeleton className="h-[200px] w-full" />
+        </div>
+      ) : (!breakdown || !history || !gamification) ? (
+        <div className="p-10 text-center border rounded-lg bg-muted/50">Nem sikerült betölteni a statisztikai adatokat.</div>
+      ) : (
+        <div className="space-y-8 animate-fade-in">
+            <LogStatistics data={breakdown} />
+            
+            <Visualizations 
+                breakdownData={breakdown} 
+                historyData={history} 
+            />
 
-      <Gamification data={gamification} />
+            <div className="grid gap-6 md:grid-cols-2">
+                {/* Layout adjustment: Gamification takes full width or half */}
+            </div>
 
-      <EventStatistics data={breakdown.eventStats} />
+            <Gamification data={gamification} />
+
+            <EventStatistics data={breakdown.eventStats} />
+        </div>
+      )}
       
     </div>
   );

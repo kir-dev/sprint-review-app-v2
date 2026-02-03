@@ -5,7 +5,7 @@ import { User } from "lucide-react";
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-8 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-7xl mx-auto">
       <PageHeader
         title="Profil Beállítások"
         description="Fiók információk kezelése"

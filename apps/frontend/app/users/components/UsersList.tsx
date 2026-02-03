@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import {
-    positionLabels,
-    positionSortOrder,
+  positionLabels,
+  positionSortOrder,
 } from "@/lib/positions"
 import { cn } from "@/lib/utils"
 import { ChevronDown, Mail, User as UserIcon } from "lucide-react"
@@ -56,9 +56,9 @@ export function UsersList({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 animate-pulse">
-        <div className="h-12 w-12 rounded-full bg-primary/20 mb-4" />
-        <p className="text-muted-foreground">Felhasználók betöltése...</p>
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-center mt-4 text-muted-foreground animate-pulse">Felhasználók betöltése...</p>
       </div>
     )
   }

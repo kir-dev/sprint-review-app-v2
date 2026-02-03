@@ -172,7 +172,7 @@ export default function LogsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-7xl mx-auto">
       <LogsHeader
         onCreateLog={() => openDialog()}
         onToggleFilters={() => setShowFilters(!showFilters)}

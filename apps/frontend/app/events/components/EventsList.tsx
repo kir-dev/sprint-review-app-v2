@@ -22,9 +22,9 @@ export function EventsList({
 }: EventsListProps) {
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 animate-pulse">
-        <div className="h-12 w-12 rounded-full bg-primary/20 mb-4" />
-        <p className="text-muted-foreground">Események betöltése...</p>
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-center mt-4 text-muted-foreground animate-pulse">Események betöltése...</p>
       </div>
     )
   }

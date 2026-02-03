@@ -95,7 +95,7 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-7xl mx-auto animate-fade-in">
       <div className="flex flex-col gap-6">
         <Button
           variant="ghost"
