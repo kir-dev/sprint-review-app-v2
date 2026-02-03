@@ -63,7 +63,7 @@ export function ProfileForm() {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
         <ProfilePictureCard />
         <AccountInfoCard user={user!} />
         <AdditionalInfoCard
@@ -74,20 +74,20 @@ export function ProfileForm() {
         />
         
         {/* Form Actions */}
-        <div className="flex justify-end gap-3 pt-4 mt-6 border-t">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 mt-6 border-t">
           <Button
             type="button"
             variant="outline"
             onClick={handleReset}
             disabled={isSaving || !isDirty}
-            className="hover:scale-105 transition-transform"
+            className="w-full sm:w-auto hover:scale-105 transition-transform"
           >
             Reset
           </Button>
           <Button
             type="submit"
             disabled={isSaving || !isDirty}
-            className="gap-2 hover:scale-105 transition-transform"
+            className="w-full sm:w-auto gap-2 hover:scale-105 transition-transform"
           >
             {isSaving ? (
               <Loader2 className="h-4 w-4 animate-spin" />

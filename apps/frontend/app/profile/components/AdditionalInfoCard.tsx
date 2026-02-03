@@ -2,11 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Github, Mail } from 'lucide-react';
@@ -88,7 +88,7 @@ export function AdditionalInfoCard({
                 <Github className="h-4 w-4 text-muted-foreground" />
                 GitHub Felhasználónév
               </label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   {...field}
                   id="github"
@@ -102,7 +102,7 @@ export function AdditionalInfoCard({
                   variant="outline"
                   onClick={() => onVerifyGithub(githubUsernameValue)}
                   disabled={isValidatingGithub || !githubUsernameValue?.trim()}
-                  className="shrink-0"
+                  className="shrink-0 w-full sm:w-auto"
                 >
                   {isValidatingGithub ? 'Ellenőrzés...' : 'Ellenőrzés'}
                 </Button>

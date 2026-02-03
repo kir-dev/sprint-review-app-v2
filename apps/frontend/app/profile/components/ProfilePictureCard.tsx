@@ -80,9 +80,9 @@ export function ProfilePictureCard() {
           onChange={handleImageChange}
           className="hidden"
         />
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
           <div
-            className="relative h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden cursor-pointer group hover:ring-2 hover:ring-primary transition-all"
+            className="relative h-24 w-24 sm:h-20 sm:w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden cursor-pointer group hover:ring-2 hover:ring-primary transition-all shrink-0"
             onClick={handleImageClick}
           >
             {preview ? (
@@ -99,7 +99,7 @@ export function ProfilePictureCard() {
               <Camera className="h-6 w-6 text-foreground" />
             </div>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col items-center sm:items-start text-center sm:text-left w-full">
             <Button
               type="button"
               variant="outline"
