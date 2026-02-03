@@ -17,10 +17,11 @@ export function LogsHeader({ onToggleFilters, onCreateLog }: LogsHeaderProps) {
       <Button 
         variant="outline" 
         onClick={onToggleFilters}
-        className="transition-all hover:scale-105"
+        className="transition-all hover:scale-105 px-3 md:px-4"
+        size="sm"
       >
-        <Filter className="h-4 w-4 mr-2" />
-        Szűrők
+        <Filter className="h-4 w-4 md:mr-2" />
+        <span className="hidden md:inline">Szűrők</span>
       </Button>
       <Button 
         onClick={onCreateLog}

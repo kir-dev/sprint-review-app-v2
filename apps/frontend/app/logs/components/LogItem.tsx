@@ -12,7 +12,7 @@ interface LogItemProps {
 export function LogItem({ log, onEdit, onDelete }: LogItemProps) {
   return (
     <div className="p-4 border rounded-lg hover:bg-accent/50 transition-all duration-300 hover:shadow-md hover:scale-[1.02] animate-fade-in group">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className={`px-2 py-1 text-xs font-medium rounded-md border ${categoryColors[log.category]} transition-all hover:scale-105`}>
@@ -51,12 +51,12 @@ export function LogItem({ log, onEdit, onDelete }: LogItemProps) {
           </div>
         </div>
         
-        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 self-end md:self-auto">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => onEdit(log)}
-            className="transition-all hover:scale-110"
+            className="transition-all hover:scale-110 h-8 w-8 p-0"
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -64,7 +64,7 @@ export function LogItem({ log, onEdit, onDelete }: LogItemProps) {
             variant="ghost" 
             size="sm" 
             onClick={() => onDelete(log.id)}
-            className="transition-all hover:scale-110"
+            className="transition-all hover:scale-110 h-8 w-8 p-0"
           >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>

@@ -154,7 +154,9 @@ export default function EventsPage() {
         description="Biztosan törölni szeretnéd ezt az eseményt? Ez a művelet nem visszavonható."
       />
 
-      <MobileFloatingActionButton onClick={() => openDialog()} icon={CalendarDays} />
+      {!isDialogOpen && !deleteConfirmOpen && (
+        <MobileFloatingActionButton onClick={() => openDialog()} icon={CalendarDays} />
+      )}
     </div>
 
   )

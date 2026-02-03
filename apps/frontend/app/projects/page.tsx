@@ -144,7 +144,9 @@ export default function ProjectsPage() {
         description="Biztosan törölni szeretnéd ezt a projektet? Ez a művelet nem visszavonható."
       />
 
-      <MobileFloatingActionButton onClick={() => openDialog()} />
+      {!isDialogOpen && !deleteConfirmOpen && (
+        <MobileFloatingActionButton onClick={() => openDialog()} />
+      )}
     </div>
   )
 }

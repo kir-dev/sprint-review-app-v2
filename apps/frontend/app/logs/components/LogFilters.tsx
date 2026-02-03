@@ -37,7 +37,7 @@ export function LogFilters({
         <CardTitle className="text-sm flex items-center justify-between">
           Szűrők
           <Button variant="ghost" size="sm" onClick={onClearFilters}>
-            Összes Törlése
+            Összes törlése
           </Button>
         </CardTitle>
       </CardHeader>

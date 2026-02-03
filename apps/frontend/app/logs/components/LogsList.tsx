@@ -20,11 +20,11 @@ export function LogsList({
   onDeleteLog,
 }: LogsListProps) {
   return (
-    <Card className="animate-fade-in">
-      <CardHeader>
+    <Card className="animate-fade-in border-none shadow-none md:border md:shadow-sm bg-transparent md:bg-card">
+      <CardHeader className="hidden md:block">
         <CardTitle>Bejegyzéseid</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 md:p-6">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -44,7 +44,7 @@ export function LogsList({
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             {logs.map((log, index) => (
               <div
                 key={log.id}
