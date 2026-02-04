@@ -9,7 +9,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 
-const navigation = [
+export const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Projektek", href: "/projects", icon: FolderKanban },
   { name: "Események", href: "/events", icon: CalendarDays },

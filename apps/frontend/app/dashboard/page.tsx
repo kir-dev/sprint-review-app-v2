@@ -8,11 +8,18 @@ import { PersonalKPI } from "@/components/dashboard/PersonalKPI";
 import { ProjectList } from "@/components/dashboard/ProjectList";
 import { TopUsersList } from "@/components/dashboard/TopUsersList";
 import { WorkPeriodProgress } from "@/components/dashboard/WorkPeriodProgress";
+import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { CategoryBreakdownData, DashboardEventStats, DashboardProjectItem, DashboardSummary, DashboardTopUser, HeatmapData } from "@/types/dashboard";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useEventData } from "../events/hooks/useEventData";
+import { LogDialog } from "../logs/components/LogDialog";
+import { useLogData } from "../logs/hooks/useLogData";
+import { useLogForm } from "../logs/hooks/useLogForm";
+import { useLogSubmit } from "../logs/hooks/useLogSubmit";
 
 export default function DashboardPage() {
   const { user, token, isLoading: authLoading } = useAuth();
@@ -26,41 +33,61 @@ export default function DashboardPage() {
   
   const [loading, setLoading] = useState(true);
 
+  // Log creation hooks
+  const { projects, workPeriods, currentWorkPeriod } = useLogData(token, user?.id);
+  const { events } = useEventData(token);
+  const {
+      isDialogOpen,
+      formData,
+      openDialog,
+      closeDialog,
+    } = useLogForm(workPeriods, currentWorkPeriod);
+
+  const { handleSubmit } = useLogSubmit({
+    token,
+    user,
+    workPeriods,
+    onSuccess: () => {
+      closeDialog();
+      fetchDashboardData();
+    }
+  });
+
   useEffect(() => {
     if (!authLoading && !token) {
       router.push('/login');
     }
   }, [authLoading, token, router]);
 
+  const fetchDashboardData = async () => {
+    if (!token) return;
+    
+    try {
+      setLoading(true);
+      const [summaryRes, projectsRes, topUsersRes, statsRes, eventsRes] = await Promise.all([
+          fetch('/api/dashboard/summary', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/dashboard/projects', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/dashboard/top-users', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/dashboard/events', { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
+      if (summaryRes.ok) setSummary(await summaryRes.json());
+      if (projectsRes.ok) setProjectsStats(await projectsRes.json());
+      if (topUsersRes.ok) setTopUsers(await topUsersRes.json());
+      if (statsRes.ok) setStats(await statsRes.json());
+      if (eventsRes.ok) setEventStats(await eventsRes.json());
+
+    } catch (error) {
+      console.error("Failed to fetch dashboard data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!token) return;
-      
-      try {
-        setLoading(true);
-        const [summaryRes, projectsRes, topUsersRes, statsRes, eventsRes] = await Promise.all([
-            fetch('/api/dashboard/summary', { headers: { Authorization: `Bearer ${token}` } }),
-            fetch('/api/dashboard/projects', { headers: { Authorization: `Bearer ${token}` } }),
-            fetch('/api/dashboard/top-users', { headers: { Authorization: `Bearer ${token}` } }),
-            fetch('/api/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } }),
-            fetch('/api/dashboard/events', { headers: { Authorization: `Bearer ${token}` } })
-        ]);
-
-        if (summaryRes.ok) setSummary(await summaryRes.json());
-        if (projectsRes.ok) setProjectsStats(await projectsRes.json());
-        if (topUsersRes.ok) setTopUsers(await topUsersRes.json());
-        if (statsRes.ok) setStats(await statsRes.json());
-        if (eventsRes.ok) setEventStats(await eventsRes.json());
-
-      } catch (error) {
-        console.error("Failed to fetch dashboard data", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (token) {
-        fetchData();
+        fetchDashboardData();
     }
   }, [token]);
 
@@ -89,6 +116,14 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">Üdv újra, {user.fullName}! Itt az összefoglalód.</p>
           </div>
         </div>
+        
+        <Button 
+            onClick={() => openDialog()}
+            className="transition-all hover:scale-105 hidden md:flex"
+        >
+            <Plus className="h-4 w-4 mr-2" />
+            Új Bejegyzés
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-12">
@@ -141,6 +176,20 @@ export default function DashboardPage() {
             />
         </div>
       </div>
+
+      <LogDialog
+        isOpen={isDialogOpen}
+        editingLog={null}
+        formData={formData}
+        projects={projects}
+        events={events as any}
+        workPeriods={workPeriods}
+
+        onSubmit={handleSubmit}
+        onClose={closeDialog}
+      />
+
+      <MobileFloatingActionButton onClick={() => openDialog()} icon={Plus} />
     </div>
   );
 }

@@ -14,8 +14,9 @@ import { LogsHeader } from './components/LogsHeader';
 import { LogsList } from './components/LogsList';
 import { useLogData } from './hooks/useLogData';
 import { useLogForm } from './hooks/useLogForm';
+import { useLogSubmit } from './hooks/useLogSubmit';
 import { LogFilters as LogFiltersType, LogFormData } from './types';
-import { filterLogs, findWorkPeriodForDate } from './utils/log-helpers';
+import { filterLogs } from './utils/log-helpers';
 
 export default function LogsPage() {
   const { user, token, isLoading: isAuthLoading } = useAuth();
@@ -42,6 +43,16 @@ export default function LogsPage() {
     closeDialog,
   } = useLogForm(workPeriods, currentWorkPeriod);
   const { events } = useEventData(token);
+
+  const { handleSubmit: submitLog } = useLogSubmit({
+    token,
+    user,
+    workPeriods,
+    onSuccess: async () => {
+      await loadData();
+      closeDialog();
+    }
+  });
 
   // Filter states
   const [showFilters, setShowFilters] = useState(false);
@@ -78,53 +89,7 @@ export default function LogsPage() {
 
   // Handlers
   async function handleSubmit(data: LogFormData) {
-    if (!user?.id) return;
-
-    const resolvedWorkPeriodId = data.workPeriodId
-      ? parseInt(data.workPeriodId)
-      : (findWorkPeriodForDate(data.date, workPeriods)?.id ?? undefined);
-
-    if (!resolvedWorkPeriodId) {
-      setError('Ehhez a dátumhoz nem található work period');
-      return;
-    }
-
-    const payload = {
-      date: data.date,
-      category: data.category,
-      description: data.description,
-      difficulty: data.difficulty || undefined,
-      timeSpent: data.timeSpent ? data.timeSpent : undefined,
-      userId: user.id,
-      projectId: data.projectId ? parseInt(data.projectId) : null,
-      eventId: data.eventId ? parseInt(data.eventId) : null,
-      workPeriodId: resolvedWorkPeriodId,
-    };
-
-    try {
-      const url = editingLog ? `/api/logs/${editingLog.id}` : '/api/logs';
-      const method = editingLog ? 'PATCH' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        await loadData();
-        closeDialog();
-      } else {
-        const error = await response.json();
-        setError(error.message || 'Nem sikerült menteni a bejegyzést');
-      }
-    } catch (err) {
-      console.error('Error saving log:', err);
-      setError('Nem sikerült menteni a bejegyzést. Próbáld újra.');
-    }
+    await submitLog(data, editingLog);
   }
 
   function handleDeleteClick(id: number) {
