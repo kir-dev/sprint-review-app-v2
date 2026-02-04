@@ -1,11 +1,11 @@
 'use client';
 
 import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
+    createContext,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState,
 } from 'react';
 import { Position } from '../../app/logs/types';
 
@@ -18,6 +18,15 @@ interface User {
   githubUsername?: string;
   profileImage?: string;
   position: Position;
+  positionHistory?: PositionHistory[];
+}
+
+export interface PositionHistory {
+  id: number;
+  userId: number;
+  position: Position;
+  startDate: string; // ISO Date
+  endDate?: string | null; // ISO Date
 }
 
 interface AuthContextType {

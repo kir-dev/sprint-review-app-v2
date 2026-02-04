@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { EventStatistics } from '@/components/statistics/EventStatistics';
 import { Gamification } from '@/components/statistics/Gamification';
 import { LogStatistics } from '@/components/statistics/LogStatistics';
+import { PositionTimeline } from '@/components/statistics/PositionTimeline';
 import { Visualizations } from '@/components/statistics/Visualizations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
@@ -16,6 +17,7 @@ export default function StatisticsPage() {
   const [breakdown, setBreakdown] = useState<any>(null);
   const [history, setHistory] = useState<any>(null);
   const [gamification, setGamification] = useState<any>(null);
+  const [positionHistory, setPositionHistory] = useState<any>([]);
 
   useEffect(() => {
     if (!user || !token) return;
@@ -27,15 +29,17 @@ export default function StatisticsPage() {
 
         // We use userId in URL as backend expects it now (no auth guard in controller yet)
         // But we send token just in case.
-        const [breakdownRes, historyRes, gamificationRes] = await Promise.all([
+        const [breakdownRes, historyRes, gamificationRes, positionsRes] = await Promise.all([
            fetch(`/api/stats/${user.id}/breakdown`, { headers }),
            fetch(`/api/stats/${user.id}/history`, { headers }),
            fetch(`/api/stats/${user.id}/gamification`, { headers }),
+           fetch(`/api/stats/${user.id}/positions`, { headers }),
         ]);
 
         if (breakdownRes.ok) setBreakdown(await breakdownRes.json());
         if (historyRes.ok) setHistory(await historyRes.json());
         if (gamificationRes.ok) setGamification(await gamificationRes.json());
+        if (positionsRes.ok) setPositionHistory(await positionsRes.json());
 
       } catch (error) {
         console.error('Failed to fetch statistics', error);
@@ -77,7 +81,7 @@ export default function StatisticsPage() {
       ) : (!breakdown || !history || !gamification) ? (
         <div className="p-10 text-center border rounded-lg bg-muted/50">Nem sikerült betölteni a statisztikai adatokat.</div>
       ) : (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-8 animate-fade-in pb-20 md:pb-0">
             <LogStatistics data={breakdown} />
             
             <Visualizations 
@@ -86,10 +90,9 @@ export default function StatisticsPage() {
             />
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Layout adjustment: Gamification takes full width or half */}
+                 <Gamification data={gamification} />
+                 <PositionTimeline currentPosition={user!.position} history={positionHistory} />
             </div>
-
-            <Gamification data={gamification} />
 
             <EventStatistics data={breakdown.eventStats} />
         </div>
