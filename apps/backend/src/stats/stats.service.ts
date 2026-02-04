@@ -228,4 +228,20 @@ export class StatsService {
         largeTaskCount: logsInPeriod.filter(l => l.difficulty === 'LARGE').length
     };
   }
+  async getPositionHistory(userId: number) {
+    this.logger.log(`Fetching position history for user ${userId}`);
+
+    const history = await this.prisma.positionHistory.findMany({
+      where: { userId },
+      orderBy: { startDate: 'desc' },
+    });
+
+    // Also get current position to make sure it's included if not in history explicitly?
+    // Or just rely on history entries.
+    // Let's assume history table will eventually be populated. 
+    // BUT for now, let's also return the current user position as the "latest" if no history exists or just as active.
+    // Actually, UI usually wants a list.
+    
+    return history;
+  }
 }

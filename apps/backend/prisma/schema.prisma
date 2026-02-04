@@ -20,6 +20,16 @@ model User {
   createdAt      DateTime  @default(now())
   managedProjects Project[] @relation("ProjectManager")
   projects       Project[] @relation("ProjectMembers")
+  positionHistory PositionHistory[]
+}
+
+model PositionHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  position  Position
+  startDate DateTime
+  endDate   DateTime?
 }
 
 model WorkPeriod {

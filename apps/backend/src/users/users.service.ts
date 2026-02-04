@@ -144,6 +144,51 @@ export class UsersService {
   ) {
     this.logger.log(`Updating user with ID: ${id}`);
     try {
+      // Handle Position History
+      if (data.position) {
+        const currentUser = await this.prisma.user.findUnique({ where: { id } });
+
+        if (currentUser && currentUser.position !== data.position) {
+          const now = new Date();
+
+          // 1. Close active history if exists
+          const activeHistory = await this.prisma.positionHistory.findFirst({
+            where: {
+              userId: id,
+              endDate: null,
+            },
+          });
+
+          if (activeHistory) {
+            await this.prisma.positionHistory.update({
+              where: { id: activeHistory.id },
+              data: { endDate: now },
+            });
+          } else {
+            // Edge case: No history exists yet (first change since feature intro)
+            // Save the OLD position as a history entry ending now
+            await this.prisma.positionHistory.create({
+              data: {
+                userId: id,
+                position: currentUser.position,
+                startDate: currentUser.createdAt, // Best guess for start logic
+                endDate: now,
+              },
+            });
+          }
+
+          // 2. Open new history
+          await this.prisma.positionHistory.create({
+            data: {
+              userId: id,
+              position: data.position,
+              startDate: now,
+              endDate: null,
+            },
+          });
+        }
+      }
+
       const user = await this.prisma.user.update({
         where: { id },
         data: {

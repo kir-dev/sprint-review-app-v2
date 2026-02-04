@@ -19,4 +19,9 @@ export class StatsController {
   async getGamification(@Param('userId') userId: string) {
     return this.statsService.getGamification(+userId);
   }
+
+  @Get(':userId/positions')
+  async getPositions(@Param('userId') userId: string) {
+    return this.statsService.getPositionHistory(+userId);
+  }
 }
