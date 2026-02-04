@@ -18,18 +18,18 @@ export function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              aria-label={item.name}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 w-full h-full text-xs font-medium transition-colors",
+                "flex flex-col items-center justify-center w-full h-full transition-colors",
                 isActive 
                   ? "text-primary" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               <item.icon className={cn(
-                "h-5 w-5 transition-transform",
+                "h-6 w-6 transition-transform",
                 isActive && "scale-110"
               )} />
-              <span className="truncate max-w-[60px]">{item.name}</span>
             </Link>
           )
         })}
