@@ -53,6 +53,10 @@ export default function DashboardPage() {
     }
   });
 
+  const onLogSubmit = async (data: any) => {
+    await handleSubmit(data);
+  };
+
   useEffect(() => {
     if (!authLoading && !token) {
       router.push('/login');
@@ -185,7 +189,7 @@ export default function DashboardPage() {
         events={events as any}
         workPeriods={workPeriods}
 
-        onSubmit={handleSubmit}
+        onSubmit={onLogSubmit}
         onClose={closeDialog}
       />
 

@@ -61,7 +61,7 @@ export function ActivityHeatmap({ data, loading, startDate, endDate }: ActivityH
          <div className="flex flex-wrap gap-1 justify-center md:justify-start">
              <TooltipProvider delayDuration={100}>
                 {calendarDates.map((date, i) => {
-                    const dateStr = date.toISOString().split('T')[0];
+                    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
                     const count = dataMap.get(dateStr) || 0;
                     return (
                         <Tooltip key={i}>

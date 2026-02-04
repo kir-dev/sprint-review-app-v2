@@ -128,9 +128,17 @@ export class DashboardService {
       workPeriodId: currentPeriod?.id,
     });
 
-    const heatmapData = heatmapLogs.map((log) => ({
-      date: log.date.toISOString().split('T')[0],
-      count: log.timeSpent, // Using hours explicitly
+    const heatmapMap = heatmapLogs.reduce((acc, log) => {
+      // Use Hungarian timezone to determine the "day" of the log
+      // en-CA locale gives YYYY-MM-DD format
+      const date = log.date.toLocaleDateString('en-CA', { timeZone: 'Europe/Budapest' });
+      acc[date] = (acc[date] || 0) + (log.timeSpent || 0);
+      return acc;
+    }, {} as Record<string, number>);
+
+    const heatmapData = Object.entries(heatmapMap).map(([date, count]) => ({
+      date,
+      count,
     }));
 
     // 3. Difficulty Breakdown (Global)

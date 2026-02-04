@@ -66,7 +66,7 @@ export function LogItem({ log, onEdit, onDelete }: LogItemProps) {
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5 transition-all hover:text-foreground">
             <Calendar className="h-3.5 w-3.5" />
-            {new Date(log.date).toLocaleDateString('hu-HU')}
+            {new Date(log.date).toLocaleDateString('hu-HU', { timeZone: 'Europe/Budapest' })}
           </span>
           {log.timeSpent && (
             <span className="flex items-center gap-1.5 transition-all hover:text-foreground">
