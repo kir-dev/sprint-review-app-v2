@@ -27,8 +27,8 @@ export function Gamification({ data }: GamificationProps) {
   }, [goalPercent]);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <Card className="bg-orange-50/10 border-orange-200/20">
+    <>
+      <Card className="bg-orange-50/10 border-orange-200/20 break-inside-avoid mb-6">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-orange-500">Streak</CardTitle>
           <Flame className="h-4 w-4 text-orange-500" />
@@ -39,7 +39,7 @@ export function Gamification({ data }: GamificationProps) {
         </CardContent>
       </Card>
 
-      <Card className="col-span-1 lg:col-span-2">
+      <Card className="break-inside-avoid mb-6">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Szemeszter Küldetés</CardTitle>
           <Target className="h-4 w-4 text-blue-500" />
@@ -57,17 +57,6 @@ export function Gamification({ data }: GamificationProps) {
           </p>
         </CardContent>
       </Card>
-      
-      {/* 
-      <Card>
-         <CardHeader>
-            <CardTitle className="text-sm font-medium">Challenges</CardTitle>
-         </CardHeader>
-         <CardContent>
-            ...
-         </CardContent>
-      </Card> 
-      */}
-    </div>
+    </>
   );
 }

@@ -25,7 +25,7 @@ const positionLabels: Record<Position, string> = {
   ARCHIVALT: "Archivált",
 };
 
-export function PositionTimeline({ currentPosition, history }: PositionTimelineProps) {
+export function PositionTimeline({ currentPosition, history, className }: PositionTimelineProps & { className?: string }) {
   // Merge current position (if not in history) with history?
   // Ideally, history contains everything.
   // If history is empty, show current position as "since creation" or similar if possible, or just current.
@@ -34,7 +34,7 @@ export function PositionTimeline({ currentPosition, history }: PositionTimelineP
   const sortedHistory = [...history].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
 
   return (
-    <Card>
+    <Card className={`break-inside-avoid ${className}`}>
       <CardHeader>
         <div className="flex items-center gap-2">
             <Briefcase className="h-5 w-5 text-primary" />

@@ -89,9 +89,9 @@ export default function StatisticsPage() {
                 historyData={history} 
             />
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="columns-1 md:columns-2 gap-6 space-y-6">
                  <Gamification data={gamification} />
-                 <PositionTimeline currentPosition={user!.position} history={positionHistory} />
+                 <PositionTimeline currentPosition={user!.position} history={positionHistory} className="mb-6" />
             </div>
 
             <EventStatistics data={breakdown.eventStats} />
