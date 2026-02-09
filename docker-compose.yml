@@ -1,32 +1,32 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:13
-    container_name: sprint_review_db
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: sprint-review-app
-    ports:
-      - '127.0.0.1:5432:5432'
-    volumes:
-      - sprintreview_db_folder_v2:/var/lib/postgresql/data
-    networks:
-      - app-network
+  # db:
+  #   image: postgres:13
+  #   container_name: sprint_review_db
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: sprint-review-app
+  #   ports:
+  #     - '127.0.0.1:5432:5432'
+  #   volumes:
+  #     - sprintreview_db_folder_v2:/var/lib/postgresql/data
+  #   networks:
+  #     - app-network
 
   backend:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
     container_name: sprint_review_backend
-    depends_on:
-      - db
+    # depends_on:
+    #   - db
     ports:
       - '3001:3001'
     environment:
-      DATABASE_URL: postgres://admin:password@db:5432/sprint-review-app
+      # DATABASE_URL: postgres://admin:password@db:5432/sprint-review-app
       # Add other necessary env vars here or use an env_file
       AUTHSCH_CLIENT_ID: ${AUTHSCH_CLIENT_ID}
       AUTHSCH_CLIENT_SECRET: ${AUTHSCH_CLIENT_SECRET}
@@ -38,8 +38,8 @@ services:
        - ./apps/backend:/app/apps/backend
        - /app/apps/backend/node_modules
 
-volumes:
-  sprintreview_db_folder_v2:
+# volumes:
+#   sprintreview_db_folder_v2:
 
 networks:
   app-network:
