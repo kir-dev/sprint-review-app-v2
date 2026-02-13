@@ -143,4 +143,49 @@ export class ProjectService {
       throw error;
     }
   }
+  async getFeatures(projectId: number) {
+    this.logger.log(`Fetching features for project ID: ${projectId}`);
+    return this.prisma.feature.findMany({
+      where: { projectId },
+      include: {
+        assignee: true,
+      },
+    });
+  }
+
+  async getStats(projectId: number) {
+    this.logger.log(`Fetching stats for project ID: ${projectId}`);
+    
+    const [project, features, logs] = await Promise.all([
+      this.prisma.project.findUnique({
+        where: { id: projectId },
+        include: { members: true, projectManager: true },
+      }),
+      this.prisma.feature.findMany({
+        where: { projectId },
+      }),
+      this.prisma.log.findMany({
+        where: { projectId },
+      }),
+    ]);
+    
+    if (!project) {
+        throw new Error('Project not found');
+    }
+
+    const totalTime = logs.reduce((acc, log) => acc + (log.timeSpent || 0), 0);
+    
+    const featureCounts = {
+        TODO: features.filter(f => f.status === 'TODO').length,
+        IN_PROGRESS: features.filter(f => f.status === 'IN_PROGRESS').length,
+        DONE: features.filter(f => f.status === 'DONE').length,
+        BLOCKED: features.filter(f => f.status === 'BLOCKED').length,
+    };
+
+    return {
+        totalLogs: logs.length,
+        totalTimeSpent: totalTime,
+        featureCounts,
+    };
+  }
 }

@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { EventsModule } from './events/events.module';
+import { FeaturesModule } from './features/features.module';
 import { LogsModule } from './logs/logs.module';
 import { ProjectsModule } from './projects/projects.module';
 import { StatsModule } from './stats/stats.module';
@@ -22,6 +23,7 @@ import { WorkPeriodsModule } from './work-periods/work-periods.module';
     UsersModule,
     WorkPeriodsModule,
     LogsModule,
+    FeaturesModule,
     EventsModule,
     StatsModule,
     DashboardModule,

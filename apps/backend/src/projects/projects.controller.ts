@@ -1,19 +1,21 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Patch,
+    Post,
 } from '@nestjs/common';
 import {
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
+    ApiBody,
+    ApiOperation,
+    ApiParam,
+    ApiResponse,
+    ApiTags,
 } from '@nestjs/swagger';
+import { CreateFeatureDto } from '../features/dto/create-feature.dto';
+import { FeaturesService } from '../features/features.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectService } from './projects.service';
@@ -21,7 +23,10 @@ import { ProjectService } from './projects.service';
 @ApiTags('projects')
 @Controller('projects')
 export class ProjectController {
-  constructor(private readonly projectService: ProjectService) {}
+  constructor(
+    private readonly projectService: ProjectService,
+    private readonly featuresService: FeaturesService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new project' })
@@ -46,6 +51,28 @@ export class ProjectController {
   @ApiResponse({ status: 404, description: 'Project not found' })
   findOne(@Param('id') id: string) {
     return this.projectService.findOne(+id);
+  }
+
+  @Get(':id/features')
+  @ApiOperation({ summary: 'Get features for a project' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Project ID' })
+  getFeatures(@Param('id') id: string) {
+    return this.projectService.getFeatures(+id);
+  }
+
+  @Post(':id/features')
+  @ApiOperation({ summary: 'Create a feature for a project' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Project ID' })
+  createFeature(@Param('id') id: string, @Body() dto: CreateFeatureDto) {
+    dto.projectId = +id;
+    return this.featuresService.create(dto);
+  }
+
+  @Get(':id/stats')
+  @ApiOperation({ summary: 'Get project statistics' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Project ID' })
+  getStats(@Param('id') id: string) {
+    return this.projectService.getStats(+id);
   }
 
   @Patch(':id')

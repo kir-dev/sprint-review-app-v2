@@ -21,6 +21,7 @@ model User {
   managedProjects Project[] @relation("ProjectManager")
   projects       Project[] @relation("ProjectMembers")
   positionHistory PositionHistory[]
+  assignedFeatures Feature[]
 }
 
 model PositionHistory {
@@ -49,6 +50,21 @@ model Project {
   projectManagerId Int?
   logs             Log[]
   members          User[]   @relation("ProjectMembers")
+  features         Feature[]
+}
+
+model Feature {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?
+  status      FeatureStatus @default(TODO)
+  priority    Priority?
+  project     Project       @relation(fields: [projectId], references: [id])
+  projectId   Int
+  assignee    User?         @relation(fields: [assigneeId], references: [id])
+  assigneeId  Int?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Event {
@@ -75,6 +91,20 @@ model Log {
   projectId    Int?
   event        Event?      @relation(fields: [eventId], references: [id])
   eventId      Int?
+}
+
+enum FeatureStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 enum LogCategory {
