@@ -4,7 +4,9 @@ import { Difficulty, LogCategory } from './types';
 export const logFormSchema = z.object({
   date: z.coerce
     .date({ message: 'A dátum megadása kötelező' })
-    .max(new Date(new Date().setHours(23, 59, 59, 999)), { message: 'A dátum nem lehet jövőbeli' }),
+    .refine((date) => date <= new Date(new Date().setHours(23, 59, 59, 999)), {
+      message: 'A dátum nem lehet jövőbeli',
+    }),
   category: z.nativeEnum(LogCategory, {
     message: 'Kategória kiválasztása kötelező',
   }),
