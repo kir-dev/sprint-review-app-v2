@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Edit2, Github, Trash2, User, Users } from "lucide-react"
+import Link from "next/link"
 import { Project } from "../types"
 
 interface ProjectsListProps {
@@ -57,7 +58,9 @@ export function ProjectsList({
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                {project.name}
+                <Link href={`/projects/${project.id}`} className="hover:underline">
+                  {project.name}
+                </Link>
               </CardTitle>
               <div className="flex gap-1">
                 <Button
