@@ -1,10 +1,12 @@
+"use client"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Kanban, KanbanBoard, KanbanColumn, KanbanItem, KanbanOverlay } from "@/components/ui/kanban"
 import { cn } from "@/lib/utils"
+import { DragEndEvent } from "@dnd-kit/core"
 import { AlertCircle, Plus } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useMemo, useState } from "react"
 import { useFeatureData } from "../hooks/useFeatureData"
 import { Feature, FeatureStatus, User } from "../types"
 import { FeatureCard } from "./FeatureCard"
@@ -14,6 +16,7 @@ interface ProjectKanbanProps {
   projectId: string
   token: string | null
   users: User[]
+  onFeatureChange?: () => void
 }
 
 const COLUMNS: { id: FeatureStatus; title: string; color: string }[] = [
@@ -23,7 +26,7 @@ const COLUMNS: { id: FeatureStatus; title: string; color: string }[] = [
   { id: 'DONE', title: 'Kész', color: 'bg-green-500/10 border-green-500/20' },
 ]
 
-export function ProjectKanban({ projectId, token, users }: ProjectKanbanProps) {
+export function ProjectKanban({ projectId, token, users, onFeatureChange }: ProjectKanbanProps) {
   const { 
     features, 
     isLoading, 
@@ -32,35 +35,28 @@ export function ProjectKanban({ projectId, token, users }: ProjectKanbanProps) {
     deleteFeature 
   } = useFeatureData(projectId, token)
 
-  const [featuresByStatus, setFeaturesByStatus] = useState<Record<FeatureStatus, Feature[]>>({
-    TODO: [],
-    IN_PROGRESS: [],
-    BLOCKED: [],
-    DONE: []
-  })
-
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null)
 
-  useEffect(() => {
-    const newFeaturesByStatus: Record<FeatureStatus, Feature[]> = {
+  const featuresByStatus = useMemo(() => {
+    const columns: Record<FeatureStatus, Feature[]> = {
       TODO: [],
       IN_PROGRESS: [],
       BLOCKED: [],
-      DONE: []
+      DONE: [],
     }
 
-    features.forEach(feature => {
-      if (newFeaturesByStatus[feature.status]) {
-        newFeaturesByStatus[feature.status].push(feature)
+    features.forEach((feature) => {
+      if (columns[feature.status]) {
+        columns[feature.status].push(feature)
       }
     })
 
-    setFeaturesByStatus(newFeaturesByStatus)
+    return columns
   }, [features])
 
-  const handleDragEnd = async (event: any) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     if (!over) return
 
@@ -68,27 +64,30 @@ export function ProjectKanban({ projectId, token, users }: ProjectKanbanProps) {
     const overId = over.id
 
     // Find the feature - handle both string and number comparison
-    const feature = features.find(f => f.id == activeId)
+    const feature = features.find((f) => f.id === Number(activeId))
     if (!feature) return
 
     let newStatus: FeatureStatus | null = null
 
     // Determine new status
-    if (Object.keys(featuresByStatus).includes(overId as string)) {
+    if (Object.keys(featuresByStatus).includes(String(overId))) {
       // Dropped on a column
       newStatus = overId as FeatureStatus
     } else {
-        // Dropped on an item
-        // Handle both string and number comparison for overId
-        const overFeature = features.find(f => f.id == overId)
-        if(overFeature) {
-            newStatus = overFeature.status
-        }
+      // Dropped on an item
+      // Handle both string and number comparison for overId
+      const overFeature = features.find((f) => f.id === Number(overId))
+      if (overFeature) {
+        newStatus = overFeature.status
+      }
     }
 
     if (newStatus && newStatus !== feature.status) {
-        // Optimistic update handled by hook, just call API
-       await updateFeature(feature.id, { status: newStatus })
+      // Optimistic update handled by hook, just call API
+      const success = await updateFeature(feature.id, { status: newStatus })
+      if (success) {
+        onFeatureChange?.()
+      }
     }
   }
 
@@ -103,9 +102,12 @@ export function ProjectKanban({ projectId, token, users }: ProjectKanbanProps) {
   }
 
   const handleDeleteClick = async (featureId: number) => {
-      if(confirm("Biztosan törölni szeretnéd ezt a feladatot?")) {
-        await deleteFeature(featureId)
+    if (confirm("Biztosan törölni szeretnéd ezt a feladatot?")) {
+      const success = await deleteFeature(featureId)
+      if (success) {
+        onFeatureChange?.()
       }
+    }
   }
 
   if (isLoading && features.length === 0) {
@@ -176,11 +178,18 @@ export function ProjectKanban({ projectId, token, users }: ProjectKanbanProps) {
         users={users}
         onClose={() => setIsDialogOpen(false)}
         onSubmit={async (data) => {
-            if (editingFeature) {
-                return await updateFeature(editingFeature.id, data)
-            } else {
-                return await createFeature(data)
-            }
+          let success = false
+          if (editingFeature) {
+            success = await updateFeature(editingFeature.id, data)
+          } else {
+            success = await createFeature(data)
+          }
+
+          if (success) {
+            onFeatureChange?.()
+          }
+
+          return success
         }}
       />
     </div>

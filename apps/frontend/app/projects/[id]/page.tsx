@@ -31,6 +31,22 @@ export default function ProjectDetailsPage() {
     }
   }, [token, isAuthLoading, router])
 
+  const fetchStats = async () => {
+    if (!token || !projectId) return
+
+    try {
+      const statsResponse = await fetch(`/api/projects/${projectId}/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats(statsData)
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error)
+    }
+  }
+
   useEffect(() => {
     async function loadData() {
       if (!token || !projectId) return
@@ -38,57 +54,43 @@ export default function ProjectDetailsPage() {
       setIsLoading(true)
       try {
         // Fetch project details
-        // We reuse the list endpoint but filter client-side or fetch all? 
-        // Ideally we should have a GET /api/projects/:id endpoint. 
-        // Since I didn't create that specifically in the plan (oops, I did creating features but maybe not details?), 
-        // let's assume we can fetch list locally or if API supports it.
-        // The plan mentioned "Project Details component".
-        // Let's check existing API. If not, I'll fetch list and find, or assume /api/projects/:id works.
-        // Existing ProjectForm uses PATCH /api/projects/:id, so GET likely works too if standard controller.
-        
         const projectResponse = await fetch(`/api/projects/${projectId}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         })
-        
+
         if (!projectResponse.ok) {
-             // Fallback: try to find in list if single fetch fails
-             const listResponse = await fetch('/api/projects', {
-                 headers: { Authorization: `Bearer ${token}` }
-             })
-             if(listResponse.ok) {
-                 const projects = await listResponse.json()
-                 const found = projects.find((p: Project) => p.id === parseInt(projectId))
-                 if(found) setProject(found)
-                 else throw new Error('Projekt nem található')
-             } else {
-                 throw new Error('Projekt nem található')
-             }
+          // Fallback: try to find in list if single fetch fails
+          const listResponse = await fetch("/api/projects", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (listResponse.ok) {
+            const projects = await listResponse.json()
+            const found = projects.find((p: Project) => p.id === parseInt(projectId))
+            if (found) setProject(found)
+            else throw new Error("Projekt nem található")
+          } else {
+            throw new Error("Projekt nem található")
+          }
         } else {
-            const projectData = await projectResponse.json()
-            setProject(projectData)
+          const projectData = await projectResponse.json()
+          setProject(projectData)
         }
 
         // Fetch Stats
-        const statsResponse = await fetch(`/api/projects/${projectId}/stats`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-        if(statsResponse.ok) {
-            const statsData = await statsResponse.json()
-            setStats(statsData)
-        }
+        await fetchStats()
 
         // Fetch Users (for assigning)
-        const usersResponse = await fetch('/api/users', {
-            headers: { Authorization: `Bearer ${token}` }
+        const usersResponse = await fetch("/api/users", {
+          headers: { Authorization: `Bearer ${token}` },
         })
-        if(usersResponse.ok) {
-            const usersData = await usersResponse.json()
-            setUsers(usersData)
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json()
+          setUsers(usersData)
         }
-
       } catch (err: unknown) {
-        console.error('Error loading project data:', err)
-        const errorMessage = err instanceof Error ? err.message : 'Hiba történt az adatok betöltésekor'
+        console.error("Error loading project data:", err)
+        const errorMessage =
+          err instanceof Error ? err.message : "Hiba történt az adatok betöltésekor"
         setError(errorMessage)
       } finally {
         setIsLoading(false)
@@ -225,7 +227,12 @@ export default function ProjectDetailsPage() {
 
       {/* Kanban Board */}
       <div className="mt-4">
-         <ProjectKanban projectId={projectId} token={token} users={users} />
+        <ProjectKanban
+          projectId={projectId}
+          token={token}
+          users={users}
+          onFeatureChange={fetchStats}
+        />
       </div>
 
     </div>
