@@ -4,6 +4,7 @@ import { ErrorAlert } from '@/components/ErrorAlert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoadingLogo } from "@/components/ui/LoadingLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from '@/context/AuthContext';
 import { positionColors, positionLabels } from '@/lib/positions';
@@ -95,7 +96,7 @@ export default function UserProfilePage() {
   if (isAuthLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <LoadingLogo size={100} />
       </div>
     );
   }
@@ -157,9 +158,8 @@ export default function UserProfilePage() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-            <p className="text-center mt-4 text-muted-foreground animate-pulse">Statisztikák betöltése...</p>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
+            <LoadingLogo size={60} />
         </div>
       ) : error ? (
         <ErrorAlert error={error} onClose={() => setError(null)} />

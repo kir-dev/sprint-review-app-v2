@@ -4,8 +4,8 @@
 import { ErrorAlert } from "@/components/ErrorAlert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { LoadingLogo } from "@/components/ui/LoadingLogo"
 import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/context/AuthContext"
 import { ArrowLeft, Calendar, Clock, Github, ListTodo, Users } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
@@ -104,17 +104,8 @@ export default function ProjectDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-7xl mx-auto">
-        <div className="flex items-center gap-4">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <Skeleton className="h-8 w-64" />
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
-        </div>
-        <Skeleton className="h-[500px]" />
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingLogo size={100} />
       </div>
     )
   }

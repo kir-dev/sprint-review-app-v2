@@ -10,6 +10,7 @@ import { TopUsersList } from "@/components/dashboard/TopUsersList";
 import { WorkPeriodProgress } from "@/components/dashboard/WorkPeriodProgress";
 import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton";
 import { Button } from "@/components/ui/button";
+import { LoadingLogo } from "@/components/ui/LoadingLogo";
 import { useAuth } from "@/context/AuthContext";
 import { CategoryBreakdownData, DashboardEventStats, DashboardProjectItem, DashboardSummary, DashboardTopUser, HeatmapData } from "@/types/dashboard";
 import { LayoutDashboard, Plus } from "lucide-react";
@@ -95,10 +96,12 @@ export default function DashboardPage() {
     }
   }, [token]);
 
+
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Betöltés...</div>
+        <LoadingLogo size={150} />
       </div>
     );
   }

@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/ui/LoadingLogo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -22,9 +23,8 @@ export function EventsList({
 }: EventsListProps) {
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <p className="text-center mt-4 text-muted-foreground animate-pulse">Események betöltése...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <LoadingLogo size={60} />
       </div>
     )
   }

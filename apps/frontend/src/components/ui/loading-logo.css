@@ -1,0 +1,67 @@
+.loading-logo-svg {
+  width: 100%;
+  height: auto;
+  max-width: 300px; /* Default max width */
+}
+
+/* Az animáció logikája: a maszk vonalát mozgatjuk */
+.loading-logo-mask-path {
+  fill: none;
+  stroke: white;
+  stroke-width: 800; /* Further increased for safety */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 4000; /* Increased to match new path length */
+  stroke-dashoffset: 4000;
+  animation: loading-logo-reveal 3s ease-in-out infinite;
+}
+
+/* Külön késleltetés az egyes elemeknek a látványosabb hatáshoz */
+.loading-logo-delay-1 {
+  animation-delay: 0s;
+}
+.loading-logo-delay-2 {
+  animation-delay: 0.2s;
+}
+.loading-logo-delay-3 {
+  animation-delay: 0.4s;
+}
+
+@keyframes loading-logo-reveal {
+  0% {
+    stroke-dashoffset: 4000;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+/* Pulzáló effekt az egész logón */
+.loading-logo-container {
+  animation: loading-logo-pulse 3s ease-in-out infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@keyframes loading-logo-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}

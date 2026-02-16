@@ -3,6 +3,7 @@
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton";
+import { LoadingLogo } from "@/components/ui/LoadingLogo";
 import { useAuth } from '@/context/AuthContext';
 import { Plus } from "lucide-react";
 import { useRouter } from 'next/navigation';
@@ -127,11 +128,13 @@ export default function LogsPage() {
   // Computed values
   const filteredLogs = filterLogs(logs, filters);
 
+
+
   // Loading state
   if (isAuthLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Betöltés...</p>
+        <LoadingLogo size={150} />
       </div>
     );
   }

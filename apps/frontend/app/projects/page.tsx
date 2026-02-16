@@ -3,6 +3,7 @@
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { ErrorAlert } from "@/components/ErrorAlert"
 import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton"
+import { LoadingLogo } from "@/components/ui/LoadingLogo"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -106,11 +107,13 @@ export default function ProjectsPage() {
     setProjectToDelete(null)
   }
 
+
+
   // Loading state
   if (isAuthLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Betöltés...</p>
+        <LoadingLogo size={150} />
       </div>
     )
   }

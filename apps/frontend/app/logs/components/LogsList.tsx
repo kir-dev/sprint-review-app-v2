@@ -1,3 +1,4 @@
+import { LoadingLogo } from "@/components/ui/LoadingLogo"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { Log } from "../types"
@@ -25,10 +26,9 @@ export function LogsList({
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="text-center mt-4 text-muted-foreground animate-pulse">Bejegyzések betöltése...</p>
-          </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <LoadingLogo size={60} />
+      </div>
         ) : logs.length === 0 ? (
           <div className="text-center py-16 animate-fade-in border rounded-xl border-dashed bg-card/50">
             <p className="text-muted-foreground mb-4">

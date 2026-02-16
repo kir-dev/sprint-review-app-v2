@@ -1,6 +1,7 @@
 "use client"
 
 import { ErrorAlert } from "@/components/ErrorAlert"
+import { LoadingLogo } from "@/components/ui/LoadingLogo"
 import { useAuth } from "@/context/AuthContext"
 import { updateUserPosition } from "@/lib/api/users"
 import { useRouter } from "next/navigation"
@@ -8,7 +9,6 @@ import { useEffect } from "react"
 import { Position } from "../logs/types"
 import { UsersHeader } from "./components/UsersHeader"
 import { UsersList } from "./components/UsersList"
-import { UsersPageSkeleton } from "./components/UsersPageSkeleton"
 import { useUserData } from "./hooks/useUserData"
 
 export default function UsersPage() {
@@ -50,9 +50,15 @@ export default function UsersPage() {
     }
   }
 
+
+
   // Loading state
   if (isLoading || !user) {
-    return <UsersPageSkeleton />
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingLogo size={150} />
+      </div>
+    )
   }
 
   return (
