@@ -21,7 +21,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Sprint Review App - Kir-Dev',
   description: 'Sprint review és munkanapló kezelő a Kir-Dev számára',
-  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/Kir-Dev-Black.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

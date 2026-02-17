@@ -7,7 +7,7 @@
   --color-card-foreground: hsl(0 0% 14.5%);
   --color-popover: hsl(0 0% 100%);
   --color-popover-foreground: hsl(0 0% 14.5%);
-  --color-primary: hsl(14 100% 60%);
+  --color-primary: #f15a29;
   --color-primary-foreground: hsl(0 0% 100%);
   --color-secondary: hsl(0 0% 97%);
   --color-secondary-foreground: hsl(0 0% 20.5%);
@@ -19,7 +19,7 @@
   --color-destructive-foreground: hsl(0 0% 98.5%);
   --color-border: hsl(0 0% 92.2%);
   --color-input: hsl(0 0% 92.2%);
-  --color-ring: hsl(14 100% 60%);
+  --color-ring: #f15a29;
   --color-highlight: hsl(48 96% 94%);
   
   --radius-sm: calc(0.5rem - 4px);
@@ -44,7 +44,7 @@
     --color-card-foreground: hsl(0 0% 98.5%);
     --color-popover: hsl(0 0% 13%);
     --color-popover-foreground: hsl(0 0% 98.5%);
-    --color-primary: hsl(14 100% 60%);
+    --color-primary: #f15a29;
     --color-primary-foreground: hsl(0 0% 11%);
     --color-secondary: hsl(0 0% 22%);
     --color-secondary-foreground: hsl(0 0% 98.5%);
@@ -56,7 +56,7 @@
     --color-destructive-foreground: hsl(0 0% 98.5%);
     --color-border: hsl(0 0% 22%);
     --color-input: hsl(0 0% 22%);
-    --color-ring: hsl(14 100% 60%);
+    --color-ring: #f15a29;
     --color-highlight: hsl(48 96% 94% / 0.1);
   }
   
