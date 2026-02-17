@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DashboardTopUser } from '@/types/dashboard';
 import { Trophy } from 'lucide-react';
+import Link from 'next/link';
 
 interface TopUsersListProps {
   users: DashboardTopUser[];
@@ -31,7 +32,11 @@ export function TopUsersList({ users, loading }: TopUsersListProps) {
         ) : (
           <div className="space-y-4">
               {users.map((user, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                  <Link 
+                    key={index} 
+                    href={`/users/${user.id}`}
+                    className="flex items-center justify-between hover:bg-secondary/50 transition-colors px-2 rounded-md -mx-2 py-2"
+                  >
                       <div className="flex items-center gap-3">
                             <div className={`
                                 flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
@@ -45,7 +50,7 @@ export function TopUsersList({ users, loading }: TopUsersListProps) {
                             <span className="font-medium">{user.name}</span>
                       </div>
                       <span className="text-sm font-semibold">{user.hours} óra</span>
-                  </div>
+                  </Link>
               ))}
           </div>
         )}

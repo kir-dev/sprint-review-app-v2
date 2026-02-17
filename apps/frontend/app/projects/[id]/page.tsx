@@ -48,51 +48,57 @@ export default function ProjectDetailsPage() {
 
   useEffect(() => {
     async function loadData() {
-      if (!token || !projectId) return
+      if (!token || !projectId) return;
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        // Fetch project details
-        const projectResponse = await fetch(`/api/projects/${projectId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-
-        if (!projectResponse.ok) {
-          // Fallback: try to find in list if single fetch fails
-          const listResponse = await fetch("/api/projects", {
+        // Fetch project, stats, and users in parallel
+        const [projectRes, statsRes, usersRes] = await Promise.all([
+          fetch(`/api/projects/${projectId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`/api/projects/${projectId}/stats`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch('/api/users', {
             headers: { Authorization: `Bearer ${token}` },
           })
-          if (listResponse.ok) {
-            const projects = await listResponse.json()
-            const found = projects.find((p: Project) => p.id === parseInt(projectId))
-            if (found) setProject(found)
-            else throw new Error("Projekt nem található")
-          } else {
-            throw new Error("Projekt nem található")
-          }
+        ]);
+
+        if (projectRes.ok) {
+          const projectData = await projectRes.json();
+          setProject(projectData);
         } else {
-          const projectData = await projectResponse.json()
-          setProject(projectData)
+          // Fallback logic if needed (matching original approach though unified is better)
+          const listResponse = await fetch("/api/projects", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (listResponse.ok) {
+            const projects = await listResponse.json();
+            const found = projects.find((p: Project) => p.id === parseInt(projectId));
+            if (found) setProject(found);
+            else throw new Error("Projekt nem található");
+          } else {
+            throw new Error("Projekt nem található");
+          }
         }
 
-        // Fetch Stats
-        await fetchStats()
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
 
-        // Fetch Users (for assigning)
-        const usersResponse = await fetch("/api/users", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (usersResponse.ok) {
-          const usersData = await usersResponse.json()
-          setUsers(usersData)
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          setUsers(usersData);
         }
       } catch (err: unknown) {
-        console.error("Error loading project data:", err)
+        console.error("Error loading project data:", err);
         const errorMessage =
-          err instanceof Error ? err.message : "Hiba történt az adatok betöltésekor"
-        setError(errorMessage)
+          err instanceof Error ? err.message : "Hiba történt az adatok betöltésekor";
+        setError(errorMessage);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
 
@@ -127,22 +133,22 @@ export default function ProjectDetailsPage() {
       <div className="flex flex-col gap-6">
         <Button
             variant="ghost"
-            onClick={() => router.push('/projects')}
+            onClick={() => router.back()}
             className="w-fit -ml-2 text-muted-foreground hover:text-foreground"
             >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Vissza a projektekhez
+            Vissza
         </Button>
 
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div className="flex items-start gap-4">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
-                    {project.description && (
+                    {project.description ? (
                         <p className="text-muted-foreground text-lg max-w-2xl">
                             {project.description}
                         </p>
-                    )}
+                    ) : null}
                     
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
@@ -173,7 +179,7 @@ export default function ProjectDetailsPage() {
                 </div>
             </div>
 
-            {project.githubUrl && (
+            {project.githubUrl ? (
                 <Button 
                     variant="secondary" 
                     size="sm" 
@@ -185,12 +191,12 @@ export default function ProjectDetailsPage() {
                         <span className="font-semibold tracking-wide whitespace-nowrap">GitHub Repository</span>
                     </a>
                 </Button>
-            )}
+            ) : null}
         </div>
       </div>
 
       {/* Stats */}
-      {stats && (
+      {stats ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -234,7 +240,7 @@ export default function ProjectDetailsPage() {
                 </CardContent>
             </Card>
         </div>
-      )}
+      ) : null}
 
       {/* Kanban Board */}
       <div className="mt-4">

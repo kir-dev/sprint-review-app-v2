@@ -67,20 +67,25 @@ export default function UserProfilePage() {
 
       setIsLoading(true);
       try {
-        // Fetch user details
-        const userResponse = await fetch(`/api/users/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!userResponse.ok) throw new Error('Failed to fetch user details');
-        const userData = await userResponse.json();
-        setUser(userData);
+        // Fetch user data and stats in parallel
+        const [userResponse, statsResponse] = await Promise.all([
+          fetch(`/api/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`/api/logs/stats/user/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        ]);
 
-        // Fetch user stats
-        const statsResponse = await fetch(`/api/logs/stats/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        if (!userResponse.ok) throw new Error('Failed to fetch user details');
         if (!statsResponse.ok) throw new Error('Failed to fetch user stats');
-        const statsData = await statsResponse.json();
+
+        const [userData, statsData] = await Promise.all([
+          userResponse.json(),
+          statsResponse.json()
+        ]);
+
+        setUser(userData);
         setStats(statsData);
       } catch (err: any) {
         console.error('Error loading profile data:', err);
@@ -115,10 +120,10 @@ export default function UserProfilePage() {
         <Button
           variant="ghost"
           className="w-fit pl-0 hover:pl-2 transition-all"
-          onClick={() => router.push('/users')}
+          onClick={() => router.back()}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Vissza a felhasználókhoz
+          Vissza
         </Button>
 
         <div className="flex items-center gap-4 animate-slide-in-left">
@@ -204,9 +209,9 @@ export default function UserProfilePage() {
                         <span className="font-medium">{count}</span>
                         </div>
                     ))}
-                    {Object.keys(stats.logsByCategory).length === 0 && (
+                    {Object.keys(stats.logsByCategory).length === 0 ? (
                         <p className="text-muted-foreground text-center py-4">Nincs még bejegyzés</p>
-                    )}
+                    ) : null}
                     </div>
                 </CardContent>
                 </Card>
@@ -223,9 +228,9 @@ export default function UserProfilePage() {
                         <span className="font-medium">{count}</span>
                         </div>
                     ))}
-                    {Object.keys(stats.logsByProject).length === 0 && (
+                    {Object.keys(stats.logsByProject).length === 0 ? (
                         <p className="text-muted-foreground text-center py-4">Nincs még projekt bejegyzés</p>
-                    )}
+                    ) : null}
                     </div>
                 </CardContent>
                 </Card>

@@ -59,15 +59,18 @@ export class DashboardService {
     // Fetch ALL logs for the period to calculate global top projects
     const allLogs = await this.logsService.findAll({ workPeriodId: currentPeriod?.id });
     
-    const logsByProject: Record<string, number> = {};
+    const projectStats: Record<number, { id: number; name: string; hours: number }> = {};
     allLogs.forEach(log => {
         if (log.project) {
-            logsByProject[log.project.name] = (logsByProject[log.project.name] || 0) + (log.timeSpent || 0); // Using hours now
+            if (!projectStats[log.project.id]) {
+                projectStats[log.project.id] = { id: log.project.id, name: log.project.name, hours: 0 };
+            }
+            projectStats[log.project.id].hours += (log.timeSpent || 0);
         }
     });
 
-    const topProjects = Object.entries(logsByProject)
-      .map(([name, count]) => ({ name, count })) // count is actually hours
+    const topProjects = Object.values(projectStats)
+      .map(({ id, name, hours }) => ({ id, name, count: hours })) 
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
@@ -80,16 +83,19 @@ export class DashboardService {
       const currentPeriod = await this.workPeriodsService.findCurrent();
       const allLogs = await this.logsService.findAll({ workPeriodId: currentPeriod?.id });
       
-      const hoursByUser: Record<string, number> = {};
+      const userStats: Record<number, { id: number; name: string; hours: number }> = {};
       
       allLogs.forEach(log => {
           if (log.user) {
-             hoursByUser[log.user.fullName] = (hoursByUser[log.user.fullName] || 0) + (log.timeSpent || 0);
+             if (!userStats[log.user.id]) {
+                 userStats[log.user.id] = { id: log.user.id, name: log.user.fullName, hours: 0 };
+             }
+             userStats[log.user.id].hours += (log.timeSpent || 0);
           }
       });
 
-      const topUsers = Object.entries(hoursByUser)
-        .map(([name, hours]) => ({ name, hours }))
+      const topUsers = Object.values(userStats)
+        .map(({ id, name, hours }) => ({ id, name, hours }))
         .sort((a, b) => b.hours - a.hours)
         .slice(0, 5);
         
@@ -170,8 +176,12 @@ export class DashboardService {
 
     const upcoming = events
       .filter((e) => new Date(e.startDate) >= now)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
       .slice(0, 5);
-    const past = events.filter((e) => new Date(e.startDate) < now).slice(0, 5);
+    const past = events
+      .filter((e) => new Date(e.startDate) < now)
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      .slice(0, 5);
 
     return {
       upcoming,

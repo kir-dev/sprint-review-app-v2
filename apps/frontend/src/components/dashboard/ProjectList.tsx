@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardProjectItem } from "@/types/dashboard";
 import { Briefcase } from "lucide-react";
+import Link from "next/link";
 
 interface ProjectListProps {
   projects: DashboardProjectItem[];
@@ -27,14 +28,18 @@ export function ProjectList({ projects, loading }: ProjectListProps) {
         ) : (
           <div className="space-y-4">
             {projects.map((project, i) => (
-              <div key={i} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+              <Link 
+                key={i} 
+                href={`/projects/${project.id}`}
+                className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0 hover:bg-secondary/50 transition-colors px-2 rounded-md -mx-2 py-2"
+              >
                 <div>
                    <p className="font-medium">{project.name}</p>
                 </div>
                 <div className="text-right">
                    <p className="font-semibold">{project.count} log</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

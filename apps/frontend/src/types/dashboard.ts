@@ -14,11 +14,13 @@ export interface DashboardSummary {
 }
 
 export interface DashboardTopUser {
+    id: number;
     name: string;
     hours: number;
 }
 
 export interface DashboardProjectItem {
+  id: number;
   name: string;
   count: number;
 }

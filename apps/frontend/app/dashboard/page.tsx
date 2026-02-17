@@ -196,7 +196,7 @@ export default function DashboardPage() {
         onClose={closeDialog}
       />
 
-      <MobileFloatingActionButton onClick={() => openDialog()} icon={Plus} />
+      {!isDialogOpen && <MobileFloatingActionButton onClick={() => openDialog()} icon={Plus} />}
     </div>
   );
 }
