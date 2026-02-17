@@ -11,6 +11,7 @@ import { useFeatureData } from "../hooks/useFeatureData"
 import { Feature, FeaturePriority, FeatureStatus, User } from "../types"
 import { FeatureCard } from "./FeatureCard"
 import { FeatureDialog } from "./FeatureDialog"
+import { LoadingLogo } from "@/components/ui/LoadingLogo"
 
 interface ProjectKanbanProps {
   projectId: string
@@ -129,7 +130,7 @@ export function ProjectKanban({ projectId, token, users, onFeatureChange }: Proj
   }
 
   if (isLoading && features.length === 0) {
-      return <div>Betöltés...</div>
+      return <LoadingLogo size={60} /> 
   }
 
   return (

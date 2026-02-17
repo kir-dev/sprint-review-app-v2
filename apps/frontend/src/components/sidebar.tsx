@@ -81,7 +81,7 @@ export function Sidebar({ className, onClose }: { className?: string; onClose?: 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
         {navigation.map((item, index) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link
               key={item.name}

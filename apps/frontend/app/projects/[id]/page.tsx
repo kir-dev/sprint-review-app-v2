@@ -164,7 +164,7 @@ export default function ProjectDetailsPage() {
                                 <Calendar className="h-3 w-3" />
                              </div>
                              <span>
-                                Létrehozva: <span className="font-medium text-foreground">{new Date(project.createdAt).toLocaleDateString()}</span>
+                                Létrehozva: <span className="font-medium text-foreground">{new Date(project.createdAt).toLocaleDateString('hu-HU')}</span>
                              </span>
                         </div>
                          <div className="flex items-center gap-2">

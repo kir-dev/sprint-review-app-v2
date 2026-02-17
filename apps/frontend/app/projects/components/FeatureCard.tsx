@@ -76,7 +76,7 @@ export function FeatureCard({ feature, onClick, onDoubleClick, onDelete }: Featu
                     )}
                 </div>
                 <div className="text-[10px] text-muted-foreground">
-                    {new Date(feature.createdAt).toLocaleDateString()}
+                    {new Date(feature.createdAt).toLocaleDateString('hu-HU')}
                 </div>
             </div>
         </div>

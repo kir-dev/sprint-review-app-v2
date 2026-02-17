@@ -12,7 +12,7 @@ export function MobileBottomNav() {
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/80 backdrop-blur-lg pb-[env(safe-area-inset-bottom)]">
       <nav className="flex items-center justify-around h-16 px-2">
         {navigation.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           
           return (
             <Link
