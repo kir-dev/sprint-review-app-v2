@@ -7,12 +7,16 @@ import { Feature } from "../types";
 interface FeatureCardProps {
     feature: Feature;
     onClick?: () => void;
+    onDoubleClick?: () => void;
     onDelete?: () => void;
 }
 
-export function FeatureCard({ feature, onClick, onDelete }: FeatureCardProps) {
+export function FeatureCard({ feature, onClick, onDoubleClick, onDelete }: FeatureCardProps) {
     return (
-        <div className="bg-card p-3 rounded-md shadow-sm border border-border hover:border-primary/50 transition-colors group relative">
+        <div 
+            className="bg-card p-3 rounded-md shadow-sm border border-border hover:border-primary/50 transition-colors group relative"
+            onDoubleClick={onDoubleClick}
+        >
             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                     className="cursor-pointer p-1 hover:bg-muted rounded focus:outline-none focus:ring-2 focus:ring-ring"

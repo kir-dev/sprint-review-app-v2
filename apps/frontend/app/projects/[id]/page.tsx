@@ -5,7 +5,6 @@ import { ErrorAlert } from "@/components/ErrorAlert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { LoadingLogo } from "@/components/ui/LoadingLogo"
-import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/context/AuthContext"
 import { ArrowLeft, Calendar, Clock, Github, ListTodo, Users } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
@@ -124,48 +123,69 @@ export default function ProjectDetailsPage() {
   return (
     <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-[1400px] mx-auto pb-10">
       {/* Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-            <Button
+      {/* Header */}
+      <div className="flex flex-col gap-6">
+        <Button
             variant="ghost"
-            size="icon"
             onClick={() => router.push('/projects')}
-            className="h-8 w-8"
+            className="w-fit -ml-2 text-muted-foreground hover:text-foreground"
             >
-            <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex-1">
-                <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                    {project.name}
-                    {project.githubUrl && (
-                        <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                            <Github className="h-6 w-6" />
-                        </a>
-                    )}
-                </h1>
-                {project.description && (
-                    <p className="text-muted-foreground mt-1 max-w-2xl">
-                        {project.description}
-                    </p>
-                )}
-            </div>
-        </div>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Vissza a projektekhez
+        </Button>
 
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground items-center bg-card p-3 rounded-lg border shadow-sm">
-             <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>Menedzser: <span className="font-medium text-foreground">{project.projectManager?.fullName || 'Nincs'}</span></span>
-             </div>
-             <Separator orientation="vertical" className="h-4 hidden sm:block" />
-             <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>Létrehozva: <span className="font-medium text-foreground">{new Date(project.createdAt).toLocaleDateString()}</span></span>
-             </div>
-             <Separator orientation="vertical" className="h-4 hidden sm:block" />
-             <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>Tagok: <span className="font-medium text-foreground">{project.members?.length || 0} fő</span></span>
-             </div>
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
+                    {project.description && (
+                        <p className="text-muted-foreground text-lg max-w-2xl">
+                            {project.description}
+                        </p>
+                    )}
+                    
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                             <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center">
+                                <Users className="h-3 w-3" />
+                             </div>
+                             <span>
+                                Menedzser: <span className="font-medium text-foreground">{project.projectManager?.fullName || 'Nincs'}</span>
+                             </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center">
+                                <Calendar className="h-3 w-3" />
+                             </div>
+                             <span>
+                                Létrehozva: <span className="font-medium text-foreground">{new Date(project.createdAt).toLocaleDateString()}</span>
+                             </span>
+                        </div>
+                         <div className="flex items-center gap-2">
+                             <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center">
+                                <Users className="h-3 w-3" />
+                             </div>
+                             <span>
+                                Tagok: <span className="font-medium text-foreground">{project.members?.length || 0} fő</span>
+                             </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {project.githubUrl && (
+                <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    asChild 
+                    className="rounded-full bg-zinc-100 text-zinc-900 border border-zinc-200 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-700 shadow-sm shrink-0 px-6 h-10 transition-all hover:scale-105 active:scale-95 group"
+                >
+                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                        <Github className="h-4 w-4 transition-transform group-hover:rotate-12" />
+                        <span className="font-semibold tracking-wide whitespace-nowrap">GitHub Repository</span>
+                    </a>
+                </Button>
+            )}
         </div>
       </div>
 

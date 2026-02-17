@@ -8,7 +8,7 @@ import { DragEndEvent } from "@dnd-kit/core"
 import { AlertCircle, Plus } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useFeatureData } from "../hooks/useFeatureData"
-import { Feature, FeatureStatus, User } from "../types"
+import { Feature, FeaturePriority, FeatureStatus, User } from "../types"
 import { FeatureCard } from "./FeatureCard"
 import { FeatureDialog } from "./FeatureDialog"
 
@@ -25,6 +25,13 @@ const COLUMNS: { id: FeatureStatus; title: string; color: string }[] = [
   { id: 'BLOCKED', title: 'Blokkolva', color: 'bg-red-500/10 border-red-500/20' },
   { id: 'DONE', title: 'Kész', color: 'bg-green-500/10 border-green-500/20' },
 ]
+
+const PRIORITY_VALUES: Record<FeaturePriority, number> = {
+  CRITICAL: 4,
+  HIGH: 3,
+  MEDIUM: 2,
+  LOW: 1,
+}
 
 export function ProjectKanban({ projectId, token, users, onFeatureChange }: ProjectKanbanProps) {
   const { 
@@ -47,7 +54,18 @@ export function ProjectKanban({ projectId, token, users, onFeatureChange }: Proj
       DONE: [],
     }
 
-    features.forEach((feature) => {
+    const sortedFeatures = [...features].sort((a, b) => {
+      const priorityA = a.priority ? PRIORITY_VALUES[a.priority] : 0
+      const priorityB = b.priority ? PRIORITY_VALUES[b.priority] : 0
+      
+      if (priorityA !== priorityB) {
+        return priorityB - priorityA // Higher priority first
+      }
+      
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() // Newer first
+    })
+
+    sortedFeatures.forEach((feature) => {
       if (columns[feature.status]) {
         columns[feature.status].push(feature)
       }
@@ -153,6 +171,7 @@ export function ProjectKanban({ projectId, token, users, onFeatureChange }: Proj
                       <FeatureCard 
                           feature={feature} 
                           onClick={() => openEditFeatureDialog(feature)}
+                          onDoubleClick={() => openEditFeatureDialog(feature)}
                           onDelete={() => handleDeleteClick(feature.id)}
                       />
                   </KanbanItem>

@@ -51,6 +51,7 @@ model Project {
   logs             Log[]
   members          User[]   @relation("ProjectMembers")
   features         Feature[]
+  createdAt        DateTime @default(now())
 }
 
 model Feature {
