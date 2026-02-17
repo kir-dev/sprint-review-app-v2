@@ -40,7 +40,7 @@ function LoginContent() {
     if (showLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark px-4">
-        <LoadingLogo size={150} />
+        <LoadingLogo size={60} />
       </div>
     );
   }
@@ -85,7 +85,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-dark px-4">
-        <LoadingLogo size={150} />
+        <LoadingLogo size={60} />
       </div>
     }>
       <LoginContent />

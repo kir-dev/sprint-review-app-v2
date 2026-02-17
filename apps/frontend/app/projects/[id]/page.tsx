@@ -105,7 +105,7 @@ export default function ProjectDetailsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <LoadingLogo size={100} />
+        <LoadingLogo size={60} />
       </div>
     )
   }

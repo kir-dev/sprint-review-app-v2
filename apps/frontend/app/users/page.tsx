@@ -56,7 +56,7 @@ export default function UsersPage() {
   if (isLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <LoadingLogo size={150} />
+        <LoadingLogo size={60} />
       </div>
     )
   }

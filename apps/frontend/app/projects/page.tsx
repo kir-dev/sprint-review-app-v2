@@ -113,7 +113,7 @@ export default function ProjectsPage() {
   if (isAuthLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <LoadingLogo size={150} />
+        <LoadingLogo size={60} />
       </div>
     )
   }

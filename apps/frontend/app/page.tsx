@@ -1,5 +1,6 @@
 'use client';
 
+import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -20,7 +21,7 @@ export default function HomePage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p>Loading...</p>
+      <LoadingLogo size={60} />
     </div>
   );
 }
