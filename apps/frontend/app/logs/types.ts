@@ -31,7 +31,8 @@ export enum Position {
 export interface Event {
   id: number
   name: string
-  date: string
+  startDate: string
+  endDate: string
   type: EventType
   _count?: {
     logs: number
@@ -82,4 +83,6 @@ export interface LogFilters {
   category: string
   projectId: string
   workPeriodId: string
+  startDate?: string
+  endDate?: string
 }

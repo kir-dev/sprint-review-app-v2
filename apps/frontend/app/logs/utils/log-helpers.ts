@@ -29,8 +29,72 @@ export function filterLogs(logs: Log[], filters: LogFilters): Log[] {
       log.workPeriodId.toString() !== filters.workPeriodId
     )
       return false;
+
+    if (filters.startDate || filters.endDate) {
+      const logDate = new Date(log.date);
+      logDate.setHours(0, 0, 0, 0);
+
+      if (filters.startDate) {
+        const start = new Date(filters.startDate);
+        start.setHours(0, 0, 0, 0);
+        if (logDate < start) return false;
+      }
+
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999);
+        if (logDate > end) return false;
+      }
+    }
+
     return true;
   });
+}
+
+export function exportLogsToCsv(logs: Log[], filters?: LogFilters) {
+  if (!logs || logs.length === 0) return;
+
+  const headers = [
+    'Dátum',
+    'Kategória',
+    'Projekt',
+    'Időszak',
+    'Ráfordított idő (óra)',
+    'Nehézség',
+    'Leírás'
+  ];
+  
+  const csvRows = logs.map(log => {
+    const date = new Date(log.date).toLocaleDateString('hu-HU');
+    const categoryName = log.category; 
+    const projectName = log.project?.name || '';
+    const workPeriodName = log.workPeriod?.name || '';
+    const timeSpent = log.timeSpent?.toString() || '';
+    const difficulty = log.difficulty || '';
+    const desc = `"${(log.description || '').replace(/"/g, '""')}"`;
+    
+    return [date, categoryName, projectName, workPeriodName, timeSpent, difficulty, desc].join(',');
+  });
+
+  const csvContent = [headers.join(','), ...csvRows].join('\n');
+  const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); // adding BOM for Excel
+  const url = URL.createObjectURL(blob);
+  
+  let dateStr = new Date().toISOString().split('T')[0];
+  if (filters?.startDate && filters?.endDate) {
+    dateStr = `${filters.startDate}_${filters.endDate}`;
+  } else if (filters?.startDate) {
+    dateStr = `${filters.startDate}_tol`;
+  } else if (filters?.endDate) {
+    dateStr = `${filters.endDate}_ig`;
+  }
+
+  const linkTag = document.createElement('a');
+  linkTag.href = url;
+  linkTag.setAttribute('download', `munkanaplok_${dateStr}.csv`);
+  document.body.appendChild(linkTag);
+  linkTag.click();
+  document.body.removeChild(linkTag);
 }
 
 export function calculateStats(logs: Log[]) {

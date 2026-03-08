@@ -39,7 +39,6 @@ export default function LogsPage() {
     isDialogOpen,
     editingLog,
     formData,
-    setFormData,
     openDialog,
     closeDialog,
   } = useLogForm(workPeriods, currentWorkPeriod);
@@ -62,6 +61,8 @@ export default function LogsPage() {
     category: '',
     projectId: '',
     workPeriodId: '',
+    startDate: '',
+    endDate: '',
   });
 
   // Delete confirmation state
@@ -153,9 +154,10 @@ export default function LogsPage() {
           workPeriods={workPeriods}
           onFiltersChange={setFilters}
           onClearFilters={() =>
-            setFilters({ category: '', projectId: '', workPeriodId: '' })
+            setFilters({ category: '', projectId: '', workPeriodId: '', startDate: '', endDate: '' })
           }
           isVisible={showFilters}
+          filteredLogs={filteredLogs}
         />
       )}
 
@@ -174,7 +176,7 @@ export default function LogsPage() {
         editingLog={editingLog}
         formData={formData}
         projects={projects}
-        events={events as any}
+        events={events}
         workPeriods={workPeriods}
 
         onSubmit={handleSubmit}

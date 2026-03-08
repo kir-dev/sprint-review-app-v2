@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Calendar22 } from "@/components/ui/datepicker"
+import { Download } from "lucide-react"
 import { useEffect, useState } from "react"
 import { categoryLabels } from "../constants"
-import { LogFilters as LogFiltersType, Project, WorkPeriod } from "../types"
+import { Log, LogFilters as LogFiltersType, Project, WorkPeriod } from "../types"
+import { exportLogsToCsv } from "../utils/log-helpers"
 
 interface LogFiltersProps {
   filters: LogFiltersType
@@ -11,6 +14,7 @@ interface LogFiltersProps {
   onFiltersChange: (filters: LogFiltersType) => void
   onClearFilters: () => void
   isVisible: boolean
+  filteredLogs: Log[]
 }
 
 export function LogFilters({ 
@@ -20,6 +24,7 @@ export function LogFilters({
   onFiltersChange,
   onClearFilters,
   isVisible,
+  filteredLogs,
 }: LogFiltersProps) {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false)
 
@@ -83,6 +88,35 @@ export function LogFilters({
                 <option key={period.id} value={period.id}>{period.name}</option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Mettől</label>
+            <Calendar22
+              value={filters.startDate}
+              onChange={(dateString) => onFiltersChange({ ...filters, startDate: dateString })}
+              className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Meddig</label>
+            <Calendar22
+              value={filters.endDate}
+              onChange={(dateString) => onFiltersChange({ ...filters, endDate: dateString })}
+              className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+            />
+          </div>
+
+          <div className="space-y-2 flex items-end">
+             <Button 
+                variant="default"
+                className="w-full h-10"
+                onClick={() => exportLogsToCsv(filteredLogs, filters)}
+                disabled={filteredLogs.length === 0}
+             >
+                <Download className="mr-2 h-4 w-4" /> Export (CSV)
+             </Button>
           </div>
         </div>
       </CardContent>
