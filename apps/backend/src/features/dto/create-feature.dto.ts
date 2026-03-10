@@ -1,7 +1,12 @@
-
 import { ApiProperty } from '@nestjs/swagger';
 import { FeatureStatus, Priority } from '@prisma/client';
-import { IsEnum, IsInt, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateFeatureDto {
   @ApiProperty({
@@ -57,4 +62,22 @@ export class CreateFeatureDto {
   @IsOptional()
   @IsInt()
   assigneeId?: number;
+
+  @ApiProperty({
+    description: 'Is bug',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isBug?: boolean;
+
+  @ApiProperty({
+    description: 'Is feature',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isFeature?: boolean;
 }

@@ -155,7 +155,7 @@ export class ProjectService {
 
   async getStats(projectId: number) {
     this.logger.log(`Fetching stats for project ID: ${projectId}`);
-    
+
     const [project, features, logs] = await Promise.all([
       this.prisma.project.findUnique({
         where: { id: projectId },
@@ -168,24 +168,35 @@ export class ProjectService {
         where: { projectId },
       }),
     ]);
-    
+
     if (!project) {
-        throw new Error('Project not found');
+      throw new Error('Project not found');
     }
 
     const totalTime = logs.reduce((acc, log) => acc + (log.timeSpent || 0), 0);
-    
+
     const featureCounts = {
-        TODO: features.filter(f => f.status === 'TODO').length,
-        IN_PROGRESS: features.filter(f => f.status === 'IN_PROGRESS').length,
-        DONE: features.filter(f => f.status === 'DONE').length,
-        BLOCKED: features.filter(f => f.status === 'BLOCKED').length,
+      TODO: features.filter((f) => f.status === 'TODO').length,
+      IN_PROGRESS: features.filter((f) => f.status === 'IN_PROGRESS').length,
+      DONE: features.filter((f) => f.status === 'DONE').length,
+      BLOCKED: features.filter((f) => f.status === 'BLOCKED').length,
     };
 
+    const bugs = features.filter((f) => f.isBug);
+    const featureTasks = features.filter((f) => f.isFeature);
+
     return {
-        totalLogs: logs.length,
-        totalTimeSpent: totalTime,
-        featureCounts,
+      totalLogs: logs.length,
+      totalTimeSpent: totalTime,
+      featureCounts,
+      bugStats: {
+        total: bugs.length,
+        completed: bugs.filter((f) => f.status === 'DONE').length,
+      },
+      featureStats: {
+        total: featureTasks.length,
+        completed: featureTasks.filter((f) => f.status === 'DONE').length,
+      },
     };
   }
 }

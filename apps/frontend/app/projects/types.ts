@@ -1,34 +1,34 @@
-import { Position } from "../logs/types"
+import { Position } from '../logs/types';
 
 export interface Project {
-  id: number
-  name: string
-  description?: string
-  githubUrl?: string
-  projectManagerId?: number
-  projectManager?: User
-  members?: User[]
-  createdAt: string
+  id: number;
+  name: string;
+  description?: string;
+  githubUrl?: string;
+  projectManagerId?: number;
+  projectManager?: User;
+  members?: User[];
+  createdAt: string;
   _count?: {
-    logs: number
-    members: number
-  }
+    logs: number;
+    members: number;
+  };
 }
 
 export interface User {
-  id: number
-  email: string
-  fullName: string
-  profileImage?: string
-  position: Position
+  id: number;
+  email: string;
+  fullName: string;
+  profileImage?: string;
+  position: Position;
 }
 
 export interface ProjectFormData {
-  name: string
-  description: string
-  githubUrl: string
-  projectManagerId: string
-  memberIds: string[]
+  name: string;
+  description: string;
+  githubUrl: string;
+  projectManagerId: string;
+  memberIds: string[];
 }
 
 export type FeatureStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'BLOCKED';
@@ -47,6 +47,8 @@ export interface Feature {
     fullName: string;
     profileImage?: string;
   };
+  isBug: boolean;
+  isFeature: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,5 +61,13 @@ export interface ProjectStats {
     IN_PROGRESS: number;
     DONE: number;
     BLOCKED: number;
+  };
+  bugStats: {
+    total: number;
+    completed: number;
+  };
+  featureStats: {
+    total: number;
+    completed: number;
   };
 }

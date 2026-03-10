@@ -62,8 +62,10 @@ model Feature {
   priority    Priority?
   project     Project       @relation(fields: [projectId], references: [id])
   projectId   Int
-  assignee    User?         @relation(fields: [assigneeId], references: [id])
+  assignee     User?         @relation(fields: [assigneeId], references: [id])
   assigneeId  Int?
+  isBug       Boolean       @default(false)
+  isFeature   Boolean       @default(false)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }

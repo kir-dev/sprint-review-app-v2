@@ -1,51 +1,76 @@
-"use client"
+'use client';
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Kanban, KanbanBoard, KanbanColumn, KanbanItem, KanbanOverlay } from "@/components/ui/kanban"
-import { cn } from "@/lib/utils"
-import { DragEndEvent } from "@dnd-kit/core"
-import { AlertCircle, Plus } from "lucide-react"
-import { useMemo, useState } from "react"
-import { useFeatureData } from "../hooks/useFeatureData"
-import { Feature, FeaturePriority, FeatureStatus, User } from "../types"
-import { FeatureCard } from "./FeatureCard"
-import { FeatureDialog } from "./FeatureDialog"
-import { LoadingLogo } from "@/components/ui/LoadingLogo"
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Kanban,
+  KanbanBoard,
+  KanbanColumn,
+  KanbanItem,
+  KanbanOverlay,
+} from '@/components/ui/kanban';
+import { cn } from '@/lib/utils';
+import { DragEndEvent } from '@dnd-kit/core';
+import { AlertCircle, Bug, ListTodo, Plus, Sparkles } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { useFeatureData } from '../hooks/useFeatureData';
+import { Feature, FeaturePriority, FeatureStatus, User } from '../types';
+import { FeatureCard } from './FeatureCard';
+import { FeatureDialog } from './FeatureDialog';
+import { LoadingLogo } from '@/components/ui/LoadingLogo';
 
 interface ProjectKanbanProps {
-  projectId: string
-  token: string | null
-  users: User[]
-  onFeatureChange?: () => void
+  projectId: string;
+  token: string | null;
+  users: User[];
+  onFeatureChange?: () => void;
 }
+
+const DONE_LIMIT_INCREMENT = 10;
 
 const COLUMNS: { id: FeatureStatus; title: string; color: string }[] = [
   { id: 'TODO', title: 'Teendő', color: 'bg-slate-500/10 border-slate-500/20' },
-  { id: 'IN_PROGRESS', title: 'Folyamatban', color: 'bg-blue-500/10 border-blue-500/20' },
-  { id: 'BLOCKED', title: 'Blokkolva', color: 'bg-red-500/10 border-red-500/20' },
+  {
+    id: 'IN_PROGRESS',
+    title: 'Folyamatban',
+    color: 'bg-blue-500/10 border-blue-500/20',
+  },
+  {
+    id: 'BLOCKED',
+    title: 'Blokkolva',
+    color: 'bg-red-500/10 border-red-500/20',
+  },
   { id: 'DONE', title: 'Kész', color: 'bg-green-500/10 border-green-500/20' },
-]
+];
 
 const PRIORITY_VALUES: Record<FeaturePriority, number> = {
   CRITICAL: 4,
   HIGH: 3,
   MEDIUM: 2,
   LOW: 1,
-}
+};
 
-export function ProjectKanban({ projectId, token, users, onFeatureChange }: ProjectKanbanProps) {
-  const { 
-    features, 
-    isLoading, 
-    createFeature, 
-    updateFeature, 
-    deleteFeature 
-  } = useFeatureData(projectId, token)
+export function ProjectKanban({
+  projectId,
+  token,
+  users,
+  onFeatureChange,
+}: ProjectKanbanProps) {
+  const { features, isLoading, createFeature, updateFeature, deleteFeature } =
+    useFeatureData(projectId, token);
 
   // Dialog state
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingFeature, setEditingFeature] = useState<Feature | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
+  const [filter, setFilter] = useState<'ALL' | 'BUG' | 'FEATURE'>('ALL');
+  const [doneLimit, setDoneLimit] = useState(DONE_LIMIT_INCREMENT);
+
+  const filteredFeatures = useMemo(() => {
+    if (filter === 'ALL') return features;
+    if (filter === 'BUG') return features.filter((f) => f.isBug);
+    if (filter === 'FEATURE') return features.filter((f) => f.isFeature);
+    return features;
+  }, [features, filter]);
 
   const featuresByStatus = useMemo(() => {
     const columns: Record<FeatureStatus, Feature[]> = {
@@ -53,90 +78,133 @@ export function ProjectKanban({ projectId, token, users, onFeatureChange }: Proj
       IN_PROGRESS: [],
       BLOCKED: [],
       DONE: [],
-    }
+    };
 
-    const sortedFeatures = [...features].sort((a, b) => {
-      const priorityA = a.priority ? PRIORITY_VALUES[a.priority] : 0
-      const priorityB = b.priority ? PRIORITY_VALUES[b.priority] : 0
-      
+    const sortedFeatures = [...filteredFeatures].sort((a, b) => {
+      const priorityA = a.priority ? PRIORITY_VALUES[a.priority] : 0;
+      const priorityB = b.priority ? PRIORITY_VALUES[b.priority] : 0;
+
       if (priorityA !== priorityB) {
-        return priorityB - priorityA // Higher priority first
+        return priorityB - priorityA; // Higher priority first
       }
-      
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() // Newer first
-    })
+
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Newer first
+    });
 
     sortedFeatures.forEach((feature) => {
       if (columns[feature.status]) {
-        columns[feature.status].push(feature)
+        columns[feature.status].push(feature);
       }
-    })
+    });
 
-    return columns
-  }, [features])
+    // Sort DONE column by updatedAt (newest finished first)
+    columns.DONE.sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    );
+
+    return columns;
+  }, [filteredFeatures]);
+
+  const totalDoneCount = featuresByStatus.DONE.length;
+
+  const displayFeaturesByStatus = useMemo(() => {
+    return {
+      ...featuresByStatus,
+      DONE: featuresByStatus.DONE.slice(0, doneLimit),
+    };
+  }, [featuresByStatus, doneLimit]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over) return
+    const { active, over } = event;
+    if (!over) return;
 
-    const activeId = active.id
-    const overId = over.id
+    const activeId = active.id;
+    const overId = over.id;
 
     // Find the feature - handle both string and number comparison
-    const feature = features.find((f) => f.id === Number(activeId))
-    if (!feature) return
+    const feature = features.find((f) => f.id === Number(activeId));
+    if (!feature) return;
 
-    let newStatus: FeatureStatus | null = null
+    let newStatus: FeatureStatus | null = null;
 
     // Determine new status
     if (Object.keys(featuresByStatus).includes(String(overId))) {
       // Dropped on a column
-      newStatus = overId as FeatureStatus
+      newStatus = overId as FeatureStatus;
     } else {
       // Dropped on an item
       // Handle both string and number comparison for overId
-      const overFeature = features.find((f) => f.id === Number(overId))
+      const overFeature = features.find((f) => f.id === Number(overId));
       if (overFeature) {
-        newStatus = overFeature.status
+        newStatus = overFeature.status;
       }
     }
 
     if (newStatus && newStatus !== feature.status) {
       // Optimistic update handled by hook, just call API
-      const success = await updateFeature(feature.id, { status: newStatus })
+      const success = await updateFeature(feature.id, { status: newStatus });
       if (success) {
-        onFeatureChange?.()
+        onFeatureChange?.();
       }
     }
-  }
+  };
 
   const openNewFeatureDialog = () => {
-    setEditingFeature(null)
-    setIsDialogOpen(true)
-  }
+    setEditingFeature(null);
+    setIsDialogOpen(true);
+  };
 
   const openEditFeatureDialog = (feature: Feature) => {
-    setEditingFeature(feature)
-    setIsDialogOpen(true)
-  }
+    setEditingFeature(feature);
+    setIsDialogOpen(true);
+  };
 
   const handleDeleteClick = async (featureId: number) => {
-    if (confirm("Biztosan törölni szeretnéd ezt a feladatot?")) {
-      const success = await deleteFeature(featureId)
+    if (confirm('Biztosan törölni szeretnéd ezt a feladatot?')) {
+      const success = await deleteFeature(featureId);
       if (success) {
-        onFeatureChange?.()
+        onFeatureChange?.();
       }
     }
-  }
+  };
 
   if (isLoading && features.length === 0) {
-      return <LoadingLogo size={60} /> 
+    return <LoadingLogo size={60} />;
   }
 
   return (
     <div className="h-[calc(100vh-250px)] w-full">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Feladatok</h2>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+        <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg">
+          <Button
+            variant={filter === 'ALL' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setFilter('ALL')}
+            className="h-8 rounded-md"
+          >
+            <ListTodo className="w-4 h-4 mr-2" />
+            Mind
+          </Button>
+          <Button
+            variant={filter === 'BUG' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setFilter('BUG')}
+            className="h-8 rounded-md"
+          >
+            <Bug className="w-4 h-4 mr-2 text-red-500" />
+            Bug
+          </Button>
+          <Button
+            variant={filter === 'FEATURE' ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setFilter('FEATURE')}
+            className="h-8 rounded-md"
+          >
+            <Sparkles className="w-4 h-4 mr-2 text-emerald-500" />
+            Feature
+          </Button>
+        </div>
         <Button onClick={openNewFeatureDialog} size="sm">
           <Plus className="w-4 h-4 mr-2" />
           Új feladat
@@ -144,7 +212,7 @@ export function ProjectKanban({ projectId, token, users, onFeatureChange }: Proj
       </div>
 
       <Kanban
-        value={featuresByStatus}
+        value={displayFeaturesByStatus}
         onDragEnd={handleDragEnd}
         getItemValue={(item) => item.id}
         orientation="horizontal"
@@ -154,64 +222,84 @@ export function ProjectKanban({ projectId, token, users, onFeatureChange }: Proj
             <KanbanColumn
               key={column.id}
               value={column.id}
-              className={cn("min-w-[300px] h-full", column.color)}
+              className={cn('min-w-[300px] h-full', column.color)}
             >
               <div className="flex items-center justify-between mb-3 px-1">
                 <span className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    {column.id === 'BLOCKED' && <AlertCircle className="w-4 h-4"/>}
-                    {column.title}
+                  {column.id === 'BLOCKED' && (
+                    <AlertCircle className="w-4 h-4" />
+                  )}
+                  {column.title}
                 </span>
                 <Badge variant="secondary" className="text-xs">
-                  {featuresByStatus[column.id]?.length || 0}
+                  {column.id === 'DONE'
+                    ? totalDoneCount
+                    : featuresByStatus[column.id]?.length || 0}
                 </Badge>
               </div>
-              
+
               <div className="flex flex-col gap-2 overflow-y-auto h-full pr-1">
-                {featuresByStatus[column.id]?.map((feature) => (
-                  <KanbanItem key={feature.id} value={feature.id} asHandle className="rounded-md">
-                      <FeatureCard 
-                          feature={feature} 
-                          onClick={() => openEditFeatureDialog(feature)}
-                          onDoubleClick={() => openEditFeatureDialog(feature)}
-                          onDelete={() => handleDeleteClick(feature.id)}
-                      />
+                {displayFeaturesByStatus[column.id]?.map((feature) => (
+                  <KanbanItem
+                    key={feature.id}
+                    value={feature.id}
+                    asHandle
+                    className="rounded-md"
+                  >
+                    <FeatureCard
+                      feature={feature}
+                      onClick={() => openEditFeatureDialog(feature)}
+                      onDoubleClick={() => openEditFeatureDialog(feature)}
+                      onDelete={() => handleDeleteClick(feature.id)}
+                    />
                   </KanbanItem>
                 ))}
-            </div>
+
+                {column.id === 'DONE' && totalDoneCount > doneLimit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full mt-2 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() =>
+                      setDoneLimit((prev) => prev + DONE_LIMIT_INCREMENT)
+                    }
+                  >
+                    Mutass többet ({totalDoneCount - doneLimit} maradt)
+                  </Button>
+                )}
+              </div>
             </KanbanColumn>
           ))}
         </KanbanBoard>
         <KanbanOverlay>
-            {({ value }) => {
-                const feature = features.find(f => f.id === value)
-                if (!feature) return null
-                return (
-                    <FeatureCard feature={feature} />
-                )
-            }}
+          {({ value }) => {
+            const feature = features.find((f) => f.id === value);
+            if (!feature) return null;
+            return <FeatureCard feature={feature} />;
+          }}
         </KanbanOverlay>
       </Kanban>
 
-      <FeatureDialog 
+      <FeatureDialog
         isOpen={isDialogOpen}
         editingFeature={editingFeature}
         users={users}
         onClose={() => setIsDialogOpen(false)}
         onSubmit={async (data) => {
-          let success = false
+          let success = false;
           if (editingFeature) {
-            success = await updateFeature(editingFeature.id, data)
+            success = await updateFeature(editingFeature.id, data);
           } else {
-            success = await createFeature(data)
+            success = await createFeature(data);
           }
 
           if (success) {
-            onFeatureChange?.()
+            onFeatureChange?.();
           }
 
-          return success
+          return success;
         }}
       />
     </div>
-  )
+  );
 }
