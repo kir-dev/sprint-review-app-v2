@@ -1,9 +1,9 @@
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Control, FieldErrors } from 'react-hook-form';
 import { difficultyLabels } from '../constants';
@@ -39,7 +39,7 @@ export function CategorySpecificFields({
               <SelectTrigger>
                 <SelectValue placeholder="Nincs projekt" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-64">
                 {projects.map((project) => (
                   <SelectItem key={project.id} value={project.id.toString()}>
                     {project.name}
@@ -60,7 +60,7 @@ export function CategorySpecificFields({
               <SelectTrigger>
                 <SelectValue placeholder="Válassz nehézséget" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-64">
                 {Object.entries(difficultyLabels).map(([value, label]) => (
                   <SelectItem key={value} value={value}>
                     {label}
@@ -87,7 +87,7 @@ export function CategorySpecificFields({
             <SelectTrigger>
               <SelectValue placeholder="Válassz eseményt" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-64">
               {events.map((event) => (
                 <SelectItem key={event.id} value={event.id.toString()}>
                   {event.name}

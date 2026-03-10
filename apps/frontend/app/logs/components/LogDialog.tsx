@@ -2,15 +2,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar22 } from '@/components/ui/datepicker';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from "lucide-react";
+import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { categoryLabels } from '../constants';
@@ -49,7 +49,7 @@ export function LogDialog({
     reset,
     setValue,
   } = useForm<LogFormData>({
-    resolver: zodResolver(logFormSchema as any) as any,
+    resolver: zodResolver(logFormSchema as any),
     defaultValues: formData,
   });
 
@@ -129,7 +129,7 @@ export function LogDialog({
                     >
                       <SelectValue placeholder="Válassz kategóriát" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-64">
                       {Object.entries(categoryLabels).map(([value, label]) => (
                         <SelectItem key={value} value={value}>
                           {label}
@@ -209,8 +209,14 @@ export function LogDialog({
               >
                 Mégse
               </Button>
-              <Button type="submit" className="transition-all hover:scale-105" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button
+                type="submit"
+                className="transition-all hover:scale-105"
+                disabled={isSubmitting}
+              >
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 {editingLog ? 'Módosítás' : 'Létrehozás'}
               </Button>
             </div>
