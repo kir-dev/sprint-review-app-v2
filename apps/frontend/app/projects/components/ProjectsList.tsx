@@ -1,16 +1,16 @@
-import { LoadingLogo } from "@/components/ui/LoadingLogo"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Edit2, Github, Trash2, User, Users } from "lucide-react"
-import Link from "next/link"
-import { Project } from "../types"
+import { LoadingLogo } from '@/components/ui/LoadingLogo';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Edit2, Github, Trash2, User, Users } from 'lucide-react';
+import Link from 'next/link';
+import { Project } from '../types';
 
 interface ProjectsListProps {
-  projects: Project[]
-  isLoading: boolean
-  onCreateProject: () => void
-  onEditProject: (project: Project) => void
-  onDeleteProject: (id: number) => void
+  projects: Project[];
+  isLoading: boolean;
+  onCreateProject: () => void;
+  onEditProject: (project: Project) => void;
+  onDeleteProject: (id: number) => void;
 }
 
 export function ProjectsList({
@@ -25,7 +25,7 @@ export function ProjectsList({
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <LoadingLogo size={60} />
       </div>
-    )
+    );
   }
 
   if (projects.length === 0) {
@@ -39,12 +39,15 @@ export function ProjectsList({
           <p className="text-sm text-muted-foreground mb-4">
             Hozz létre egy projektet a kezdéshez
           </p>
-          <Button onClick={onCreateProject} className="transition-all hover:scale-105">
+          <Button
+            onClick={onCreateProject}
+            className="transition-all hover:scale-105"
+          >
             Projekt Létrehozása
           </Button>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -58,7 +61,10 @@ export function ProjectsList({
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                <Link href={`/projects/${project.id}`} className="hover:underline">
+                <Link
+                  href={`/projects/${project.id}`}
+                  className="hover:underline"
+                >
                   {project.name}
                 </Link>
               </CardTitle>
@@ -88,7 +94,7 @@ export function ProjectsList({
                 {project.description}
               </p>
             )}
-            
+
             {project.githubUrl && (
               <a
                 href={project.githubUrl}
@@ -103,12 +109,17 @@ export function ProjectsList({
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2 border-t">
               {project.projectManager && (
-                <div className="flex items-center gap-1" title="Projektmenedzser">
+                <div
+                  className="flex items-center gap-1"
+                  title="Projektmenedzser"
+                >
                   <User className="h-4 w-4" />
-                  <span className="truncate">{project.projectManager.fullName}</span>
+                  <span className="truncate">
+                    {project.projectManager.fullName}
+                  </span>
                 </div>
               )}
-              
+
               {project._count && (
                 <div className="flex items-center gap-1" title="Csapattagok">
                   <Users className="h-4 w-4" />
@@ -120,5 +131,5 @@ export function ProjectsList({
         </Card>
       ))}
     </div>
-  )
+  );
 }

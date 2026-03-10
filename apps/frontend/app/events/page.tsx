@@ -1,119 +1,127 @@
-"use client"
+'use client';
 
-import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
-import { ErrorAlert } from "@/components/ErrorAlert"
-import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton"
-import { LoadingLogo } from "@/components/ui/LoadingLogo"
-import { useAuth } from "@/context/AuthContext"
-import { useRouter } from "next/navigation"
-import React, { useEffect, useState } from "react"
-import { EventDialog } from "./components/EventDialog"
-import { EventsHeader } from "./components/EventsHeader"
-import { EventsList } from "./components/EventsList"
-import { useEventData } from "./hooks/useEventData"
-import { useEventForm } from "./hooks/useEventForm"
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
+import { ErrorAlert } from '@/components/ErrorAlert';
+import { MobileFloatingActionButton } from '@/components/MobileFloatingActionButton';
+import { LoadingLogo } from '@/components/ui/LoadingLogo';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { EventDialog } from './components/EventDialog';
+import { EventsHeader } from './components/EventsHeader';
+import { EventsList } from './components/EventsList';
+import { useEventData } from './hooks/useEventData';
+import { useEventForm } from './hooks/useEventForm';
 
 export default function EventsPage() {
-  const { user, token, isLoading: isAuthLoading } = useAuth()
-  const router = useRouter()
+  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
 
   // Custom hooks
-  const { events, setEvents, isLoading, error, setError, loadData } = useEventData(token)
-  const { isDialogOpen, editingEvent, formData, setFormData, openDialog, closeDialog } = useEventForm()
+  const { events, setEvents, isLoading, error, setError, loadData } =
+    useEventData(token);
+  const {
+    isDialogOpen,
+    editingEvent,
+    formData,
+    setFormData,
+    openDialog,
+    closeDialog,
+  } = useEventForm();
 
   // Action states
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Delete confirmation state
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [eventToDelete, setEventToDelete] = useState<number | null>(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<number | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthLoading && !token) {
-      router.push("/login")
+      router.push('/login');
     }
-  }, [token, isAuthLoading, router])
+  }, [token, isAuthLoading, router]);
 
   // Handlers
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
 
     if (formData.endDate && formData.startDate > formData.endDate) {
-      setError("A befejezés dátuma nem lehet korábbi a kezdés dátumánál.")
-      return
+      setError('A befejezés dátuma nem lehet korábbi a kezdés dátumánál.');
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     const payload = {
       name: formData.name,
       startDate: formData.startDate,
       endDate: formData.endDate || formData.startDate,
       type: formData.type,
-    }
+    };
 
     try {
-      const url = editingEvent ? `/api/events/${editingEvent.id}` : "/api/events"
-      const method = editingEvent ? "PATCH" : "POST"
+      const url = editingEvent
+        ? `/api/events/${editingEvent.id}`
+        : '/api/events';
+      const method = editingEvent ? 'PATCH' : 'POST';
 
       const response = await fetch(url, {
         method,
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
-      })
+      });
 
       if (response.ok) {
-        await loadData()
-        closeDialog()
+        await loadData();
+        closeDialog();
       } else {
-        const error = await response.json()
-        setError(error.message || "Nem sikerült menteni az eseményt")
+        const error = await response.json();
+        setError(error.message || 'Nem sikerült menteni az eseményt');
       }
     } catch (err) {
-      console.error("Error saving event:", err)
-      setError("Nem sikerült menteni az eseményt. Próbáld újra.")
+      console.error('Error saving event:', err);
+      setError('Nem sikerült menteni az eseményt. Próbáld újra.');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
   function handleDeleteClick(id: number) {
-    setEventToDelete(id)
-    setDeleteConfirmOpen(true)
+    setEventToDelete(id);
+    setDeleteConfirmOpen(true);
   }
 
   async function handleDeleteConfirm() {
-    if (!eventToDelete) return
+    if (!eventToDelete) return;
     // NOTE: We could add a separate isDeleting state here for the confirmation dialog
     try {
       const response = await fetch(`/api/events/${eventToDelete}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
-      })
+      });
 
       if (response.ok) {
-        setEvents(events.filter((event) => event.id !== eventToDelete))
-        setDeleteConfirmOpen(false)
-        setEventToDelete(null)
+        setEvents(events.filter((event) => event.id !== eventToDelete));
+        setDeleteConfirmOpen(false);
+        setEventToDelete(null);
       } else {
-        setError("Nem sikerült törölni az eseményt")
+        setError('Nem sikerült törölni az eseményt');
       }
     } catch (err) {
-      console.error("Error deleting event:", err)
-      setError("Nem sikerült törölni az eseményt. Próbáld újra.")
+      console.error('Error deleting event:', err);
+      setError('Nem sikerült törölni az eseményt. Próbáld újra.');
     }
   }
 
   function handleDeleteCancel() {
-    setDeleteConfirmOpen(false)
-    setEventToDelete(null)
+    setDeleteConfirmOpen(false);
+    setEventToDelete(null);
   }
-
-
 
   // Loading state
   if (isAuthLoading || !user) {
@@ -121,7 +129,7 @@ export default function EventsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <LoadingLogo size={60} />
       </div>
-    )
+    );
   }
 
   return (
@@ -160,6 +168,5 @@ export default function EventsPage() {
         <MobileFloatingActionButton onClick={() => openDialog()} />
       )}
     </div>
-
-  )
+  );
 }

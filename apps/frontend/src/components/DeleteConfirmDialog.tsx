@@ -1,26 +1,26 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertTriangle } from "lucide-react"
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle } from 'lucide-react';
 
 interface DeleteConfirmDialogProps {
-  isOpen: boolean
-  onConfirm: () => void
-  onCancel: () => void
-  title?: string
-  description?: string
+  isOpen: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  title?: string;
+  description?: string;
 }
 
 export function DeleteConfirmDialog({
   isOpen,
   onConfirm,
   onCancel,
-  title = "Delete Item",
-  description = "Are you sure you want to delete this item? This action cannot be undone.",
+  title = 'Delete Item',
+  description = 'Are you sure you want to delete this item? This action cannot be undone.',
 }: DeleteConfirmDialogProps) {
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 animate-fade-in">
       <Card className="w-full max-w-md m-4 animate-slide-in-bottom">
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -32,7 +32,7 @@ export function DeleteConfirmDialog({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">{description}</p>
-          
+
           <div className="flex justify-end gap-3">
             <Button
               type="button"
@@ -54,5 +54,5 @@ export function DeleteConfirmDialog({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

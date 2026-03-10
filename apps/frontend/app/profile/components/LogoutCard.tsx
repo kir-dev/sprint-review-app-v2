@@ -1,11 +1,17 @@
-"use client"
+'use client';
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LogOut } from "lucide-react"
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { LogOut } from 'lucide-react';
 
 interface LogoutCardProps {
-  onLogout: () => void
+  onLogout: () => void;
 }
 
 export function LogoutCard({ onLogout }: LogoutCardProps) {
@@ -13,9 +19,7 @@ export function LogoutCard({ onLogout }: LogoutCardProps) {
     <Card className="animate-slide-in-bottom hover:shadow-lg transition-shadow">
       <CardHeader>
         <CardTitle>Kijelentkezés</CardTitle>
-        <CardDescription>
-          Jelentkezz ki a fiókodból
-        </CardDescription>
+        <CardDescription>Jelentkezz ki a fiókodból</CardDescription>
       </CardHeader>
       <CardContent>
         <Button
@@ -28,5 +32,5 @@ export function LogoutCard({ onLogout }: LogoutCardProps) {
         </Button>
       </CardContent>
     </Card>
-  )
+  );
 }

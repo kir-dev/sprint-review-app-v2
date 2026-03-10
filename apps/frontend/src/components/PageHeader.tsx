@@ -7,7 +7,12 @@ interface PageHeaderProps {
   children?: React.ReactNode;
 }
 
-export function PageHeader({ title, description, icon: Icon, children }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  icon: Icon,
+  children,
+}: PageHeaderProps) {
   return (
     <div className="flex items-start justify-between animate-fade-in">
       <div className="flex items-start gap-3 md:gap-4">
@@ -15,8 +20,12 @@ export function PageHeader({ title, description, icon: Icon, children }: PageHea
           <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
-          <p className="text-sm md:text-base text-muted-foreground">{description}</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            {title}
+          </h1>
+          <p className="text-sm md:text-base text-muted-foreground">
+            {description}
+          </p>
         </div>
       </div>
       {children && <div className="flex gap-3 shrink-0">{children}</div>}

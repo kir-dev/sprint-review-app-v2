@@ -146,7 +146,9 @@ export class UsersService {
     try {
       // Handle Position History
       if (data.position) {
-        const currentUser = await this.prisma.user.findUnique({ where: { id } });
+        const currentUser = await this.prisma.user.findUnique({
+          where: { id },
+        });
 
         if (currentUser && currentUser.position !== data.position) {
           const now = new Date();

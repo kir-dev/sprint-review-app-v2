@@ -4,7 +4,7 @@ import { Response } from 'express';
 
 /**
  * Custom AuthSCH Guard that prevents duplicate authorization code usage.
- * 
+ *
  * OAuth authorization codes are single-use tokens. Due to browser behavior
  * (duplicate requests, redirects, etc.), the same code might be submitted twice.
  * This guard caches recently seen codes to prevent the second attempt.
@@ -25,11 +25,11 @@ export class AuthSchDedupGuard extends AuthGuard('authsch') {
     // Check if code was already processed
     if (code && this.processedCodes.has(code)) {
       this.logger.warn(`⚠️  BLOCKED: Code already processed: ${code}`);
-      
+
       // Return 204 No Content - acknowledges the request but provides no body
       // This is the cleanest way to handle duplicate requests
       response.status(204).end();
-      
+
       // Return false to stop further processing
       return false;
     }
@@ -49,7 +49,7 @@ export class AuthSchDedupGuard extends AuthGuard('authsch') {
     // Proceed with normal AuthGuard logic
     const result = (await super.canActivate(context)) as boolean;
     this.logger.log(`🛡️  Guard result: ${result}`);
-    
+
     return result;
   }
 }

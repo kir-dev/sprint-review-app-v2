@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react';
 import { Feature } from '../types';
 
@@ -13,7 +12,10 @@ interface UseFeatureDataReturn {
   setError: (error: string | null) => void;
 }
 
-export function useFeatureData(projectId: string, token: string | null): UseFeatureDataReturn {
+export function useFeatureData(
+  projectId: string,
+  token: string | null,
+): UseFeatureDataReturn {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,9 +49,9 @@ export function useFeatureData(projectId: string, token: string | null): UseFeat
     try {
       const response = await fetch(`/api/projects/${projectId}/features`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       });
@@ -63,7 +65,10 @@ export function useFeatureData(projectId: string, token: string | null): UseFeat
       return true;
     } catch (err: unknown) {
       console.error('Error creating feature:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Nem sikerült létrehozni a feladatot';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Nem sikerült létrehozni a feladatot';
       setError(errorMessage);
       return false;
     }
@@ -71,34 +76,39 @@ export function useFeatureData(projectId: string, token: string | null): UseFeat
 
   const updateFeature = async (id: number, data: Partial<Feature>) => {
     try {
-        // Optimistic update for status changes (drag and drop)
-        if (data.status) {
-            setFeatures(prev => prev.map(f => f.id === id ? { ...f, ...data } : f));
-        }
+      // Optimistic update for status changes (drag and drop)
+      if (data.status) {
+        setFeatures((prev) =>
+          prev.map((f) => (f.id === id ? { ...f, ...data } : f)),
+        );
+      }
 
       const response = await fetch(`/api/features/${id}`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` 
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-         // Revert on error
-         if (data.status) loadFeatures();
-         throw new Error('Failed to update feature');
+        // Revert on error
+        if (data.status) loadFeatures();
+        throw new Error('Failed to update feature');
       }
 
       // If it wasn't a status change (e.g. edit details), reload to get full data
       if (!data.status) {
-          await loadFeatures();
+        await loadFeatures();
       }
       return true;
     } catch (err: unknown) {
       console.error('Error updating feature:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Nem sikerült frissíteni a feladatot';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'Nem sikerült frissíteni a feladatot';
       setError(errorMessage);
       return false;
     }
@@ -113,11 +123,12 @@ export function useFeatureData(projectId: string, token: string | null): UseFeat
 
       if (!response.ok) throw new Error('Failed to delete feature');
 
-      setFeatures(prev => prev.filter(f => f.id !== id));
+      setFeatures((prev) => prev.filter((f) => f.id !== id));
       return true;
     } catch (err: unknown) {
       console.error('Error deleting feature:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Nem sikerült törölni a feladatot';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Nem sikerült törölni a feladatot';
       setError(errorMessage);
       return false;
     }
@@ -131,6 +142,6 @@ export function useFeatureData(projectId: string, token: string | null): UseFeat
     createFeature,
     updateFeature,
     deleteFeature,
-    setError
+    setError,
   };
 }

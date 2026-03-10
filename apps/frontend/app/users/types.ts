@@ -1,17 +1,17 @@
-import { Position } from "../logs/types"
+import { Position } from '../logs/types';
 
 export interface User {
-  id: number
-  email: string
-  simonyiEmail?: string
-  githubUsername?: string
-  fullName: string
-  profileImage?: string
-  position: Position
-  createdAt: string
+  id: number;
+  email: string;
+  simonyiEmail?: string;
+  githubUsername?: string;
+  fullName: string;
+  profileImage?: string;
+  position: Position;
+  createdAt: string;
   _count?: {
-    logs: number
-    managedProjects: number
-    projects: number
-  }
+    logs: number;
+    managedProjects: number;
+    projects: number;
+  };
 }

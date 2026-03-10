@@ -46,5 +46,6 @@ yarn preview
 The frontend connects to the backend at `http://localhost:3000` via Vite proxy configuration.
 
 Backend API endpoints are proxied:
+
 - `/auth/*` → Backend auth endpoints
 - `/api/*` → Backend API endpoints

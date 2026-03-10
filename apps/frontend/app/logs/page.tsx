@@ -2,10 +2,10 @@
 
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { ErrorAlert } from '@/components/ErrorAlert';
-import { MobileFloatingActionButton } from "@/components/MobileFloatingActionButton";
-import { LoadingLogo } from "@/components/ui/LoadingLogo";
+import { MobileFloatingActionButton } from '@/components/MobileFloatingActionButton';
+import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
-import { Plus } from "lucide-react";
+import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useEventData } from '../events/hooks/useEventData';
@@ -35,13 +35,8 @@ export default function LogsPage() {
     setError,
     loadData,
   } = useLogData(token, user?.id);
-  const {
-    isDialogOpen,
-    editingLog,
-    formData,
-    openDialog,
-    closeDialog,
-  } = useLogForm(workPeriods, currentWorkPeriod);
+  const { isDialogOpen, editingLog, formData, openDialog, closeDialog } =
+    useLogForm(workPeriods, currentWorkPeriod);
   const { events } = useEventData(token);
 
   const { handleSubmit: submitLog } = useLogSubmit({
@@ -51,7 +46,7 @@ export default function LogsPage() {
     onSuccess: async () => {
       await loadData();
       closeDialog();
-    }
+    },
   });
 
   // Filter states
@@ -129,8 +124,6 @@ export default function LogsPage() {
   // Computed values
   const filteredLogs = filterLogs(logs, filters);
 
-
-
   // Loading state
   if (isAuthLoading || !user) {
     return (
@@ -154,7 +147,13 @@ export default function LogsPage() {
           workPeriods={workPeriods}
           onFiltersChange={setFilters}
           onClearFilters={() =>
-            setFilters({ category: '', projectId: '', workPeriodId: '', startDate: '', endDate: '' })
+            setFilters({
+              category: '',
+              projectId: '',
+              workPeriodId: '',
+              startDate: '',
+              endDate: '',
+            })
           }
           isVisible={showFilters}
           filteredLogs={filteredLogs}
@@ -178,7 +177,6 @@ export default function LogsPage() {
         projects={projects}
         events={events}
         workPeriods={workPeriods}
-
         onSubmit={handleSubmit}
         onClose={closeDialog}
       />

@@ -74,7 +74,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUser = useCallback(async (authToken: string) => {
     if (!authToken) return;
 
-    console.log('🔍 Fetching user with token:', authToken.substring(0, 20) + '...');
+    console.log(
+      '🔍 Fetching user with token:',
+      authToken.substring(0, 20) + '...',
+    );
     try {
       const response = await fetch('/api/auth/me', {
         headers: {
@@ -83,7 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       console.log('📡 Response status:', response.status);
-      
+
       if (response.ok) {
         const userData = await response.json();
         console.log('✅ User data loaded:', userData);
@@ -94,7 +97,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Token invalid, clear it
         localStorage.removeItem('jwt');
         setToken(null);
-        setError('A munkamenet lejárt vagy érvénytelen. Kérjük, jelentkezz be újra.');
+        setError(
+          'A munkamenet lejárt vagy érvénytelen. Kérjük, jelentkezz be újra.',
+        );
       }
     } catch (error) {
       console.error('❌ Error fetching user:', error);
@@ -107,13 +112,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = useCallback((newToken: string) => {
-    localStorage.setItem('jwt', newToken);
-    setToken(newToken);
-    setError(null);
-    setIsLoading(true);
-    fetchUser(newToken);
-  }, [fetchUser]);
+  const login = useCallback(
+    (newToken: string) => {
+      localStorage.setItem('jwt', newToken);
+      setToken(newToken);
+      setError(null);
+      setIsLoading(true);
+      fetchUser(newToken);
+    },
+    [fetchUser],
+  );
 
   const logout = useCallback(() => {
     localStorage.removeItem('jwt');
@@ -129,7 +137,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [token, fetchUser]);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, refreshUser, isLoading, error }}>
+    <AuthContext.Provider
+      value={{ user, token, login, logout, refreshUser, isLoading, error }}
+    >
       {children}
     </AuthContext.Provider>
   );

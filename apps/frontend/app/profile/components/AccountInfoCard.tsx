@@ -22,9 +22,7 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
     <Card className="animate-slide-in-left hover:shadow-lg transition-shadow">
       <CardHeader>
         <CardTitle>Fiók Információk</CardTitle>
-        <CardDescription>
-          Adatok az AuthSCH-ból
-        </CardDescription>
+        <CardDescription>Adatok az AuthSCH-ból</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 md:space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
@@ -48,7 +46,9 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
         <div className="space-y-2 pt-2 border-t">
           <label className="text-sm font-medium">Pozíció</label>
           <div className="flex items-center gap-2 mt-2">
-            <Badge className={`${positionColors[user.position]} whitespace-nowrap shrink-0`}>
+            <Badge
+              className={`${positionColors[user.position]} whitespace-nowrap shrink-0`}
+            >
               {positionLabels[user.position]}
             </Badge>
             <p className="text-xs text-muted-foreground">

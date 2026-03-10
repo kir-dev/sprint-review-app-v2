@@ -73,7 +73,7 @@ export function LogDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 animate-fade-in">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4 animate-slide-in-bottom">
         <CardHeader>
           <CardTitle>
@@ -96,8 +96,8 @@ export function LogDialog({
                     value={
                       (field.value as any) instanceof Date
                         ? new Date(
-                            ((field.value as any) as Date).getTime() -
-                              ((field.value as any) as Date).getTimezoneOffset() *
+                            (field.value as any as Date).getTime() -
+                              (field.value as any as Date).getTimezoneOffset() *
                                 60000,
                           )
                             .toISOString()

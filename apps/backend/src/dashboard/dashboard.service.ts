@@ -18,21 +18,32 @@ export class DashboardService {
   async getSummary(userId: number) {
     this.logger.log(`Getting dashboard summary for user ${userId}`);
     const currentPeriod = await this.workPeriodsService.findCurrent();
-    const stats = await this.logsService.getStatsByUser(userId, currentPeriod?.id);
+    const stats = await this.logsService.getStatsByUser(
+      userId,
+      currentPeriod?.id,
+    );
 
     // Global stats for comparison/display
-    const allLogs = await this.logsService.findAll({ workPeriodId: currentPeriod?.id });
-    const groupTotalHours = allLogs.reduce((sum, log) => sum + (log.timeSpent || 0), 0);
-    const activeContributors = new Set(allLogs.map(l => l.userId)).size;
+    const allLogs = await this.logsService.findAll({
+      workPeriodId: currentPeriod?.id,
+    });
+    const groupTotalHours = allLogs.reduce(
+      (sum, log) => sum + (log.timeSpent || 0),
+      0,
+    );
+    const activeContributors = new Set(allLogs.map((l) => l.userId)).size;
 
     // Calculate active projects count from logs
     const activeProjectsCount = Object.keys(stats.logsByProject).length;
-    
+
     // Global total active projects (unique projects in all logs)
-    const allProjectNames = new Set(allLogs.map(l => l.project?.id).filter(Boolean));
+    const allProjectNames = new Set(
+      allLogs.map((l) => l.project?.id).filter(Boolean),
+    );
     const totalProjectsCount = allProjectNames.size;
 
-    const averageHoursPerUser = activeContributors > 0 ? (groupTotalHours / activeContributors) : 0;
+    const averageHoursPerUser =
+      activeContributors > 0 ? groupTotalHours / activeContributors : 0;
 
     return {
       totalHours: stats.totalTimeSpent,
@@ -55,22 +66,31 @@ export class DashboardService {
   async getProjectsStats(userId: number) {
     this.logger.log(`Getting project stats (global)`);
     const currentPeriod = await this.workPeriodsService.findCurrent();
-    
+
     // Fetch ALL logs for the period to calculate global top projects
-    const allLogs = await this.logsService.findAll({ workPeriodId: currentPeriod?.id });
-    
-    const projectStats: Record<number, { id: number; name: string; hours: number }> = {};
-    allLogs.forEach(log => {
-        if (log.project) {
-            if (!projectStats[log.project.id]) {
-                projectStats[log.project.id] = { id: log.project.id, name: log.project.name, hours: 0 };
-            }
-            projectStats[log.project.id].hours += (log.timeSpent || 0);
+    const allLogs = await this.logsService.findAll({
+      workPeriodId: currentPeriod?.id,
+    });
+
+    const projectStats: Record<
+      number,
+      { id: number; name: string; hours: number }
+    > = {};
+    allLogs.forEach((log) => {
+      if (log.project) {
+        if (!projectStats[log.project.id]) {
+          projectStats[log.project.id] = {
+            id: log.project.id,
+            name: log.project.name,
+            hours: 0,
+          };
         }
+        projectStats[log.project.id].hours += log.timeSpent || 0;
+      }
     });
 
     const topProjects = Object.values(projectStats)
-      .map(({ id, name, hours }) => ({ id, name, count: hours })) 
+      .map(({ id, name, hours }) => ({ id, name, count: hours }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
@@ -80,31 +100,40 @@ export class DashboardService {
   }
 
   async getTopUsers() {
-      const currentPeriod = await this.workPeriodsService.findCurrent();
-      const allLogs = await this.logsService.findAll({ workPeriodId: currentPeriod?.id });
-      
-      const userStats: Record<number, { id: number; name: string; hours: number }> = {};
-      
-      allLogs.forEach(log => {
-          if (log.user) {
-             if (!userStats[log.user.id]) {
-                 userStats[log.user.id] = { id: log.user.id, name: log.user.fullName, hours: 0 };
-             }
-             userStats[log.user.id].hours += (log.timeSpent || 0);
-          }
-      });
+    const currentPeriod = await this.workPeriodsService.findCurrent();
+    const allLogs = await this.logsService.findAll({
+      workPeriodId: currentPeriod?.id,
+    });
 
-      const topUsers = Object.values(userStats)
-        .map(({ id, name, hours }) => ({ id, name, hours }))
-        .sort((a, b) => b.hours - a.hours)
-        .slice(0, 5);
-        
-      return topUsers;
+    const userStats: Record<
+      number,
+      { id: number; name: string; hours: number }
+    > = {};
+
+    allLogs.forEach((log) => {
+      if (log.user) {
+        if (!userStats[log.user.id]) {
+          userStats[log.user.id] = {
+            id: log.user.id,
+            name: log.user.fullName,
+            hours: 0,
+          };
+        }
+        userStats[log.user.id].hours += log.timeSpent || 0;
+      }
+    });
+
+    const topUsers = Object.values(userStats)
+      .map(({ id, name, hours }) => ({ id, name, hours }))
+      .sort((a, b) => b.hours - a.hours)
+      .slice(0, 5);
+
+    return topUsers;
   }
 
   // Activity Feed removed as requested
   async getFeed(userId: number) {
-     return [];
+    return [];
   }
 
   async getStats(userId: number) {
@@ -134,13 +163,18 @@ export class DashboardService {
       workPeriodId: currentPeriod?.id,
     });
 
-    const heatmapMap = heatmapLogs.reduce((acc, log) => {
-      // Use Hungarian timezone to determine the "day" of the log
-      // en-CA locale gives YYYY-MM-DD format
-      const date = log.date.toLocaleDateString('en-CA', { timeZone: 'Europe/Budapest' });
-      acc[date] = (acc[date] || 0) + (log.timeSpent || 0);
-      return acc;
-    }, {} as Record<string, number>);
+    const heatmapMap = heatmapLogs.reduce(
+      (acc, log) => {
+        // Use Hungarian timezone to determine the "day" of the log
+        // en-CA locale gives YYYY-MM-DD format
+        const date = log.date.toLocaleDateString('en-CA', {
+          timeZone: 'Europe/Budapest',
+        });
+        acc[date] = (acc[date] || 0) + (log.timeSpent || 0);
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     const heatmapData = Object.entries(heatmapMap).map(([date, count]) => ({
       date,
@@ -149,13 +183,13 @@ export class DashboardService {
 
     // 3. Difficulty Breakdown (Global)
     const difficultyBreakdown = allLogs.reduce(
-        (acc, log) => {
-            if (log.difficulty) {
-                acc[log.difficulty] = (acc[log.difficulty] || 0) + 1;
-            }
-            return acc;
-        },
-        {} as Record<string, number>
+      (acc, log) => {
+        if (log.difficulty) {
+          acc[log.difficulty] = (acc[log.difficulty] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>,
     );
 
     return {
@@ -176,11 +210,17 @@ export class DashboardService {
 
     const upcoming = events
       .filter((e) => new Date(e.startDate) >= now)
-      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+      .sort(
+        (a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+      )
       .slice(0, 5);
     const past = events
       .filter((e) => new Date(e.startDate) < now)
-      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
+      )
       .slice(0, 5);
 
     return {

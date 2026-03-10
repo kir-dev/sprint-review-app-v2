@@ -8,7 +8,7 @@ interface LoadingLogoProps {
 
 export function LoadingLogo({ className, size = 300 }: LoadingLogoProps) {
   return (
-    <div className={cn("loading-logo-container", className)}>
+    <div className={cn('loading-logo-container', className)}>
       <svg
         className="loading-logo-svg"
         xmlns="http://www.w3.org/2000/svg"
@@ -18,15 +18,24 @@ export function LoadingLogo({ className, size = 300 }: LoadingLogoProps) {
         <defs>
           <mask id="loading-logo-mask-left">
             {/* Cover from top-left to bottom-left */}
-            <path className="loading-logo-mask-path loading-logo-delay-1" d="M37,54 Q 650 600 37,1220" />
+            <path
+              className="loading-logo-mask-path loading-logo-delay-1"
+              d="M37,54 Q 650 600 37,1220"
+            />
           </mask>
           <mask id="loading-logo-mask-right">
-             {/* Cover from inner-top (1000,-100) to outer-bottom (1536,1300) to match the R shape flow */}
-             <path className="loading-logo-mask-path loading-logo-delay-2" d="M1000,-100 Q 1240 600 1536,1300" />
+            {/* Cover from inner-top (1000,-100) to outer-bottom (1536,1300) to match the R shape flow */}
+            <path
+              className="loading-logo-mask-path loading-logo-delay-2"
+              d="M1000,-100 Q 1240 600 1536,1300"
+            />
           </mask>
           <mask id="loading-logo-mask-center">
             {/* Vertical bar full height extended */}
-            <path className="loading-logo-mask-path loading-logo-delay-3" d="M774,-100 V1400" />
+            <path
+              className="loading-logo-mask-path loading-logo-delay-3"
+              d="M774,-100 V1400"
+            />
           </mask>
         </defs>
 

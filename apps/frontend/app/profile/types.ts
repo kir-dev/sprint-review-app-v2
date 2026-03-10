@@ -3,16 +3,16 @@ import { SIMONYI_EMAIL_SUFFIX } from './constants';
 
 // Copied from apps/frontend/app/logs/types.ts to avoid complex relative imports
 export enum Position {
-  UJONC = "UJONC",
-  TAG = "TAG",
-  HR_FELELOS = "HR_FELELOS",
-  PR_FELELOS = "PR_FELELOS",
-  TANFOLYAMFELELOS = "TANFOLYAMFELELOS",
-  GAZDASAGIS = "GAZDASAGIS",
-  KORVEZETO_HELYETTES = "KORVEZETO_HELYETTES",
-  KORVEZETO = "KORVEZETO",
-  OREGTAG = "OREGTAG",
-  ARCHIVALT = "ARCHIVALT",
+  UJONC = 'UJONC',
+  TAG = 'TAG',
+  HR_FELELOS = 'HR_FELELOS',
+  PR_FELELOS = 'PR_FELELOS',
+  TANFOLYAMFELELOS = 'TANFOLYAMFELELOS',
+  GAZDASAGIS = 'GAZDASAGIS',
+  KORVEZETO_HELYETTES = 'KORVEZETO_HELYETTES',
+  KORVEZETO = 'KORVEZETO',
+  OREGTAG = 'OREGTAG',
+  ARCHIVALT = 'ARCHIVALT',
 }
 
 // Based on apps/frontend/src/context/AuthContext.tsx

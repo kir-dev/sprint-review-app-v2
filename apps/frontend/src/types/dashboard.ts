@@ -14,9 +14,9 @@ export interface DashboardSummary {
 }
 
 export interface DashboardTopUser {
-    id: number;
-    name: string;
-    hours: number;
+  id: number;
+  name: string;
+  hours: number;
 }
 
 export interface DashboardProjectItem {
@@ -29,7 +29,7 @@ export interface DashboardProjectStats {
   topProjects: DashboardProjectItem[];
 }
 
-// Re-using generic Log interface but simplified for feed display if needed, 
+// Re-using generic Log interface but simplified for feed display if needed,
 // or defining a specific one. The backend returns full Log entities.
 export interface DashboardFeedItem {
   id: number;

@@ -2,11 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Camera, User } from 'lucide-react';
 import Image from 'next/image';
@@ -14,9 +14,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { toast } from 'sonner';
 import {
-    ALLOWED_IMAGE_TYPES,
-    MAX_PROFILE_IMAGE_SIZE_BYTES,
-    MAX_PROFILE_IMAGE_SIZE_MB,
+  ALLOWED_IMAGE_TYPES,
+  MAX_PROFILE_IMAGE_SIZE_BYTES,
+  MAX_PROFILE_IMAGE_SIZE_MB,
 } from '../constants';
 import { ProfileFormData } from '../types';
 

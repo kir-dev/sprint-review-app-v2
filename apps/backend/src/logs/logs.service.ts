@@ -166,7 +166,7 @@ export class LogsService {
     this.logger.log(`Updating log with ID: ${id}`);
     try {
       const { userId, workPeriodId, projectId, eventId, ...rest } = dto;
-  
+
       const updateData: Prisma.LogUpdateInput = {
         ...rest,
         ...(dto.date && { date: new Date(dto.date) }),
@@ -175,19 +175,19 @@ export class LogsService {
           workPeriod: { connect: { id: workPeriodId } },
         }),
       };
-  
+
       if (dto.hasOwnProperty('projectId')) {
         updateData.project = dto.projectId
           ? { connect: { id: dto.projectId } }
           : { disconnect: true };
       }
-  
+
       if (dto.hasOwnProperty('eventId')) {
         updateData.event = dto.eventId
           ? { connect: { id: dto.eventId } }
           : { disconnect: true };
       }
-  
+
       const log = await this.prisma.log.update({
         where: { id },
         data: updateData,

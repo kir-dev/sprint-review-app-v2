@@ -3,9 +3,9 @@ import tailwindcssAnimate from 'tailwindcss-animate';
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/**/*.{js,ts,jsx,tsx,mdx}",
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   darkMode: 'class',
   theme: {
@@ -51,15 +51,15 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
-        'spin': {
+        spin: {
           from: { transform: 'rotate(0deg)' },
           to: { transform: 'rotate(360deg)' },
         },
-        'pulse': {
+        pulse: {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.5' },
         },
-        'bounce': {
+        bounce: {
           '0%, 100%': {
             transform: 'translateY(-25%)',
             animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
@@ -107,11 +107,11 @@ export default {
         },
       },
       animation: {
-        'spin': 'spin 1s linear infinite',
+        spin: 'spin 1s linear infinite',
         'spin-slow': 'spin 3s linear infinite',
-        'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'bounce': 'bounce 1s infinite',
+        bounce: 'bounce 1s infinite',
         'bounce-slow': 'bounce 2s infinite',
         'fade-in': 'fade-in 0.3s ease-out',
         'fade-out': 'fade-out 0.2s ease-in',
@@ -125,7 +125,5 @@ export default {
       },
     },
   },
-  plugins: [
-    tailwindcssAnimate,
-  ],
-}
+  plugins: [tailwindcssAnimate],
+};

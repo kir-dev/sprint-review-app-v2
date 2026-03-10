@@ -1,7 +1,7 @@
 /**
  * @see https://github.com/radix-ui/primitives/blob/main/packages/react/compose-refs/src/compose-refs.tsx
  */
-import * as React from "react";
+import * as React from 'react';
 
 type PossibleRef<T> = React.Ref<T> | undefined;
 
@@ -10,7 +10,7 @@ type PossibleRef<T> = React.Ref<T> | undefined;
  * This utility takes care of different types of refs: callback refs and RefObject(s)
  */
 function setRef<T>(ref: PossibleRef<T>, value: T) {
-  if (typeof ref === "function") {
+  if (typeof ref === 'function') {
     return ref(value);
   }
 
@@ -28,7 +28,7 @@ function composeRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
     let hasCleanup = false;
     const cleanups = refs.map((ref) => {
       const cleanup = setRef(ref, node);
-      if (!hasCleanup && typeof cleanup === "function") {
+      if (!hasCleanup && typeof cleanup === 'function') {
         hasCleanup = true;
       }
       return cleanup;
@@ -42,7 +42,7 @@ function composeRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
       return () => {
         for (let i = 0; i < cleanups.length; i++) {
           const cleanup = cleanups[i];
-          if (typeof cleanup === "function") {
+          if (typeof cleanup === 'function') {
             cleanup();
           } else {
             setRef(refs[i], null);

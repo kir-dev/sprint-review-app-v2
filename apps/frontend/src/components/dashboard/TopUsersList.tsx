@@ -1,6 +1,12 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { DashboardTopUser } from '@/types/dashboard';
 import { Trophy } from 'lucide-react';
 import Link from 'next/link';
@@ -19,39 +25,46 @@ export function TopUsersList({ users, loading }: TopUsersListProps) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
-            Top Hozzájárulók
+          <Trophy className="h-5 w-5 text-yellow-500" />
+          Top Hozzájárulók
         </CardTitle>
         <CardDescription>A kör legaktívabb tagjai</CardDescription>
       </CardHeader>
       <CardContent>
         {users.length === 0 ? (
-           <div className="h-40 flex items-center justify-center text-muted-foreground">
-             Nincs adat.
-           </div>
+          <div className="h-40 flex items-center justify-center text-muted-foreground">
+            Nincs adat.
+          </div>
         ) : (
           <div className="space-y-4">
-              {users.map((user, index) => (
-                  <Link 
-                    key={index} 
-                    href={`/users/${user.id}`}
-                    className="flex items-center justify-between hover:bg-secondary/50 transition-colors px-2 rounded-md -mx-2 py-2"
-                  >
-                      <div className="flex items-center gap-3">
-                            <div className={`
+            {users.map((user, index) => (
+              <Link
+                key={index}
+                href={`/users/${user.id}`}
+                className="flex items-center justify-between hover:bg-secondary/50 transition-colors px-2 rounded-md -mx-2 py-2"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`
                                 flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
-                                ${index === 0 ? 'bg-yellow-500/20 text-yellow-600 border border-yellow-500/30' : 
-                                  index === 1 ? 'bg-slate-300/20 text-slate-600 border border-slate-400/30' :
-                                  index === 2 ? 'bg-amber-700/20 text-amber-700 border border-amber-700/30' : 
-                                  'bg-secondary text-muted-foreground'}
-                            `}>
-                                {index + 1}
-                            </div>
-                            <span className="font-medium">{user.name}</span>
-                      </div>
-                      <span className="text-sm font-semibold">{user.hours} óra</span>
-                  </Link>
-              ))}
+                                ${
+                                  index === 0
+                                    ? 'bg-yellow-500/20 text-yellow-600 border border-yellow-500/30'
+                                    : index === 1
+                                      ? 'bg-slate-300/20 text-slate-600 border border-slate-400/30'
+                                      : index === 2
+                                        ? 'bg-amber-700/20 text-amber-700 border border-amber-700/30'
+                                        : 'bg-secondary text-muted-foreground'
+                                }
+                            `}
+                  >
+                    {index + 1}
+                  </div>
+                  <span className="font-medium">{user.name}</span>
+                </div>
+                <span className="text-sm font-semibold">{user.hours} óra</span>
+              </Link>
+            ))}
           </div>
         )}
       </CardContent>

@@ -1,9 +1,9 @@
-import { PageHeader } from "@/components/PageHeader"
-import { Button } from "@/components/ui/button"
-import { CalendarDays, Plus } from "lucide-react"
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
+import { CalendarDays, Plus } from 'lucide-react';
 
 interface EventsHeaderProps {
-  onCreateEvent: () => void
+  onCreateEvent: () => void;
 }
 
 export function EventsHeader({ onCreateEvent }: EventsHeaderProps) {
@@ -13,7 +13,7 @@ export function EventsHeader({ onCreateEvent }: EventsHeaderProps) {
       description="Kir-Dev és Simonyi események kezelése"
       icon={CalendarDays}
     >
-      <Button 
+      <Button
         onClick={onCreateEvent}
         className="gap-2 hover:scale-105 transition-transform hidden md:flex"
       >
@@ -21,5 +21,5 @@ export function EventsHeader({ onCreateEvent }: EventsHeaderProps) {
         Új Esemény
       </Button>
     </PageHeader>
-  )
+  );
 }

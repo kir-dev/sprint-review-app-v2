@@ -1,17 +1,17 @@
-import { LoadingLogo } from "@/components/ui/LoadingLogo"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { CalendarDays, Edit2, FileText, Trash2 } from "lucide-react"
-import { eventTypeColors, eventTypeLabels } from "../constants"
-import { Event } from "../types"
+import { LoadingLogo } from '@/components/ui/LoadingLogo';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { CalendarDays, Edit2, FileText, Trash2 } from 'lucide-react';
+import { eventTypeColors, eventTypeLabels } from '../constants';
+import { Event } from '../types';
 
 interface EventsListProps {
-  events: Event[]
-  isLoading: boolean
-  onCreateEvent: () => void
-  onEditEvent: (event: Event) => void
-  onDeleteEvent: (id: number) => void
+  events: Event[];
+  isLoading: boolean;
+  onCreateEvent: () => void;
+  onEditEvent: (event: Event) => void;
+  onDeleteEvent: (id: number) => void;
 }
 
 export function EventsList({
@@ -26,7 +26,7 @@ export function EventsList({
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <LoadingLogo size={60} />
       </div>
-    )
+    );
   }
 
   if (events.length === 0) {
@@ -40,20 +40,23 @@ export function EventsList({
           <p className="text-sm text-muted-foreground mb-4">
             Hozz létre egy eseményt a kezdéshez
           </p>
-          <Button onClick={onCreateEvent} className="transition-all hover:scale-105">
+          <Button
+            onClick={onCreateEvent}
+            className="transition-all hover:scale-105"
+          >
             Esemény Létrehozása
           </Button>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {events.map((event, index) => {
-        const startDate = new Date(event.startDate)
-        const endDate = new Date(event.endDate)
-        
+        const startDate = new Date(event.startDate);
+        const endDate = new Date(event.endDate);
+
         const formattedDate =
           startDate.getTime() === endDate.getTime()
             ? startDate.toLocaleDateString('hu-HU', {
@@ -69,7 +72,7 @@ export function EventsList({
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-              })}`
+              })}`;
 
         return (
           <Card
@@ -109,10 +112,10 @@ export function EventsList({
               </div>
 
               <div className="flex items-center gap-2">
-                <span 
+                <span
                   className={cn(
-                    "px-2 py-1 rounded text-xs font-medium border",
-                    eventTypeColors[event.type]
+                    'px-2 py-1 rounded text-xs font-medium border',
+                    eventTypeColors[event.type],
                   )}
                 >
                   {eventTypeLabels[event.type]}
@@ -127,8 +130,8 @@ export function EventsList({
               )}
             </CardContent>
           </Card>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

@@ -23,7 +23,11 @@ function LoginContent() {
 
   // Redirect to dashboard when user is loaded
   useEffect(() => {
-    console.log('🔄 Auth state:', { isLoading, hasUser: !!user, hasToken: !!token });
+    console.log('🔄 Auth state:', {
+      isLoading,
+      hasUser: !!user,
+      hasToken: !!token,
+    });
     if (!isLoading && user && token) {
       console.log('✅ Redirecting to dashboard');
       router.push('/dashboard');
@@ -35,9 +39,7 @@ function LoginContent() {
   const jwtFromUrl = searchParams.get('jwt');
   const showLoading = (jwtFromUrl || (token && user)) && !error;
 
-
-
-    if (showLoading) {
+  if (showLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark px-4">
         <LoadingLogo size={60} />
@@ -47,7 +49,8 @@ function LoginContent() {
 
   const handleLogin = () => {
     // Redirect to backend AuthSCH login
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
     window.location.href = `${backendUrl}/auth/login`;
   };
 
@@ -55,7 +58,11 @@ function LoginContent() {
     <div className="min-h-screen flex items-center justify-center bg-dark px-4">
       <div className="bg-dark-lighter border border-dark rounded-3xl shadow-2xl p-6 md:p-12 max-w-md w-full text-center">
         <div className="flex justify-center mb-6">
-          <img src="Kir-Dev-White.png" alt="Kir-Dev Logo" className="max-w-48 h-auto" />
+          <img
+            src="Kir-Dev-White.png"
+            alt="Kir-Dev Logo"
+            className="max-w-48 h-auto"
+          />
         </div>
         <h1 className="text-4xl font-bold text-white mb-3">
           Sprint Review App
@@ -83,11 +90,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-dark px-4">
-        <LoadingLogo size={60} />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-dark px-4">
+          <LoadingLogo size={60} />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );

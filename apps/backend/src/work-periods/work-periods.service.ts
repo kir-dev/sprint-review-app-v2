@@ -110,19 +110,21 @@ export class WorkPeriodsService {
       });
 
       if (!workPeriod) {
-        this.logger.warn('No current work period found, creating one automatically');
-        
+        this.logger.warn(
+          'No current work period found, creating one automatically',
+        );
+
         // Calculate semester period
         // Hungarian university semesters:
         // Fall semester (I. félév): September 1 - January 31
         // Spring semester (II. félév): February 1 - June 30
         const year = now.getFullYear();
         const month = now.getMonth(); // 0-11
-        
+
         let name: string;
         let startDate: Date;
         let endDate: Date;
-        
+
         if (month < 5) {
           // January - May: Spring semester (II. félév)
           // E.g., in Jan 2026, it is 2025/2026 II. félév
@@ -137,7 +139,7 @@ export class WorkPeriodsService {
           startDate = new Date(year, 5, 1); // June 1
           endDate = new Date(year, 11, 31); // December 31
         }
-        
+
         this.logger.log(`Creating new work period: ${name}`);
         workPeriod = await this.prisma.workPeriod.create({
           data: {
@@ -153,8 +155,10 @@ export class WorkPeriodsService {
             },
           },
         });
-        
-        this.logger.log(`Work period created automatically: ${workPeriod.name}`);
+
+        this.logger.log(
+          `Work period created automatically: ${workPeriod.name}`,
+        );
       } else {
         this.logger.log(`Current work period found: ${workPeriod.name}`);
       }

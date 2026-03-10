@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { PageHeader } from "@/components/PageHeader";
-import { User } from "lucide-react";
+import { PageHeader } from '@/components/PageHeader';
+import { User } from 'lucide-react';
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (

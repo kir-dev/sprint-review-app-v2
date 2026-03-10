@@ -1,4 +1,4 @@
-import { LoadingLogo } from "@/components/ui/LoadingLogo";
+import { LoadingLogo } from '@/components/ui/LoadingLogo';
 
 export default function ProfileLoading() {
   return (

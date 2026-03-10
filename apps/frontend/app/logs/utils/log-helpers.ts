@@ -61,25 +61,35 @@ export function exportLogsToCsv(logs: Log[], filters?: LogFilters) {
     'Időszak',
     'Ráfordított idő (óra)',
     'Nehézség',
-    'Leírás'
+    'Leírás',
   ];
-  
-  const csvRows = logs.map(log => {
+
+  const csvRows = logs.map((log) => {
     const date = new Date(log.date).toLocaleDateString('hu-HU');
-    const categoryName = log.category; 
+    const categoryName = log.category;
     const projectName = log.project?.name || '';
     const workPeriodName = log.workPeriod?.name || '';
     const timeSpent = log.timeSpent?.toString() || '';
     const difficulty = log.difficulty || '';
     const desc = `"${(log.description || '').replace(/"/g, '""')}"`;
-    
-    return [date, categoryName, projectName, workPeriodName, timeSpent, difficulty, desc].join(',');
+
+    return [
+      date,
+      categoryName,
+      projectName,
+      workPeriodName,
+      timeSpent,
+      difficulty,
+      desc,
+    ].join(',');
   });
 
   const csvContent = [headers.join(','), ...csvRows].join('\n');
-  const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); // adding BOM for Excel
+  const blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), csvContent], {
+    type: 'text/csv;charset=utf-8;',
+  }); // adding BOM for Excel
   const url = URL.createObjectURL(blob);
-  
+
   let dateStr = new Date().toISOString().split('T')[0];
   if (filters?.startDate && filters?.endDate) {
     dateStr = `${filters.startDate}_${filters.endDate}`;

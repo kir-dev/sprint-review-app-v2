@@ -1,4 +1,3 @@
-
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateFeatureDto } from './dto/create-feature.dto';
@@ -11,7 +10,9 @@ export class FeaturesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createFeatureDto: CreateFeatureDto) {
-    this.logger.log(`Creating feature: ${createFeatureDto.title} for project ${createFeatureDto.projectId}`);
+    this.logger.log(
+      `Creating feature: ${createFeatureDto.title} for project ${createFeatureDto.projectId}`,
+    );
     return this.prisma.feature.create({
       data: createFeatureDto,
     });
@@ -20,10 +21,10 @@ export class FeaturesService {
   async findAll() {
     this.logger.log('Fetching all features');
     return this.prisma.feature.findMany({
-        include: {
-            assignee: true,
-            project: true
-        }
+      include: {
+        assignee: true,
+        project: true,
+      },
     });
   }
 
@@ -33,8 +34,8 @@ export class FeaturesService {
       where: { id },
       include: {
         assignee: true,
-        project: true
-      }
+        project: true,
+      },
     });
   }
 

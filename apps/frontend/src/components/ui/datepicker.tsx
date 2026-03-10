@@ -1,44 +1,51 @@
-"use client"
+'use client';
 
-import { ChevronDownIcon } from "lucide-react"
-import * as React from "react"
+import { ChevronDownIcon } from 'lucide-react';
+import * as React from 'react';
 
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 type Calendar22Props = {
   // date value in YYYY-MM-DD format (compatible with input[type=date])
-  value?: string | null
+  value?: string | null;
   // called with date in YYYY-MM-DD format or empty string when cleared
-  onChange?: (dateString: string) => void
-  onBlur?: () => void
-  id?: string
-  required?: boolean
-  className?: string
+  onChange?: (dateString: string) => void;
+  onBlur?: () => void;
+  id?: string;
+  required?: boolean;
+  className?: string;
   // custom class for the popover content (controls popover width)
-  popoverClassName?: string
-}
+  popoverClassName?: string;
+};
 
-export function Calendar22({ value, onChange, onBlur, id, className, popoverClassName }: Calendar22Props) {
-  const [open, setOpen] = React.useState(false)
+export function Calendar22({
+  value,
+  onChange,
+  onBlur,
+  id,
+  className,
+  popoverClassName,
+}: Calendar22Props) {
+  const [open, setOpen] = React.useState(false);
   const [date, setDate] = React.useState<Date | undefined>(
-    value ? new Date(value) : undefined
-  )
+    value ? new Date(value) : undefined,
+  );
 
   // keep internal state in sync if parent changes the value
   React.useEffect(() => {
     if (value) {
-      const parsed = new Date(value)
-      if (!isNaN(parsed.getTime())) setDate(parsed)
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) setDate(parsed);
     } else {
-      setDate(undefined)
+      setDate(undefined);
     }
-  }, [value])
+  }, [value]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -46,14 +53,17 @@ export function Calendar22({ value, onChange, onBlur, id, className, popoverClas
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            id={id ?? "date"}
+            id={id ?? 'date'}
             className={`${className ?? 'w-60'} justify-between font-normal`}
           >
-            {date ? date.toLocaleDateString() : "Select date"}
+            {date ? date.toLocaleDateString() : 'Select date'}
             <ChevronDownIcon />
           </Button>
         </PopoverTrigger>
-  <PopoverContent className={`${popoverClassName ?? 'w-auto'} min-w-[300px] p-0`} align="start">
+        <PopoverContent
+          className={`${popoverClassName ?? 'w-auto'} min-w-[300px] p-0`}
+          align="start"
+        >
           <Calendar
             mode="single"
             selected={date}
@@ -62,10 +72,12 @@ export function Calendar22({ value, onChange, onBlur, id, className, popoverClas
             classNames={{ root: 'w-full' }}
             weekStartsOn={1}
             onSelect={(selected: Date | undefined) => {
-              setDate(selected)
-              setOpen(false)
+              setDate(selected);
+              setOpen(false);
               const localDate = selected
-                ? new Date(selected.getTime() - selected.getTimezoneOffset() * 60000)
+                ? new Date(
+                    selected.getTime() - selected.getTimezoneOffset() * 60000,
+                  )
                     .toISOString()
                     .slice(0, 10)
                 : '';
@@ -77,5 +89,5 @@ export function Calendar22({ value, onChange, onBlur, id, className, popoverClas
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }

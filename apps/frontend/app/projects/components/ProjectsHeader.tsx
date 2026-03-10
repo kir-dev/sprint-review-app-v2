@@ -1,9 +1,9 @@
-import { PageHeader } from "@/components/PageHeader"
-import { Button } from "@/components/ui/button"
-import { FolderKanban, Plus } from "lucide-react"
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
+import { FolderKanban, Plus } from 'lucide-react';
 
 interface ProjectsHeaderProps {
-  onCreateProject: () => void
+  onCreateProject: () => void;
 }
 
 export function ProjectsHeader({ onCreateProject }: ProjectsHeaderProps) {
@@ -13,7 +13,7 @@ export function ProjectsHeader({ onCreateProject }: ProjectsHeaderProps) {
       description="Projektek kezelése"
       icon={FolderKanban}
     >
-      <Button 
+      <Button
         onClick={onCreateProject}
         className="gap-2 transition-all hover:scale-105 shadow-lg hidden md:flex"
       >
@@ -21,5 +21,5 @@ export function ProjectsHeader({ onCreateProject }: ProjectsHeaderProps) {
         Új Projekt
       </Button>
     </PageHeader>
-  )
+  );
 }

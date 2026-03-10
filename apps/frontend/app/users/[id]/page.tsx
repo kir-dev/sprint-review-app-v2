@@ -4,8 +4,8 @@ import { ErrorAlert } from '@/components/ErrorAlert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LoadingLogo } from "@/components/ui/LoadingLogo";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingLogo } from '@/components/ui/LoadingLogo';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
 import { positionColors, positionLabels } from '@/lib/positions';
 import { cn } from '@/lib/utils';
@@ -46,7 +46,7 @@ export default function UserProfilePage() {
         fullName: name,
         email: '', // Placeholder, will be updated
         position: (searchParams.get('position') as Position) || Position.UJONC,
-        profileImage: searchParams.get('image') || undefined
+        profileImage: searchParams.get('image') || undefined,
       };
     }
     return null;
@@ -74,7 +74,7 @@ export default function UserProfilePage() {
           }),
           fetch(`/api/logs/stats/user/${userId}`, {
             headers: { Authorization: `Bearer ${token}` },
-          })
+          }),
         ]);
 
         if (!userResponse.ok) throw new Error('Failed to fetch user details');
@@ -82,7 +82,7 @@ export default function UserProfilePage() {
 
         const [userData, statsData] = await Promise.all([
           userResponse.json(),
-          statsResponse.json()
+          statsResponse.json(),
         ]);
 
         setUser(userData);
@@ -109,7 +109,10 @@ export default function UserProfilePage() {
   if (!user && !isLoading) {
     return (
       <div className="p-8 text-center bg-background min-h-screen">
-        <ErrorAlert error={error || 'Felhasználó nem található'} onClose={() => router.back()} />
+        <ErrorAlert
+          error={error || 'Felhasználó nem található'}
+          onClose={() => router.back()}
+        />
       </div>
     );
   }
@@ -129,34 +132,34 @@ export default function UserProfilePage() {
         <div className="flex items-center gap-4 animate-slide-in-left">
           {user ? (
             <>
-                <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-background shadow-lg">
-                    {user.profileImage ? (
-                    <img
-                        src={user.profileImage}
-                        alt={user.fullName}
-                        className="w-full h-full object-cover"
-                    />
-                    ) : (
-                    <User className="h-10 w-10 text-primary" />
-                    )}
-                </div>
-                <div>
-                    <h1 className="text-3xl font-bold">{user.fullName}</h1>
-                    <Badge
-                    variant="outline"
-                    className={cn('mt-2', positionColors[user.position])}
-                    >
-                    {positionLabels[user.position]}
-                    </Badge>
-                </div>
+              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-background shadow-lg">
+                {user.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt={user.fullName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="h-10 w-10 text-primary" />
+                )}
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">{user.fullName}</h1>
+                <Badge
+                  variant="outline"
+                  className={cn('mt-2', positionColors[user.position])}
+                >
+                  {positionLabels[user.position]}
+                </Badge>
+              </div>
             </>
           ) : (
             <>
-                <Skeleton className="h-20 w-20 rounded-full" />
-                <div>
-                    <Skeleton className="h-9 w-64 mb-2" />
-                    <Skeleton className="h-6 w-32" />
-                </div>
+              <Skeleton className="h-20 w-20 rounded-full" />
+              <div>
+                <Skeleton className="h-9 w-64 mb-2" />
+                <Skeleton className="h-6 w-32" />
+              </div>
             </>
           )}
         </div>
@@ -164,77 +167,104 @@ export default function UserProfilePage() {
 
       {isLoading ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-            <LoadingLogo size={60} />
+          <LoadingLogo size={60} />
         </div>
       ) : error ? (
         <ErrorAlert error={error} onClose={() => setError(null)} />
       ) : stats ? (
         <div className="space-y-6 animate-slide-in-bottom">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Összes Bejegyzés
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalLogs}</div>
-                </CardContent>
-                </Card>
-                <Card className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Összes Eltöltött Idő
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{stats.totalTimeSpent}h</div>
-                </CardContent>
-                </Card>
-            </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Összes Bejegyzés
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalLogs}</div>
+              </CardContent>
+            </Card>
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Összes Eltöltött Idő
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats.totalTimeSpent}h
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                <Card className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                    <CardTitle>Kategóriák szerint</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                    {Object.entries(stats.logsByCategory).map(([category, count]) => (
-                        <div key={category} className="flex items-center justify-between">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <CardTitle>Kategóriák szerint</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(stats.logsByCategory).map(
+                    ([category, count]) => (
+                      <div
+                        key={category}
+                        className="flex items-center justify-between"
+                      >
                         <div className="flex items-center gap-2">
-                            <span className={`w-3 h-3 rounded-full ${categoryColors[category as keyof typeof categoryColors]?.split(' ')[0] || 'bg-gray-500'}`} />
-                            <span>{categoryLabels[category as keyof typeof categoryLabels] || category}</span>
+                          <span
+                            className={`w-3 h-3 rounded-full ${categoryColors[category as keyof typeof categoryColors]?.split(' ')[0] || 'bg-gray-500'}`}
+                          />
+                          <span>
+                            {categoryLabels[
+                              category as keyof typeof categoryLabels
+                            ] || category}
+                          </span>
                         </div>
                         <span className="font-medium">{count}</span>
-                        </div>
-                    ))}
-                    {Object.keys(stats.logsByCategory).length === 0 ? (
-                        <p className="text-muted-foreground text-center py-4">Nincs még bejegyzés</p>
-                    ) : null}
-                    </div>
-                </CardContent>
-                </Card>
+                      </div>
+                    ),
+                  )}
+                  {Object.keys(stats.logsByCategory).length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">
+                      Nincs még bejegyzés
+                    </p>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
 
-                <Card className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                    <CardTitle>Projektenként</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                    {Object.entries(stats.logsByProject).map(([project, count]) => (
-                        <div key={project} className="flex items-center justify-between">
-                        <span className="truncate max-w-[200px]" title={project}>{project}</span>
+            <Card className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <CardTitle>Projektenként</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(stats.logsByProject).map(
+                    ([project, count]) => (
+                      <div
+                        key={project}
+                        className="flex items-center justify-between"
+                      >
+                        <span
+                          className="truncate max-w-[200px]"
+                          title={project}
+                        >
+                          {project}
+                        </span>
                         <span className="font-medium">{count}</span>
-                        </div>
-                    ))}
-                    {Object.keys(stats.logsByProject).length === 0 ? (
-                        <p className="text-muted-foreground text-center py-4">Nincs még projekt bejegyzés</p>
-                    ) : null}
-                    </div>
-                </CardContent>
-                </Card>
-            </div>
+                      </div>
+                    ),
+                  )}
+                  {Object.keys(stats.logsByProject).length === 0 ? (
+                    <p className="text-muted-foreground text-center py-4">
+                      Nincs még projekt bejegyzés
+                    </p>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       ) : null}
     </div>

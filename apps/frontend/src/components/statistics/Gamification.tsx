@@ -7,10 +7,10 @@ interface GamificationProps {
   data: {
     currentStreak: number;
     goal: {
-       label: string;
-       current: number;
-       target: number;
-       percentage: string;
+      label: string;
+      current: number;
+      target: number;
+      percentage: string;
     };
     largeTaskCount: number;
   };
@@ -30,7 +30,9 @@ export function Gamification({ data }: GamificationProps) {
     <>
       <Card className="bg-orange-50/10 border-orange-200/20 break-inside-avoid mb-6">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-orange-500">Streak</CardTitle>
+          <CardTitle className="text-sm font-medium text-orange-500">
+            Streak
+          </CardTitle>
           <Flame className="h-4 w-4 text-orange-500" />
         </CardHeader>
         <CardContent>
@@ -41,19 +43,28 @@ export function Gamification({ data }: GamificationProps) {
 
       <Card className="break-inside-avoid mb-6">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Szemeszter Küldetés</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Szemeszter Küldetés
+          </CardTitle>
           <Target className="h-4 w-4 text-blue-500" />
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col space-y-1">
-             <div className="flex justify-between text-sm">
-                <span>{data.goal.current} / {data.goal.target} óra</span>
-                <span className="font-bold">{data.goal.percentage}%</span>
-             </div>
+            <div className="flex justify-between text-sm">
+              <span>
+                {data.goal.current} / {data.goal.target} óra
+              </span>
+              <span className="font-bold">{data.goal.percentage}%</span>
+            </div>
           </div>
-          <Progress value={animatedProgress} className="h-2 transition-all duration-1000 ease-out" />
+          <Progress
+            value={animatedProgress}
+            className="h-2 transition-all duration-1000 ease-out"
+          />
           <p className="text-xs text-muted-foreground">
-            {goalPercent >= 100 ? "Gratulálunk, teljesítetted a célt!" : "Csak így tovább!"}
+            {goalPercent >= 100
+              ? 'Gratulálunk, teljesítetted a célt!'
+              : 'Csak így tovább!'}
           </p>
         </CardContent>
       </Card>

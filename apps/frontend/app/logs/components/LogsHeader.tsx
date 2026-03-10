@@ -1,10 +1,10 @@
-import { PageHeader } from "@/components/PageHeader"
-import { Button } from "@/components/ui/button"
-import { FileText, Filter, Plus } from "lucide-react"
+import { PageHeader } from '@/components/PageHeader';
+import { Button } from '@/components/ui/button';
+import { FileText, Filter, Plus } from 'lucide-react';
 
 interface LogsHeaderProps {
-  onToggleFilters: () => void
-  onCreateLog: () => void
+  onToggleFilters: () => void;
+  onCreateLog: () => void;
 }
 
 export function LogsHeader({ onToggleFilters, onCreateLog }: LogsHeaderProps) {
@@ -14,8 +14,8 @@ export function LogsHeader({ onToggleFilters, onCreateLog }: LogsHeaderProps) {
       description="Kövesd nyomon a munkaóráidat és tevékenységeidet"
       icon={FileText}
     >
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         onClick={onToggleFilters}
         className="transition-all hover:scale-105 px-3 md:px-4"
         size="sm"
@@ -23,7 +23,7 @@ export function LogsHeader({ onToggleFilters, onCreateLog }: LogsHeaderProps) {
         <Filter className="h-4 w-4 md:mr-2" />
         <span className="hidden md:inline">Szűrők</span>
       </Button>
-      <Button 
+      <Button
         onClick={onCreateLog}
         className="transition-all hover:scale-105 hidden md:flex"
       >
@@ -31,5 +31,5 @@ export function LogsHeader({ onToggleFilters, onCreateLog }: LogsHeaderProps) {
         Új Bejegyzés
       </Button>
     </PageHeader>
-  )
+  );
 }

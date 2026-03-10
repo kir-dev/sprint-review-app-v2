@@ -34,5 +34,5 @@ module.exports = [
   },
   {
     ignores: ['eslint.config.js', 'dist/'],
-  }
+  },
 ];
