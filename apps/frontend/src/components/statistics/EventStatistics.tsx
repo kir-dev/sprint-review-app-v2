@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatNumber } from '@/utils/dashboard-utils';
 import { Calendar, Clock, Users } from 'lucide-react';
 
 interface EventStatisticsProps {
@@ -45,7 +46,7 @@ export function EventStatistics({ data }: EventStatisticsProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {data.avgTimePerEvent.toFixed(1)} óra
+            {formatNumber(data.avgTimePerEvent)} óra
           </div>
           <p className="text-xs text-muted-foreground">Jelenlét átlagosan</p>
         </CardContent>

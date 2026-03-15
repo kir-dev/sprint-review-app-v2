@@ -1,4 +1,5 @@
 import { Log, LogFilters, WorkPeriod } from '../types';
+import { formatNumber } from '@/utils/dashboard-utils';
 
 export function findWorkPeriodForDate(
   dateString: string | Date,
@@ -119,7 +120,7 @@ export function calculateStats(logs: Log[]) {
   );
   const avgHours =
     logsWithTimeSpent.length > 0
-      ? parseFloat((totalHours / logsWithTimeSpent.length).toFixed(1))
+      ? parseFloat(formatNumber(totalHours / logsWithTimeSpent.length))
       : 0;
 
   return {

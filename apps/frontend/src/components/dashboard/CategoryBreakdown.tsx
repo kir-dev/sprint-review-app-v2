@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { formatNumber } from '@/utils/dashboard-utils';
 import { CategoryBreakdownData } from '@/types/dashboard';
 import {
   Cell,
@@ -57,7 +58,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               {name}
             </span>
             <span className="font-bold text-muted-foreground">
-              {payload[0].value.toFixed(1)} óra
+              {formatNumber(payload[0].value)} óra
             </span>
           </div>
         </div>

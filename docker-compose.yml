@@ -24,7 +24,7 @@ services:
     # depends_on:
     #   - db
     ports:
-      - '3001:3001'
+      - '127.0.0.1:3001:3001'
     environment:
       # DATABASE_URL: postgres://admin:password@db:5432/sprint-review-app
       # Add other necessary env vars here or use an env_file

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatNumber } from '@/utils/dashboard-utils';
 import { useAuth } from '@/context/AuthContext';
 import { positionColors, positionLabels } from '@/lib/positions';
 import { cn } from '@/lib/utils';
@@ -192,7 +193,7 @@ export default function UserProfilePage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {stats.totalTimeSpent}h
+                  {formatNumber(stats.totalTimeSpent)} óra
                 </div>
               </CardContent>
             </Card>

@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { DashboardTopUser } from '@/types/dashboard';
+import { formatNumber } from '@/utils/dashboard-utils';
 import { Trophy } from 'lucide-react';
 import Link from 'next/link';
 
@@ -62,7 +63,9 @@ export function TopUsersList({ users, loading }: TopUsersListProps) {
                   </div>
                   <span className="font-medium">{user.name}</span>
                 </div>
-                <span className="text-sm font-semibold">{user.hours} óra</span>
+                <span className="text-sm font-semibold">
+                  {formatNumber(user.hours)} óra
+                </span>
               </Link>
             ))}
           </div>

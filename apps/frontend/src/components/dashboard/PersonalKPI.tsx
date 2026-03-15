@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatNumber } from '@/utils/dashboard-utils';
 import { DashboardSummary } from '@/types/dashboard';
 import { Briefcase, Clock, Users } from 'lucide-react';
 
@@ -22,7 +23,7 @@ export function PersonalKPI({ summary, loading }: PersonalKPIProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {summary?.totalHours || 0} óra
+            {formatNumber(summary?.totalHours)} óra
           </div>
           <p className="text-xs text-muted-foreground">
             {summary?.currentPeriod?.name || 'Jelenlegi időszak'}
@@ -38,7 +39,7 @@ export function PersonalKPI({ summary, loading }: PersonalKPIProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {summary?.groupTotalHours || 0} óra
+            {formatNumber(summary?.groupTotalHours)} óra
           </div>
           <p className="text-xs text-muted-foreground">
             {summary?.activeContributors || 0} aktív tag
@@ -73,7 +74,7 @@ export function PersonalKPI({ summary, loading }: PersonalKPIProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {summary?.averageHoursPerUser.toFixed(1) || 0} óra
+            {formatNumber(summary?.averageHoursPerUser)} óra
           </div>
           <p className="text-xs text-muted-foreground">Átlagos aktivitás</p>
         </CardContent>
