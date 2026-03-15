@@ -46,7 +46,6 @@ export function LogDialog({
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
-    reset,
     setValue,
   } = useForm<LogFormData>({
     resolver: zodResolver(logFormSchema as any),
@@ -55,10 +54,6 @@ export function LogDialog({
 
   const category = watch('category');
   const description = watch('description');
-
-  useEffect(() => {
-    reset(formData);
-  }, [formData, reset]);
 
   useEffect(() => {
     const date = watch('date');
@@ -122,7 +117,7 @@ export function LogDialog({
                 {(field) => (
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value || undefined}
                   >
                     <SelectTrigger
                       className={errors.category ? 'border-destructive' : ''}

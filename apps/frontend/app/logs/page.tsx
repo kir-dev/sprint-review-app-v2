@@ -170,16 +170,18 @@ export default function LogsPage() {
         onDeleteLog={handleDeleteClick}
       />
 
-      <LogDialog
-        isOpen={isDialogOpen}
-        editingLog={editingLog}
-        formData={formData}
-        projects={projects}
-        events={events}
-        workPeriods={workPeriods}
-        onSubmit={handleSubmit}
-        onClose={closeDialog}
-      />
+      {isDialogOpen && (
+        <LogDialog
+          isOpen={isDialogOpen}
+          editingLog={editingLog}
+          formData={formData}
+          projects={projects}
+          events={events}
+          workPeriods={workPeriods}
+          onSubmit={handleSubmit}
+          onClose={closeDialog}
+        />
+      )}
 
       <DeleteConfirmDialog
         isOpen={deleteConfirmOpen}

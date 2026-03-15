@@ -35,7 +35,10 @@ export function CategorySpecificFields({
           error={errors.projectId}
         >
           {(field) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value || undefined}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Nincs projekt" />
               </SelectTrigger>
@@ -56,7 +59,10 @@ export function CategorySpecificFields({
           error={errors.difficulty}
         >
           {(field) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value || undefined}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Válassz nehézséget" />
               </SelectTrigger>
@@ -83,7 +89,10 @@ export function CategorySpecificFields({
         error={errors.eventId}
       >
         {(field) => (
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select
+            onValueChange={field.onChange}
+            value={field.value || undefined}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Válassz eseményt" />
             </SelectTrigger>
