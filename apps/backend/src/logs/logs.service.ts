@@ -177,14 +177,14 @@ export class LogsService {
       };
 
       if (dto.hasOwnProperty('projectId')) {
-        updateData.project = dto.projectId
-          ? { connect: { id: dto.projectId } }
+        updateData.project = projectId
+          ? { connect: { id: projectId } }
           : { disconnect: true };
       }
 
       if (dto.hasOwnProperty('eventId')) {
-        updateData.event = dto.eventId
-          ? { connect: { id: dto.eventId } }
+        updateData.event = eventId
+          ? { connect: { id: eventId } }
           : { disconnect: true };
       }
 
@@ -236,50 +236,72 @@ export class LogsService {
         where.workPeriodId = workPeriodId;
       }
 
-      const logs = await this.prisma.log.findMany({
-        where,
-        include: {
-          project: true,
-        },
+      const [aggregate, categoryStats, difficultyStats, projectStats] =
+        await Promise.all([
+          this.prisma.log.aggregate({
+            where,
+            _count: { id: true },
+            _sum: { timeSpent: true },
+          }),
+          this.prisma.log.groupBy({
+            by: ['category'],
+            where,
+            _count: { id: true },
+          }),
+          this.prisma.log.groupBy({
+            by: ['difficulty'],
+            where: { ...where, difficulty: { not: null } },
+            _count: { id: true },
+          }),
+          this.prisma.log.groupBy({
+            by: ['projectId'],
+            where: { ...where, projectId: { not: null } },
+            _count: { id: true },
+          }),
+        ]);
+
+      // Get project names
+      const projectIds = projectStats.map((p) => p.projectId as number);
+      const projects = await this.prisma.project.findMany({
+        where: { id: { in: projectIds } },
+        select: { id: true, name: true },
       });
-
-      const totalLogs = logs.length;
-      const totalTimeSpent = logs.reduce(
-        (sum, log) => sum + (log.timeSpent || 0),
-        0,
+      const projectNameMap = projects.reduce(
+        (acc, p) => {
+          acc[p.id] = p.name;
+          return acc;
+        },
+        {} as Record<number, string>,
       );
 
-      const logsByCategory = logs.reduce(
-        (acc, log) => {
-          acc[log.category] = (acc[log.category] || 0) + 1;
+      const logsByCategory = categoryStats.reduce(
+        (acc, c) => {
+          acc[c.category] = c._count.id;
           return acc;
         },
         {} as Record<string, number>,
       );
 
-      const logsByDifficulty = logs.reduce(
-        (acc, log) => {
-          if (log.difficulty) {
-            acc[log.difficulty] = (acc[log.difficulty] || 0) + 1;
-          }
+      const logsByDifficulty = difficultyStats.reduce(
+        (acc, d) => {
+          if (d.difficulty) acc[d.difficulty] = d._count.id;
           return acc;
         },
         {} as Record<string, number>,
       );
 
-      const logsByProject = logs.reduce(
-        (acc, log) => {
-          if (log.project) {
-            acc[log.project.name] = (acc[log.project.name] || 0) + 1;
-          }
+      const logsByProject = projectStats.reduce(
+        (acc, p) => {
+          const name = projectNameMap[p.projectId as number] || 'Ismeretlen';
+          acc[name] = p._count.id;
           return acc;
         },
         {} as Record<string, number>,
       );
 
       return {
-        totalLogs,
-        totalTimeSpent,
+        totalLogs: aggregate._count.id,
+        totalTimeSpent: aggregate._sum.timeSpent || 0,
         logsByCategory,
         logsByDifficulty,
         logsByProject,
@@ -293,6 +315,80 @@ export class LogsService {
     }
   }
 
+  async aggregateTimeSpent(where: Prisma.LogWhereInput) {
+    const aggregate = await this.prisma.log.aggregate({
+      where,
+      _sum: {
+        timeSpent: true,
+      },
+      _count: {
+        id: true,
+        userId: true,
+        projectId: true,
+      },
+    });
+    return aggregate;
+  }
+
+  async groupByProject(where: Prisma.LogWhereInput) {
+    return this.prisma.log.groupBy({
+      by: ['projectId'],
+      where: {
+        ...where,
+        projectId: { not: null },
+      },
+      _sum: {
+        timeSpent: true,
+      },
+      _count: {
+        id: true,
+      },
+      orderBy: {
+        _sum: {
+          timeSpent: 'desc',
+        },
+      },
+    });
+  }
+
+  async groupByCategory(where: Prisma.LogWhereInput) {
+    return this.prisma.log.groupBy({
+      by: ['category'],
+      where,
+      _sum: {
+        timeSpent: true,
+      },
+      _count: {
+        id: true,
+      },
+    });
+  }
+
+  async groupByDifficulty(where: Prisma.LogWhereInput) {
+    return this.prisma.log.groupBy({
+      by: ['difficulty'],
+      where: {
+        ...where,
+        difficulty: { not: null },
+      },
+      _count: {
+        id: true,
+      },
+    });
+  }
+
+  async groupByDate(where: Prisma.LogWhereInput) {
+    // Note: SQLite/Postgres date grouping might differ in Prisma
+    // For simplicity, we can fetch dates and timeSpent only
+    return this.prisma.log.findMany({
+      where,
+      select: {
+        date: true,
+        timeSpent: true,
+      },
+    });
+  }
+
   async getStatsByProject(projectId: number, workPeriodId?: number) {
     this.logger.log(
       `Fetching stats for project ID: ${projectId}, work period: ${workPeriodId || 'all'}`,
@@ -303,51 +399,73 @@ export class LogsService {
         where.workPeriodId = workPeriodId;
       }
 
-      const logs = await this.prisma.log.findMany({
-        where,
-        include: {
-          user: true,
-        },
+      const [aggregate, categoryStats, difficultyStats, userStats] =
+        await Promise.all([
+          this.prisma.log.aggregate({
+            where,
+            _count: { id: true },
+            _sum: { timeSpent: true },
+          }),
+          this.prisma.log.groupBy({
+            by: ['category'],
+            where,
+            _count: { id: true },
+          }),
+          this.prisma.log.groupBy({
+            by: ['difficulty'],
+            where: { ...where, difficulty: { not: null } },
+            _count: { id: true },
+          }),
+          this.prisma.log.groupBy({
+            by: ['userId'],
+            where,
+            _count: { id: true },
+          }),
+        ]);
+
+      // Get user names
+      const userIds = userStats.map((u) => u.userId);
+      const users = await this.prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, fullName: true },
       });
-
-      const totalLogs = logs.length;
-      const totalTimeSpent = logs.reduce(
-        (sum, log) => sum + (log.timeSpent || 0),
-        0,
+      const userNameMap = users.reduce(
+        (acc, u) => {
+          acc[u.id] = u.fullName;
+          return acc;
+        },
+        {} as Record<number, string>,
       );
-      const uniqueContributors = new Set(logs.map((log) => log.userId)).size;
 
-      const logsByCategory = logs.reduce(
-        (acc, log) => {
-          acc[log.category] = (acc[log.category] || 0) + 1;
+      const logsByCategory = categoryStats.reduce(
+        (acc, c) => {
+          acc[c.category] = c._count.id;
           return acc;
         },
         {} as Record<string, number>,
       );
 
-      const logsByDifficulty = logs.reduce(
-        (acc, log) => {
-          if (log.difficulty) {
-            acc[log.difficulty] = (acc[log.difficulty] || 0) + 1;
-          }
+      const logsByDifficulty = difficultyStats.reduce(
+        (acc, d) => {
+          if (d.difficulty) acc[d.difficulty] = d._count.id;
           return acc;
         },
         {} as Record<string, number>,
       );
 
-      const contributorsList = logs.reduce(
-        (acc, log) => {
-          const userName = log.user.fullName;
-          acc[userName] = (acc[userName] || 0) + 1;
+      const contributorsList = userStats.reduce(
+        (acc, u) => {
+          const name = userNameMap[u.userId] || 'Ismeretlen';
+          acc[name] = u._count.id;
           return acc;
         },
         {} as Record<string, number>,
       );
 
       return {
-        totalLogs,
-        totalTimeSpent,
-        uniqueContributors,
+        totalLogs: aggregate._count.id,
+        totalTimeSpent: aggregate._sum.timeSpent || 0,
+        uniqueContributors: userStats.length,
         logsByCategory,
         logsByDifficulty,
         contributorsList,

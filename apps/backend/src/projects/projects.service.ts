@@ -156,46 +156,59 @@ export class ProjectService {
   async getStats(projectId: number) {
     this.logger.log(`Fetching stats for project ID: ${projectId}`);
 
-    const [project, features, logs] = await Promise.all([
-      this.prisma.project.findUnique({
-        where: { id: projectId },
-        include: { members: true, projectManager: true },
+    const [logAggregate, featureStats, bugStats, featureCountsRaw] =
+      await Promise.all([
+        this.prisma.log.aggregate({
+          where: { projectId },
+          _count: { id: true },
+          _sum: { timeSpent: true },
+        }),
+        this.prisma.feature.aggregate({
+          where: { projectId, isFeature: true },
+          _count: { id: true },
+        }),
+        this.prisma.feature.aggregate({
+          where: { projectId, isBug: true },
+          _count: { id: true },
+        }),
+        this.prisma.feature.groupBy({
+          by: ['status'],
+          where: { projectId },
+          _count: { id: true },
+        }),
+      ]);
+
+    // Also need completed counts
+    const [completedFeatures, completedBugs] = await Promise.all([
+      this.prisma.feature.count({
+        where: { projectId, isFeature: true, status: 'DONE' },
       }),
-      this.prisma.feature.findMany({
-        where: { projectId },
-      }),
-      this.prisma.log.findMany({
-        where: { projectId },
+      this.prisma.feature.count({
+        where: { projectId, isBug: true, status: 'DONE' },
       }),
     ]);
 
-    if (!project) {
-      throw new Error('Project not found');
-    }
-
-    const totalTime = logs.reduce((acc, log) => acc + (log.timeSpent || 0), 0);
-
     const featureCounts = {
-      TODO: features.filter((f) => f.status === 'TODO').length,
-      IN_PROGRESS: features.filter((f) => f.status === 'IN_PROGRESS').length,
-      DONE: features.filter((f) => f.status === 'DONE').length,
-      BLOCKED: features.filter((f) => f.status === 'BLOCKED').length,
+      TODO: featureCountsRaw.find((f) => f.status === 'TODO')?._count.id || 0,
+      IN_PROGRESS:
+        featureCountsRaw.find((f) => f.status === 'IN_PROGRESS')?._count.id ||
+        0,
+      DONE: featureCountsRaw.find((f) => f.status === 'DONE')?._count.id || 0,
+      BLOCKED:
+        featureCountsRaw.find((f) => f.status === 'BLOCKED')?._count.id || 0,
     };
 
-    const bugs = features.filter((f) => f.isBug);
-    const featureTasks = features.filter((f) => f.isFeature);
-
     return {
-      totalLogs: logs.length,
-      totalTimeSpent: totalTime,
+      totalLogs: logAggregate._count.id,
+      totalTimeSpent: logAggregate._sum.timeSpent || 0,
       featureCounts,
       bugStats: {
-        total: bugs.length,
-        completed: bugs.filter((f) => f.status === 'DONE').length,
+        total: bugStats._count.id,
+        completed: completedBugs,
       },
       featureStats: {
-        total: featureTasks.length,
-        completed: featureTasks.filter((f) => f.status === 'DONE').length,
+        total: featureStats._count.id,
+        completed: completedFeatures,
       },
     };
   }

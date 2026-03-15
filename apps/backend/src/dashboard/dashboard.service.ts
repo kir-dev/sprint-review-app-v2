@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { EventService } from '../events/events.service';
 import { LogsService } from '../logs/logs.service';
 import { ProjectService } from '../projects/projects.service';
@@ -9,6 +10,7 @@ export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
 
   constructor(
+    private readonly prisma: PrismaService,
     private readonly logsService: LogsService,
     private readonly projectsService: ProjectService,
     private readonly workPeriodsService: WorkPeriodsService,
@@ -18,36 +20,48 @@ export class DashboardService {
   async getSummary(userId: number) {
     this.logger.log(`Getting dashboard summary for user ${userId}`);
     const currentPeriod = await this.workPeriodsService.findCurrent();
-    const stats = await this.logsService.getStatsByUser(
+    const wpId = currentPeriod?.id;
+
+    // User specific stats
+    const userAggregate = await this.logsService.aggregateTimeSpent({
       userId,
-      currentPeriod?.id,
-    );
-
-    // Global stats for comparison/display
-    const allLogs = await this.logsService.findAll({
-      workPeriodId: currentPeriod?.id,
+      workPeriodId: wpId,
     });
-    const groupTotalHours = allLogs.reduce(
-      (sum, log) => sum + (log.timeSpent || 0),
-      0,
-    );
-    const activeContributors = new Set(allLogs.map((l) => l.userId)).size;
 
-    // Calculate active projects count from logs
-    const activeProjectsCount = Object.keys(stats.logsByProject).length;
+    const userProjects = await this.logsService.groupByProject({
+      userId,
+      workPeriodId: wpId,
+    });
 
-    // Global total active projects (unique projects in all logs)
-    const allProjectNames = new Set(
-      allLogs.map((l) => l.project?.id).filter(Boolean),
-    );
-    const totalProjectsCount = allProjectNames.size;
+    // Global stats
+    const globalAggregate = await this.logsService.aggregateTimeSpent({
+      workPeriodId: wpId,
+    });
 
+    // Count unique contributors (users who have logs in this period)
+    const activeContributorsResult = await this.prisma.log.groupBy({
+      by: ['userId'],
+      where: { workPeriodId: wpId },
+    });
+    const activeContributors = activeContributorsResult.length;
+
+    // Count unique projects
+    const totalProjectsResult = await this.prisma.log.groupBy({
+      by: ['projectId'],
+      where: {
+        workPeriodId: wpId,
+        projectId: { not: null },
+      },
+    });
+    const totalProjectsCount = totalProjectsResult.length;
+
+    const groupTotalHours = globalAggregate._sum.timeSpent || 0;
     const averageHoursPerUser =
       activeContributors > 0 ? groupTotalHours / activeContributors : 0;
 
     return {
-      totalHours: stats.totalTimeSpent,
-      activeProjects: activeProjectsCount,
+      totalHours: userAggregate._sum.timeSpent || 0,
+      activeProjects: userProjects.length,
       groupTotalHours,
       activeContributors,
       totalProjectsCount,
@@ -63,36 +77,42 @@ export class DashboardService {
     };
   }
 
-  async getProjectsStats(userId: number) {
+  async getProjectsStats(_userId: number) {
     this.logger.log(`Getting project stats (global)`);
     const currentPeriod = await this.workPeriodsService.findCurrent();
+    const wpId = currentPeriod?.id;
 
-    // Fetch ALL logs for the period to calculate global top projects
-    const allLogs = await this.logsService.findAll({
-      workPeriodId: currentPeriod?.id,
+    const groupedProjects = await this.logsService.groupByProject({
+      workPeriodId: wpId,
     });
 
-    const projectStats: Record<
-      number,
-      { id: number; name: string; hours: number }
-    > = {};
-    allLogs.forEach((log) => {
-      if (log.project) {
-        if (!projectStats[log.project.id]) {
-          projectStats[log.project.id] = {
-            id: log.project.id,
-            name: log.project.name,
-            hours: 0,
-          };
-        }
-        projectStats[log.project.id].hours += log.timeSpent || 0;
-      }
+    // Get project names for the top 5
+    const top5Grouped = groupedProjects.slice(0, 5);
+    const topProjectIds = top5Grouped.map((p) => p.projectId as number);
+
+    const projects = await this.prisma.project.findMany({
+      where: {
+        id: { in: topProjectIds },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
     });
 
-    const topProjects = Object.values(projectStats)
-      .map(({ id, name, hours }) => ({ id, name, count: hours }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+    const projectNamesMap = projects.reduce(
+      (acc, p) => {
+        acc[p.id] = p.name;
+        return acc;
+      },
+      {} as Record<number, string>,
+    );
+
+    const topProjects = top5Grouped.map((p) => ({
+      id: p.projectId,
+      name: projectNamesMap[p.projectId as number] || 'Ismeretlen',
+      count: p._sum.timeSpent || 0,
+    }));
 
     return {
       topProjects,
@@ -101,72 +121,78 @@ export class DashboardService {
 
   async getTopUsers() {
     const currentPeriod = await this.workPeriodsService.findCurrent();
-    const allLogs = await this.logsService.findAll({
-      workPeriodId: currentPeriod?.id,
+    const wpId = currentPeriod?.id;
+
+    const groupedUsers = await this.prisma.log.groupBy({
+      by: ['userId'],
+      where: { workPeriodId: wpId },
+      _sum: {
+        timeSpent: true,
+      },
+      orderBy: {
+        _sum: {
+          timeSpent: 'desc',
+        },
+      },
+      take: 5,
     });
 
-    const userStats: Record<
-      number,
-      { id: number; name: string; hours: number }
-    > = {};
-
-    allLogs.forEach((log) => {
-      if (log.user) {
-        if (!userStats[log.user.id]) {
-          userStats[log.user.id] = {
-            id: log.user.id,
-            name: log.user.fullName,
-            hours: 0,
-          };
-        }
-        userStats[log.user.id].hours += log.timeSpent || 0;
-      }
+    const userIds = groupedUsers.map((u) => u.userId);
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: { in: userIds },
+      },
+      select: {
+        id: true,
+        fullName: true,
+      },
     });
 
-    const topUsers = Object.values(userStats)
-      .map(({ id, name, hours }) => ({ id, name, hours }))
-      .sort((a, b) => b.hours - a.hours)
-      .slice(0, 5);
+    const userNamesMap = users.reduce(
+      (acc, u) => {
+        acc[u.id] = u.fullName;
+        return acc;
+      },
+      {} as Record<number, string>,
+    );
+
+    const topUsers = groupedUsers.map((u) => ({
+      id: u.userId,
+      name: userNamesMap[u.userId] || 'Ismeretlen',
+      hours: u._sum.timeSpent || 0,
+    }));
 
     return topUsers;
   }
 
   // Activity Feed removed as requested
-  async getFeed(userId: number) {
+  async getFeed(_userId: number) {
     return [];
   }
 
   async getStats(userId: number) {
     this.logger.log(`Getting extended stats for user ${userId}`);
     const currentPeriod = await this.workPeriodsService.findCurrent();
-    const logs = await this.logsService.findAll({
-      userId,
-      workPeriodId: currentPeriod?.id,
-    });
+    const wpId = currentPeriod?.id;
 
     // 1. Category Breakdown (Global - all users)
-    const allLogs = await this.logsService.findAll({
-      workPeriodId: currentPeriod?.id,
+    const categoryStats = await this.logsService.groupByCategory({
+      workPeriodId: wpId,
     });
 
-    const categoryBreakdown = allLogs.reduce(
-      (acc, log) => {
-        acc[log.category] = (acc[log.category] || 0) + (log.timeSpent || 0);
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    const categoryBreakdown = categoryStats.map((c) => ({
+      name: c.category,
+      value: c._sum.timeSpent || 0,
+    }));
 
-    // 2. Heatmap Data (full current work period)
-    const heatmapLogs = await this.logsService.findAll({
+    // 2. Heatmap Data (User specific)
+    const heatmapRaw = await this.logsService.groupByDate({
       userId,
-      workPeriodId: currentPeriod?.id,
+      workPeriodId: wpId,
     });
 
-    const heatmapMap = heatmapLogs.reduce(
+    const heatmapMap = heatmapRaw.reduce(
       (acc, log) => {
-        // Use Hungarian timezone to determine the "day" of the log
-        // en-CA locale gives YYYY-MM-DD format
         const date = log.date.toLocaleDateString('en-CA', {
           timeZone: 'Europe/Budapest',
         });
@@ -182,24 +208,19 @@ export class DashboardService {
     }));
 
     // 3. Difficulty Breakdown (Global)
-    const difficultyBreakdown = allLogs.reduce(
-      (acc, log) => {
-        if (log.difficulty) {
-          acc[log.difficulty] = (acc[log.difficulty] || 0) + 1;
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+    const difficultyStats = await this.logsService.groupByDifficulty({
+      workPeriodId: wpId,
+    });
+
+    const difficultyBreakdown = difficultyStats.map((d) => ({
+      name: d.difficulty,
+      value: d._count.id,
+    }));
 
     return {
-      categoryBreakdown: Object.entries(categoryBreakdown).map(
-        ([name, value]) => ({ name, value }),
-      ),
+      categoryBreakdown,
       heatmapData,
-      difficultyBreakdown: Object.entries(difficultyBreakdown).map(
-        ([name, value]) => ({ name, value }),
-      ),
+      difficultyBreakdown,
     };
   }
 

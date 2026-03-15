@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { format, startOfWeek, subWeeks } from 'date-fns';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -11,9 +12,6 @@ export class StatsService {
   async getBreakdown(userId: number) {
     this.logger.log(`Fetching breakdown stats for user ${userId}`);
 
-    // Get current work period (assuming active one, or just all logs for now as per requirement "Aktuális periódus")
-    // For simplicity, I'll fetch *all* logs for the user to match general "stats" request or maybe filter by recent.
-    // The requirement says "Aktuális periódus". I should try to find the active work period.
     const now = new Date();
     const activeWorkPeriod = await this.prisma.workPeriod.findFirst({
       where: {
@@ -22,66 +20,63 @@ export class StatsService {
       },
     });
 
-    const where: any = { userId };
+    const where: Prisma.LogWhereInput = { userId };
     if (activeWorkPeriod) {
       where.workPeriodId = activeWorkPeriod.id;
     }
 
-    const logs = await this.prisma.log.findMany({
+    // 1. Total count and Large difficulty count
+    const totalLogs = await this.prisma.log.count({ where });
+    const largeCount = await this.prisma.log.count({
+      where: { ...where, difficulty: 'LARGE' },
+    });
+
+    // 2. Category Breakdown
+    const categoryStats = await this.prisma.log.groupBy({
+      by: ['category'],
       where,
+      _sum: { timeSpent: true },
     });
 
-    const totalLogs = logs.length;
+    const categoryBreakdown = categoryStats.map((c) => ({
+      name: c.category,
+      value: c._sum.timeSpent || 0,
+    }));
 
-    // Category Breakdown
-    const categoryBreakdown = logs.reduce(
-      (acc, log) => {
-        acc[log.category] = (acc[log.category] || 0) + (log.timeSpent || 0);
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    // Difficulty Breakdown
-    const difficultyBreakdown = logs.reduce(
-      (acc, log) => {
-        if (log.difficulty) {
-          acc[log.difficulty] = (acc[log.difficulty] || 0) + 1;
-        }
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-
-    // Event Stats
-    const eventLogs = await this.prisma.log.findMany({
-      where: {
-        ...where,
-        eventId: { not: null },
-      },
-      include: { event: true },
+    // 3. Difficulty Breakdown
+    const difficultyStats = await this.prisma.log.groupBy({
+      by: ['difficulty'],
+      where: { ...where, difficulty: { not: null } },
+      _count: { id: true },
     });
 
-    const eventCount = eventLogs.length;
-    const uniqueEvents = new Set(eventLogs.map((l) => l.eventId)).size;
+    const difficultyBreakdown = difficultyStats.map((d) => ({
+      name: d.difficulty,
+      value: d._count.id,
+    }));
+
+    // 4. Event Stats
+    const eventStatsResult = await this.prisma.log.aggregate({
+      where: { ...where, eventId: { not: null } },
+      _count: { id: true, eventId: true },
+      _sum: { timeSpent: true },
+    });
+
+    const uniqueEventsResult = await this.prisma.log.groupBy({
+      by: ['eventId'],
+      where: { ...where, eventId: { not: null } },
+    });
+
+    const eventCount = eventStatsResult._count.id;
     const avgTimePerEvent =
-      eventCount > 0
-        ? eventLogs.reduce((sum, l) => sum + (l.timeSpent || 0), 0) / eventCount
-        : 0;
-
-    // Large difficulty count
-    const largeCount = logs.filter((l) => l.difficulty === 'LARGE').length;
+      eventCount > 0 ? (eventStatsResult._sum.timeSpent || 0) / eventCount : 0;
 
     return {
       totalLogs,
-      categoryBreakdown: Object.entries(categoryBreakdown).map(
-        ([name, value]) => ({ name, value }),
-      ),
-      difficultyBreakdown: Object.entries(difficultyBreakdown).map(
-        ([name, value]) => ({ name, value }),
-      ),
+      categoryBreakdown,
+      difficultyBreakdown,
       eventStats: {
-        totalEvents: uniqueEvents,
+        totalEvents: uniqueEventsResult.length,
         totalLogEntries: eventCount,
         avgTimePerEvent,
       },
@@ -92,56 +87,44 @@ export class StatsService {
   async getHistory(userId: number) {
     this.logger.log(`Fetching history stats for user ${userId}`);
 
-    // Fetch all logs to compute different views
+    // Fetch minimal data for history instead of everything
     const logs = await this.prisma.log.findMany({
       where: { userId },
-      include: { workPeriod: true },
+      select: {
+        date: true,
+        timeSpent: true,
+        workPeriod: {
+          select: { name: true },
+        },
+      },
       orderBy: { date: 'asc' },
     });
 
     const now = new Date();
     const twelveWeeksAgo = subWeeks(startOfWeek(now), 12);
 
-    // 1. Weekly Trend (Last 12 Weeks) - Existing
     const weeklyTrend: Record<string, number> = {};
-    // 2. Heatmap (Daily) - Existing
     const heatmap: Record<string, number> = {};
-    // 3. Monthly Trend (All time or last year?) - Let's do all time grouped by month
     const monthlyTrend: Record<string, number> = {};
-    // 4. Work Period Trend
     const workPeriodTrend: Record<string, number> = {};
-    // 5. All Time Weekly
     const allTimeWeeklyTrend: Record<string, number> = {};
 
     logs.forEach((log) => {
       const dayKey = format(log.date, 'yyyy-MM-dd');
       const weekKey = format(startOfWeek(log.date), 'yyyy-MM-dd');
       const monthKey = format(log.date, 'yyyy-MM');
-      const wpName = log.workPeriod?.name || 'Unknown';
+      const wpName = log.workPeriod?.name || 'Ismeretlen';
+      const time = log.timeSpent || 0;
 
-      // Heatmap (Daily) - limit to reasonable range? Or just send all. Visualization currently handles 12 weeks equivalent.
-      // Let's send all for heatmap for now or keep logic consistent if frontend expects something specific.
-      // Frontend currently doesn't visualize heatmap yet (commented out), but logic was there.
-      // Let's filter heatmap to last year perhaps if needed, but simplest is all.
-      heatmap[dayKey] = (heatmap[dayKey] || 0) + (log.timeSpent || 0);
+      heatmap[dayKey] = (heatmap[dayKey] || 0) + time;
 
-      // Weekly (Last 12 weeks)
       if (new Date(weekKey) >= twelveWeeksAgo) {
-        weeklyTrend[weekKey] =
-          (weeklyTrend[weekKey] || 0) + (log.timeSpent || 0);
+        weeklyTrend[weekKey] = (weeklyTrend[weekKey] || 0) + time;
       }
 
-      // All Time Weekly
-      allTimeWeeklyTrend[weekKey] =
-        (allTimeWeeklyTrend[weekKey] || 0) + (log.timeSpent || 0);
-
-      // Monthly
-      monthlyTrend[monthKey] =
-        (monthlyTrend[monthKey] || 0) + (log.timeSpent || 0);
-
-      // Work Period
-      workPeriodTrend[wpName] =
-        (workPeriodTrend[wpName] || 0) + (log.timeSpent || 0);
+      allTimeWeeklyTrend[weekKey] = (allTimeWeeklyTrend[weekKey] || 0) + time;
+      monthlyTrend[monthKey] = (monthlyTrend[monthKey] || 0) + time;
+      workPeriodTrend[wpName] = (workPeriodTrend[wpName] || 0) + time;
     });
 
     return {
@@ -157,7 +140,7 @@ export class StatsService {
       workPeriodTrend: Object.entries(workPeriodTrend).map(([name, hours]) => ({
         name,
         hours,
-      })), // Sort by usage or name? Let's keep distinct.
+      })),
       heatmap: Object.entries(heatmap).map(([date, count]) => ({
         date,
         count,
@@ -170,6 +153,7 @@ export class StatsService {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
+      select: { id: true },
     });
 
     if (!user) return null;
@@ -182,42 +166,34 @@ export class StatsService {
       },
     });
 
-    const logs = await this.prisma.log.findMany({
+    // Optimized streak calculation: only fetch dates
+    const logsForStreak = await this.prisma.log.findMany({
       where: {
         userId,
-        // Since streaks are easier to calculate on *all* history usually, or maybe just this period.
-        // Let's do all recent history for streak.
-        date: {
-          gte: subWeeks(new Date(), 4), // check last month for active streak
-        },
+        date: { gte: subWeeks(new Date(), 4) },
       },
+      select: { date: true },
       orderBy: { date: 'desc' },
     });
 
-    // Streak calculation
     let currentStreak = 0;
-    if (logs.length > 0) {
+    if (logsForStreak.length > 0) {
       const uniqueDates = Array.from(
-        new Set(logs.map((l) => format(l.date, 'yyyy-MM-dd'))),
+        new Set(logsForStreak.map((l) => format(l.date, 'yyyy-MM-dd'))),
       )
         .sort()
         .reverse();
-      // Simple streak: consecutive days looking back from today (or last log)
-      // If the last log was today or yesterday, streak is alive.
+
       const today = format(new Date(), 'yyyy-MM-dd');
       const yesterday = format(new Date(Date.now() - 86400000), 'yyyy-MM-dd');
 
-      const lastDate = uniqueDates[0]; // Explicit const
-
-      if (lastDate && (lastDate === today || lastDate === yesterday)) {
-        let currentStreakDate = new Date(lastDate);
-
+      if (uniqueDates[0] === today || uniqueDates[0] === yesterday) {
         currentStreak = 1;
+        let currentStreakDate = new Date(uniqueDates[0]);
 
         for (let i = 1; i < uniqueDates.length; i++) {
           currentStreakDate.setDate(currentStreakDate.getDate() - 1);
-          const expectedDate = format(currentStreakDate, 'yyyy-MM-dd');
-          if (uniqueDates[i] === expectedDate) {
+          if (uniqueDates[i] === format(currentStreakDate, 'yyyy-MM-dd')) {
             currentStreak++;
           } else {
             break;
@@ -226,41 +202,37 @@ export class StatsService {
       }
     }
 
-    // Role specific goals
-    let goalProgress = 0;
-    let goalTarget = 0;
-    let goalLabel = '';
-
-    const logsInPeriod = await this.prisma.log.findMany({
+    // Role specific goals - optimized with aggregate
+    const wpId = activeWorkPeriod?.id;
+    const missionStats = await this.prisma.log.aggregate({
       where: {
         userId,
-        workPeriodId: activeWorkPeriod?.id,
+        workPeriodId: wpId,
+        category: { notIn: ['RESPONSIBILITY', 'SIMONYI'] },
+      },
+      _sum: { timeSpent: true },
+    });
+
+    const largeCount = await this.prisma.log.count({
+      where: {
+        userId,
+        workPeriodId: wpId,
+        difficulty: 'LARGE',
       },
     });
-    const hoursInPeriod = logsInPeriod.reduce(
-      (sum, l) => sum + (l.timeSpent || 0),
-      0,
-    );
 
-    // Logic based on requirements - Unified for all users
-    // 60 hours target, excluding RESPONSIBILITY and SIMONYI
-    goalLabel = 'Szemeszter Küldetés';
-    goalTarget = 60;
-
-    goalProgress = logsInPeriod
-      .filter((l) => !['RESPONSIBILITY', 'SIMONYI'].includes(l.category))
-      .reduce((sum, l) => sum + (l.timeSpent || 0), 0);
+    const goalTarget = 60;
+    const goalProgress = missionStats._sum.timeSpent || 0;
 
     return {
       currentStreak,
       goal: {
-        label: goalLabel,
+        label: 'Szemeszter Küldetés',
         current: goalProgress,
         target: goalTarget,
         percentage: Math.min((goalProgress / goalTarget) * 100, 100).toFixed(1),
       },
-      largeTaskCount: logsInPeriod.filter((l) => l.difficulty === 'LARGE')
-        .length,
+      largeTaskCount: largeCount,
     };
   }
   async getPositionHistory(userId: number) {
