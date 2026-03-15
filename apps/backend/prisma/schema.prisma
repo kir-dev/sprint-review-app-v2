@@ -31,6 +31,8 @@ model PositionHistory {
   position  Position
   startDate DateTime
   endDate   DateTime?
+
+  @@index([userId])
 }
 
 model WorkPeriod {
@@ -94,6 +96,11 @@ model Log {
   projectId    Int?
   event        Event?      @relation(fields: [eventId], references: [id])
   eventId      Int?
+
+  @@index([userId, workPeriodId])
+  @@index([projectId, workPeriodId])
+  @@index([eventId])
+  @@index([date])
 }
 
 enum FeatureStatus {
