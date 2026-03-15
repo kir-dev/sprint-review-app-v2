@@ -50,11 +50,11 @@ export function TopUsersList({ users, loading }: TopUsersListProps) {
                                 flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm
                                 ${
                                   index === 0
-                                    ? 'bg-yellow-500/20 text-yellow-600 border border-yellow-500/30'
+                                    ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-500 border border-yellow-500/30'
                                     : index === 1
-                                      ? 'bg-slate-300/20 text-slate-600 border border-slate-400/30'
+                                      ? 'bg-slate-300/20 text-slate-600 dark:text-slate-300 border border-slate-400/30'
                                       : index === 2
-                                        ? 'bg-amber-700/20 text-amber-700 border border-amber-700/30'
+                                        ? 'bg-amber-700/20 text-amber-700 dark:text-amber-500 border border-amber-700/30'
                                         : 'bg-secondary text-muted-foreground'
                                 }
                             `}

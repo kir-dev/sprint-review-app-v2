@@ -45,7 +45,7 @@ export function ProjectList({ projects, loading }: ProjectListProps) {
                   <p className="font-medium">{project.name}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{project.count} log</p>
+                  <p className="font-semibold">{project.count} óra</p>
                 </div>
               </Link>
             ))}
