@@ -17,14 +17,31 @@ interface GamificationProps {
 }
 
 export function Gamification({ data }: GamificationProps) {
-  const goalPercent = parseFloat(data.goal.percentage);
   const [animatedProgress, setAnimatedProgress] = useState(0);
+
+  const current = data.goal.current;
+  const target = data.goal.target || 60;
+  const rawPercentage = (current / target) * 100;
+
+  const maxLevels = 4;
+
+  const levelColors = [
+    'bg-primary',
+    'bg-yellow-500',
+    'bg-cyan-400',
+    'bg-emerald-500',
+  ];
 
   useEffect(() => {
     // Small delay to ensure render happens first then animation triggers
-    const timer = setTimeout(() => setAnimatedProgress(goalPercent), 100);
+    const timer = setTimeout(() => setAnimatedProgress(rawPercentage), 100);
     return () => clearTimeout(timer);
-  }, [goalPercent]);
+  }, [rawPercentage]);
+
+  // If current is exactly a multiple of target, don't show the empty next bar unless it's 0
+  let barsToShow = Math.ceil(current / target);
+  if (barsToShow === 0) barsToShow = 1;
+  barsToShow = Math.min(barsToShow, maxLevels);
 
   return (
     <>
@@ -52,17 +69,30 @@ export function Gamification({ data }: GamificationProps) {
           <div className="flex flex-col space-y-1">
             <div className="flex justify-between text-sm">
               <span>
-                {data.goal.current} / {data.goal.target} óra
+                {current} / {target} óra
               </span>
-              <span className="font-bold">{data.goal.percentage}%</span>
+              <span className="font-bold">{rawPercentage.toFixed(1)}%</span>
             </div>
           </div>
-          <Progress
-            value={animatedProgress}
-            className="h-2 transition-all duration-1000 ease-out"
-          />
+          <div className="space-y-2">
+            {Array.from({ length: barsToShow }).map((_, index) => {
+              const barValue = Math.max(
+                0,
+                Math.min(100, animatedProgress - index * 100),
+              );
+
+              return (
+                <Progress
+                  key={index}
+                  value={barValue}
+                  className="h-2"
+                  indicatorClassName={levelColors[index % levelColors.length]}
+                />
+              );
+            })}
+          </div>
           <p className="text-xs text-muted-foreground">
-            {goalPercent >= 100
+            {rawPercentage >= 100
               ? 'Gratulálunk, teljesítetted a célt!'
               : 'Csak így tovább!'}
           </p>
