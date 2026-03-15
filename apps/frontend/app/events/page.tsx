@@ -18,8 +18,14 @@ export default function EventsPage() {
   const router = useRouter();
 
   // Custom hooks
-  const { events, setEvents, isLoading, error, setError, loadData } =
-    useEventData(token);
+  const {
+    events,
+    setEvents,
+    isLoading: dataLoading,
+    error,
+    setError,
+    loadData,
+  } = useEventData(token);
   const {
     isDialogOpen,
     editingEvent,
@@ -123,6 +129,8 @@ export default function EventsPage() {
     setEventToDelete(null);
   }
 
+  const isLoading = dataLoading && events.length === 0;
+
   // Loading state
   if (isAuthLoading || !user) {
     return (
@@ -146,15 +154,17 @@ export default function EventsPage() {
         onDeleteEvent={handleDeleteClick}
       />
 
-      <EventDialog
-        isOpen={isDialogOpen}
-        editingEvent={editingEvent}
-        formData={formData}
-        isPending={isSubmitting}
-        onFormDataChange={setFormData}
-        onSubmit={handleSubmit}
-        onClose={closeDialog}
-      />
+      {isDialogOpen && (
+        <EventDialog
+          isOpen={isDialogOpen}
+          editingEvent={editingEvent}
+          formData={formData}
+          isPending={isSubmitting}
+          onFormDataChange={setFormData}
+          onSubmit={handleSubmit}
+          onClose={closeDialog}
+        />
+      )}
 
       <DeleteConfirmDialog
         isOpen={deleteConfirmOpen}

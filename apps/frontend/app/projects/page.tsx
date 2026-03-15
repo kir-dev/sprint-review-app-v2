@@ -18,8 +18,15 @@ export default function ProjectsPage() {
   const router = useRouter();
 
   // Custom hooks
-  const { projects, setProjects, users, isLoading, error, setError, loadData } =
-    useProjectData(token);
+  const {
+    projects,
+    setProjects,
+    users,
+    isLoading: dataLoading,
+    error,
+    setError,
+    loadData,
+  } = useProjectData(token);
   const {
     isDialogOpen,
     editingProject,
@@ -121,6 +128,8 @@ export default function ProjectsPage() {
     setProjectToDelete(null);
   }
 
+  const isLoading = dataLoading && projects.length === 0;
+
   // Loading state
   if (isAuthLoading || !user) {
     return (
@@ -144,16 +153,18 @@ export default function ProjectsPage() {
         onDeleteProject={handleDeleteClick}
       />
 
-      <ProjectDialog
-        isOpen={isDialogOpen}
-        editingProject={editingProject}
-        formData={formData}
-        isPending={isSubmitting}
-        users={users}
-        onFormDataChange={setFormData}
-        onSubmit={handleSubmit}
-        onClose={closeDialog}
-      />
+      {isDialogOpen && (
+        <ProjectDialog
+          isOpen={isDialogOpen}
+          editingProject={editingProject}
+          formData={formData}
+          isPending={isSubmitting}
+          users={users}
+          onFormDataChange={setFormData}
+          onSubmit={handleSubmit}
+          onClose={closeDialog}
+        />
+      )}
 
       <DeleteConfirmDialog
         isOpen={deleteConfirmOpen}

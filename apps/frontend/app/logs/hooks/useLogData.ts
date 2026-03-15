@@ -1,74 +1,72 @@
-import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Log, Project, WorkPeriod } from '../types';
 
 export function useLogData(token: string | null, userId: number | undefined) {
-  const [logs, setLogs] = useState<Log[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [workPeriods, setWorkPeriods] = useState<WorkPeriod[]>([]);
-  const [currentWorkPeriod, setCurrentWorkPeriod] = useState<WorkPeriod | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const headers = { Authorization: `Bearer ${token}` };
+
+  const logsQuery = useQuery<Log[]>({
+    queryKey: ['logs', userId],
+    queryFn: () =>
+      fetch(`/api/logs${userId ? `?userId=${userId}` : ''}`, { headers }).then(
+        (res) => res.json(),
+      ),
+    enabled: !!token,
+  });
+
+  const projectsQuery = useQuery<Project[]>({
+    queryKey: ['projects'],
+    queryFn: () =>
+      fetch('/api/projects', { headers }).then((res) => res.json()),
+    enabled: !!token,
+  });
+
+  const workPeriodsQuery = useQuery<WorkPeriod[]>({
+    queryKey: ['work-periods'],
+    queryFn: () =>
+      fetch('/api/work-periods', { headers }).then((res) => res.json()),
+    enabled: !!token,
+  });
+
+  const currentWorkPeriodQuery = useQuery<WorkPeriod | null>({
+    queryKey: ['work-periods', 'current'],
+    queryFn: () =>
+      fetch('/api/work-periods/current', { headers }).then((res) => res.json()),
+    enabled: !!token,
+  });
+
+  const [localError, setLocalError] = useState<string | null>(null);
 
   async function loadData() {
     try {
-      setIsLoading(true);
-
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const [logsRes, projectsRes, workPeriodsRes, currentWorkPeriodRes] =
-        await Promise.all([
-          fetch(`/api/logs${userId ? `?userId=${userId}` : ''}`, { headers }),
-          fetch('/api/projects', { headers }),
-          fetch('/api/work-periods', { headers }),
-          fetch('/api/work-periods/current', { headers }),
-        ]);
-
-      if (logsRes.ok) {
-        const logsData = await logsRes.json();
-        setLogs(logsData);
-      }
-
-      if (projectsRes.ok) {
-        const projectsData = await projectsRes.json();
-        setProjects(projectsData);
-      }
-
-      if (workPeriodsRes.ok) {
-        const workPeriodsData = await workPeriodsRes.json();
-        setWorkPeriods(workPeriodsData);
-      }
-
-      if (currentWorkPeriodRes.ok) {
-        const currentWorkPeriodData = await currentWorkPeriodRes.json();
-        setCurrentWorkPeriod(currentWorkPeriodData);
-      }
-
-      setError(null);
+      await Promise.all([
+        logsQuery.refetch(),
+        projectsQuery.refetch(),
+        workPeriodsQuery.refetch(),
+        currentWorkPeriodQuery.refetch(),
+      ]);
+      setLocalError(null);
     } catch (err) {
-      setError('Failed to load data. Please check if the backend is running.');
-      console.error('Error loading data:', err);
-    } finally {
-      setIsLoading(false);
+      setLocalError('Hiba történt az adatok frissítésekor');
     }
   }
 
-  useEffect(() => {
-    if (token) {
-      loadData();
-    }
-  }, [token, userId]);
-
   return {
-    logs,
-    setLogs,
-    projects,
-    workPeriods,
-    currentWorkPeriod,
-    isLoading,
-    error,
-    setError,
+    logs: logsQuery.data || [],
+    projects: projectsQuery.data || [],
+    workPeriods: workPeriodsQuery.data || [],
+    currentWorkPeriod: currentWorkPeriodQuery.data || null,
+    isLoading:
+      logsQuery.isLoading ||
+      projectsQuery.isLoading ||
+      workPeriodsQuery.isLoading ||
+      currentWorkPeriodQuery.isLoading,
+    error: logsQuery.error ? 'Nem sikerült betölteni a naplókat' : localError,
+    setError: setLocalError,
     loadData,
+    setLogs: (logs: Log[]) => {
+      queryClient.setQueryData(['logs', userId], logs);
+    },
   };
 }

@@ -1,4 +1,5 @@
 import { AppLayout } from '@/components/AppLayout';
+import { QueryProvider } from '@/components/QueryProvider';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ThemedToaster } from '@/components/ThemedToaster';
@@ -44,11 +45,13 @@ export default function RootLayout({
       </head>
       <body className={`font-sans antialiased`}>
         <ThemeProvider defaultTheme="dark">
-          <AuthProvider>
-            <ServiceWorkerRegister />
-            <AppLayout>{children}</AppLayout>
-            <ThemedToaster />
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ServiceWorkerRegister />
+              <AppLayout>{children}</AppLayout>
+              <ThemedToaster />
+            </AuthProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

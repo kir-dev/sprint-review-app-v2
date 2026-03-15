@@ -14,9 +14,9 @@ import {
   Users,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { ProjectKanban } from '../components/ProjectKanban';
-import { Project, ProjectStats, User } from '../types';
+import { useProjectDetails } from '../hooks/useProjectDetails';
 
 export default function ProjectDetailsPage() {
   const { token, isLoading: isAuthLoading } = useAuth();
@@ -24,11 +24,14 @@ export default function ProjectDetailsPage() {
   const params = useParams();
   const projectId = params.id as string;
 
-  const [project, setProject] = useState<Project | null>(null);
-  const [stats, setStats] = useState<ProjectStats | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    project,
+    stats,
+    users,
+    isLoading: dataLoading,
+    error,
+    refetchStats,
+  } = useProjectDetails(projectId, token);
 
   useEffect(() => {
     if (!isAuthLoading && !token) {
@@ -36,86 +39,9 @@ export default function ProjectDetailsPage() {
     }
   }, [token, isAuthLoading, router]);
 
-  const fetchStats = async () => {
-    if (!token || !projectId) return;
-
-    try {
-      const statsResponse = await fetch(`/api/projects/${projectId}/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData);
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
-
-  useEffect(() => {
-    async function loadData() {
-      if (!token || !projectId) return;
-
-      setIsLoading(true);
-      try {
-        // Fetch project, stats, and users in parallel
-        const [projectRes, statsRes, usersRes] = await Promise.all([
-          fetch(`/api/projects/${projectId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`/api/projects/${projectId}/stats`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('/api/users', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        if (projectRes.ok) {
-          const projectData = await projectRes.json();
-          setProject(projectData);
-        } else {
-          // Fallback logic if needed (matching original approach though unified is better)
-          const listResponse = await fetch('/api/projects', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (listResponse.ok) {
-            const projects = await listResponse.json();
-            const found = projects.find(
-              (p: Project) => p.id === parseInt(projectId),
-            );
-            if (found) setProject(found);
-            else throw new Error('Projekt nem található');
-          } else {
-            throw new Error('Projekt nem található');
-          }
-        }
-
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setStats(statsData);
-        }
-
-        if (usersRes.ok) {
-          const usersData = await usersRes.json();
-          setUsers(usersData);
-        }
-      } catch (err: unknown) {
-        console.error('Error loading project data:', err);
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : 'Hiba történt az adatok betöltésekor';
-        setError(errorMessage);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadData();
-  }, [projectId, token]);
-
   if (isAuthLoading) return null;
+
+  const isLoading = dataLoading && !project;
 
   if (isLoading) {
     return (
@@ -145,7 +71,6 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-[1400px] mx-auto pb-10">
-      {/* Header */}
       {/* Header */}
       <div className="flex flex-col gap-6">
         <Button
@@ -232,7 +157,7 @@ export default function ProjectDetailsPage() {
 
       {/* Stats */}
       {stats ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -296,7 +221,7 @@ export default function ProjectDetailsPage() {
           projectId={projectId}
           token={token}
           users={users}
-          onFeatureChange={fetchStats}
+          onFeatureChange={refetchStats}
         />
       </div>
     </div>

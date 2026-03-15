@@ -12,42 +12,29 @@ import { MobileFloatingActionButton } from '@/components/MobileFloatingActionBut
 import { Button } from '@/components/ui/button';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
-import {
-  CategoryBreakdownData,
-  DashboardEventStats,
-  DashboardProjectItem,
-  DashboardSummary,
-  DashboardTopUser,
-  HeatmapData,
-} from '@/types/dashboard';
 import { LayoutDashboard, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useEventData } from '../events/hooks/useEventData';
 import { LogDialog } from '../logs/components/LogDialog';
 import { useLogData } from '../logs/hooks/useLogData';
 import { useLogForm } from '../logs/hooks/useLogForm';
 import { useLogSubmit } from '../logs/hooks/useLogSubmit';
+import { useDashboardData } from './hooks/useDashboardData';
 
 export default function DashboardPage() {
   const { user, token, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [projectsStats, setProjectsStats] = useState<{
-    topProjects: DashboardProjectItem[];
-  } | null>(null);
-  const [topUsers, setTopUsers] = useState<DashboardTopUser[]>([]);
-  const [stats, setStats] = useState<{
-    categoryBreakdown: CategoryBreakdownData[];
-    heatmapData: HeatmapData[];
-    difficultyBreakdown: { name: string; value: number }[];
-  } | null>(null);
-  const [eventStats, setEventStats] = useState<DashboardEventStats | null>(
-    null,
-  );
-
-  const [loading, setLoading] = useState(true);
+  const {
+    summary,
+    projectsStats,
+    topUsers,
+    stats,
+    eventStats,
+    isLoading: dataLoading,
+    refetchAll,
+  } = useDashboardData(token);
 
   // Log creation hooks
   const { projects, workPeriods, currentWorkPeriod } = useLogData(
@@ -66,7 +53,7 @@ export default function DashboardPage() {
     workPeriods,
     onSuccess: () => {
       closeDialog();
-      fetchDashboardData();
+      refetchAll();
     },
   });
 
@@ -80,48 +67,6 @@ export default function DashboardPage() {
     }
   }, [authLoading, token, router]);
 
-  const fetchDashboardData = async () => {
-    if (!token) return;
-
-    try {
-      setLoading(true);
-      const [summaryRes, projectsRes, topUsersRes, statsRes, eventsRes] =
-        await Promise.all([
-          fetch('/api/dashboard/summary', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('/api/dashboard/projects', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('/api/dashboard/top-users', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('/api/dashboard/stats', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('/api/dashboard/events', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-      if (summaryRes.ok) setSummary(await summaryRes.json());
-      if (projectsRes.ok) setProjectsStats(await projectsRes.json());
-      if (topUsersRes.ok) setTopUsers(await topUsersRes.json());
-      if (statsRes.ok) setStats(await statsRes.json());
-      if (eventsRes.ok) setEventStats(await eventsRes.json());
-    } catch (error) {
-      console.error('Failed to fetch dashboard data', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (token) {
-      fetchDashboardData();
-    }
-  }, [token]);
-
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -133,6 +78,8 @@ export default function DashboardPage() {
   if (!user || !token) {
     return null;
   }
+
+  const loading = dataLoading && !summary;
 
   return (
     <div className="p-4 md:p-0 md:pt-4 space-y-8 max-w-7xl mx-auto">
@@ -162,7 +109,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-12">
         {/* Left Column (Main Stats) */}
         <div className="md:col-span-8 space-y-6">
-          <PersonalKPI summary={summary} loading={loading} />
+          <PersonalKPI summary={summary || null} loading={loading} />
 
           <ActivityHeatmap
             data={stats?.heatmapData || []}
@@ -190,7 +137,7 @@ export default function DashboardPage() {
             loading={loading}
           />
 
-          <EventList stats={eventStats} loading={loading} />
+          <EventList stats={eventStats || null} loading={loading} />
 
           <TopUsersList users={topUsers} loading={loading} />
 
@@ -201,16 +148,18 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <LogDialog
-        isOpen={isDialogOpen}
-        editingLog={null}
-        formData={formData}
-        projects={projects}
-        events={events as any}
-        workPeriods={workPeriods}
-        onSubmit={onLogSubmit}
-        onClose={closeDialog}
-      />
+      {isDialogOpen && (
+        <LogDialog
+          isOpen={isDialogOpen}
+          editingLog={null}
+          formData={formData}
+          projects={projects}
+          events={events as any}
+          workPeriods={workPeriods}
+          onSubmit={onLogSubmit}
+          onClose={closeDialog}
+        />
+      )}
 
       {!isDialogOpen && (
         <MobileFloatingActionButton onClick={() => openDialog()} icon={Plus} />

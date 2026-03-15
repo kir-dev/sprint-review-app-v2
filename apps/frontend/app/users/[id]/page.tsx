@@ -15,22 +15,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { categoryColors, categoryLabels } from '../../logs/constants';
 import { Position } from '../../logs/types';
-
-interface UserDetails {
-  id: number;
-  fullName: string;
-  email: string;
-  position: Position;
-  profileImage?: string;
-}
-
-interface UserStats {
-  totalLogs: number;
-  totalTimeSpent: number;
-  logsByCategory: Record<string, number>;
-  logsByDifficulty: Record<string, number>;
-  logsByProject: Record<string, number>;
-}
+import { useUserDetails } from '../hooks/useUserDetails';
 
 export default function UserProfilePage() {
   const { token, isLoading: isAuthLoading } = useAuth();
@@ -39,22 +24,28 @@ export default function UserProfilePage() {
   const searchParams = useSearchParams();
   const userId = params.id as string;
 
-  const [user, setUser] = useState<UserDetails | null>(() => {
+  const {
+    user: fetchedUser,
+    stats,
+    isLoading: dataLoading,
+    error,
+  } = useUserDetails(userId, token);
+
+  // Use search params for initial UI if available (fast transition)
+  const [initialUser] = useState(() => {
     const name = searchParams.get('name');
     if (name) {
       return {
         id: parseInt(userId),
         fullName: name,
-        email: '', // Placeholder, will be updated
         position: (searchParams.get('position') as Position) || Position.UJONC,
         profileImage: searchParams.get('image') || undefined,
       };
     }
     return null;
   });
-  const [stats, setStats] = useState<UserStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const user = fetchedUser || initialUser;
 
   useEffect(() => {
     if (!isAuthLoading && !token) {
@@ -62,44 +53,11 @@ export default function UserProfilePage() {
     }
   }, [token, isAuthLoading, router]);
 
-  useEffect(() => {
-    async function loadData() {
-      if (!token || !userId) return;
+  if (isAuthLoading) return null;
 
-      setIsLoading(true);
-      try {
-        // Fetch user data and stats in parallel
-        const [userResponse, statsResponse] = await Promise.all([
-          fetch(`/api/users/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`/api/logs/stats/user/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+  const isLoading = dataLoading && !user;
 
-        if (!userResponse.ok) throw new Error('Failed to fetch user details');
-        if (!statsResponse.ok) throw new Error('Failed to fetch user stats');
-
-        const [userData, statsData] = await Promise.all([
-          userResponse.json(),
-          statsResponse.json(),
-        ]);
-
-        setUser(userData);
-        setStats(statsData);
-      } catch (err: any) {
-        console.error('Error loading profile data:', err);
-        setError(err.message || 'Failed to load profile data');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadData();
-  }, [token, userId]);
-
-  if (isAuthLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingLogo size={100} />
@@ -107,7 +65,7 @@ export default function UserProfilePage() {
     );
   }
 
-  if (!user && !isLoading) {
+  if ((!user && !isLoading) || error) {
     return (
       <div className="p-8 text-center bg-background min-h-screen">
         <ErrorAlert
@@ -148,30 +106,24 @@ export default function UserProfilePage() {
                 <h1 className="text-3xl font-bold">{user.fullName}</h1>
                 <Badge
                   variant="outline"
-                  className={cn('mt-2', positionColors[user.position])}
+                  className={cn(
+                    'mt-2',
+                    positionColors[user.position as Position],
+                  )}
                 >
-                  {positionLabels[user.position]}
+                  {positionLabels[user.position as Position]}
                 </Badge>
               </div>
             </>
-          ) : (
-            <>
-              <Skeleton className="h-20 w-20 rounded-full" />
-              <div>
-                <Skeleton className="h-9 w-64 mb-2" />
-                <Skeleton className="h-6 w-32" />
-              </div>
-            </>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-          <LoadingLogo size={60} />
+      {!stats && dataLoading ? (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
         </div>
-      ) : error ? (
-        <ErrorAlert error={error} onClose={() => setError(null)} />
       ) : stats ? (
         <div className="space-y-6 animate-slide-in-bottom">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

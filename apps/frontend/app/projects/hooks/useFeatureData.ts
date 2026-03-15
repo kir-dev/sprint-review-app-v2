@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Feature } from '../types';
 
 interface UseFeatureDataReturn {
@@ -16,132 +16,142 @@ export function useFeatureData(
   projectId: string,
   token: string | null,
 ): UseFeatureDataReturn {
-  const [features, setFeatures] = useState<Feature[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const headers = { Authorization: `Bearer ${token}` };
 
-  const loadFeatures = useCallback(async () => {
-    if (!token || !projectId) return;
+  const {
+    data: features = [],
+    isLoading,
+    error: queryError,
+  } = useQuery<Feature[]>({
+    queryKey: ['projects', projectId, 'features'],
+    queryFn: () =>
+      fetch(`/api/projects/${projectId}/features`, { headers }).then((res) =>
+        res.json(),
+      ),
+    enabled: !!token && !!projectId,
+  });
 
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/projects/${projectId}/features`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch features');
-
-      const data = await response.json();
-      setFeatures(data);
-    } catch (err) {
-      console.error('Error loading features:', err);
-      setError('Nem sikerült betölteni a feladatokat');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [projectId, token]);
-
-  useEffect(() => {
-    loadFeatures();
-  }, [loadFeatures]);
-
-  const createFeature = async (data: Partial<Feature>) => {
-    try {
-      const response = await fetch(`/api/projects/${projectId}/features`, {
+  const createMutation = useMutation({
+    mutationFn: (data: Partial<Feature>) =>
+      fetch(`/api/projects/${projectId}/features`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          ...headers,
         },
         body: JSON.stringify(data),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Failed to create feature');
+        }
+        return res.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['projects', projectId, 'features'],
       });
+    },
+  });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create feature');
-      }
-
-      await loadFeatures();
-      return true;
-    } catch (err: unknown) {
-      console.error('Error creating feature:', err);
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'Nem sikerült létrehozni a feladatot';
-      setError(errorMessage);
-      return false;
-    }
-  };
-
-  const updateFeature = async (id: number, data: Partial<Feature>) => {
-    try {
-      // Optimistic update for status changes (drag and drop)
-      if (data.status) {
-        setFeatures((prev) =>
-          prev.map((f) => (f.id === id ? { ...f, ...data } : f)),
-        );
-      }
-
-      const response = await fetch(`/api/features/${id}`, {
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Feature> }) =>
+      fetch(`/api/features/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          ...headers,
         },
         body: JSON.stringify(data),
+      }).then((res) => {
+        if (!res.ok) throw new Error('Failed to update feature');
+        return res.json();
+      }),
+    onMutate: async ({ id, data }) => {
+      // Optimistic update
+      await queryClient.cancelQueries({
+        queryKey: ['projects', projectId, 'features'],
       });
+      const previousFeatures = queryClient.getQueryData<Feature[]>([
+        'projects',
+        projectId,
+        'features',
+      ]);
 
-      if (!response.ok) {
-        // Revert on error
-        if (data.status) loadFeatures();
-        throw new Error('Failed to update feature');
+      if (previousFeatures) {
+        queryClient.setQueryData(
+          ['projects', projectId, 'features'],
+          previousFeatures.map((f) => (f.id === id ? { ...f, ...data } : f)),
+        );
       }
 
-      // If it wasn't a status change (e.g. edit details), reload to get full data
-      if (!data.status) {
-        await loadFeatures();
+      return { previousFeatures };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousFeatures) {
+        queryClient.setQueryData(
+          ['projects', projectId, 'features'],
+          context.previousFeatures,
+        );
       }
-      return true;
-    } catch (err: unknown) {
-      console.error('Error updating feature:', err);
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'Nem sikerült frissíteni a feladatot';
-      setError(errorMessage);
-      return false;
-    }
-  };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['projects', projectId, 'features'],
+      });
+    },
+  });
 
-  const deleteFeature = async (id: number) => {
-    try {
-      const response = await fetch(`/api/features/${id}`, {
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/features/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers,
+      }).then((res) => {
+        if (!res.ok) throw new Error('Failed to delete feature');
+        return res.json();
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['projects', projectId, 'features'],
       });
-
-      if (!response.ok) throw new Error('Failed to delete feature');
-
-      setFeatures((prev) => prev.filter((f) => f.id !== id));
-      return true;
-    } catch (err: unknown) {
-      console.error('Error deleting feature:', err);
-      const errorMessage =
-        err instanceof Error ? err.message : 'Nem sikerült törölni a feladatot';
-      setError(errorMessage);
-      return false;
-    }
-  };
+    },
+  });
 
   return {
     features,
     isLoading,
-    error,
-    loadFeatures,
-    createFeature,
-    updateFeature,
-    deleteFeature,
-    setError,
+    error: queryError ? 'Nem sikerült betölteni a feladatokat' : null,
+    loadFeatures: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['projects', projectId, 'features'],
+      });
+    },
+    createFeature: async (data) => {
+      try {
+        await createMutation.mutateAsync(data);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    updateFeature: async (id, data) => {
+      try {
+        await updateMutation.mutateAsync({ id, data });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    deleteFeature: async (id) => {
+      try {
+        await deleteMutation.mutateAsync(id);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    setError: () => {},
   };
 }

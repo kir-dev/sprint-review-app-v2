@@ -1,45 +1,38 @@
-import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { User } from '../types';
 
 export function useUserData(token: string | null) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const headers = { Authorization: `Bearer ${token}` };
+
+  const usersQuery = useQuery<User[]>({
+    queryKey: ['users'],
+    queryFn: () => fetch('/api/users', { headers }).then((res) => res.json()),
+    enabled: !!token,
+  });
+
+  const [localError, setLocalError] = useState<string | null>(null);
 
   async function loadUsers() {
-    if (!token) return;
-
     try {
-      setIsLoading(true);
-      const response = await fetch('/api/users', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-        setError(null);
-      } else {
-        setError('Failed to load users');
-      }
+      await usersQuery.refetch();
+      setLocalError(null);
     } catch (err) {
-      console.error('Error loading users:', err);
-      setError('Failed to load users');
-    } finally {
-      setIsLoading(false);
+      setLocalError('Hiba történt a felhasználók frissítésekor');
     }
   }
 
-  useEffect(() => {
-    loadUsers();
-  }, [token]);
-
   return {
-    users,
-    setUsers,
-    isLoading,
-    error,
-    setError,
+    users: usersQuery.data || [],
+    isLoading: usersQuery.isLoading,
+    error: usersQuery.error
+      ? 'Nem sikerült betölteni a felhasználókat'
+      : localError,
+    setError: setLocalError,
     loadUsers,
+    setUsers: (users: User[]) => {
+      queryClient.setQueryData(['users'], users);
+    },
   };
 }
