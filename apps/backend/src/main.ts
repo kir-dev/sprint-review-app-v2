@@ -5,6 +5,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
+import session from 'express-session';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -16,7 +17,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Session configuration for Passport (AuthSCH)
-  const session = require('express-session');
   app.use(
     session({
       secret: process.env.JWT_SECRET || 'secret',
