@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Feature, FeaturePriority, FeatureStatus, User } from '../types';
 
 interface FeatureDialogProps {
@@ -36,6 +36,7 @@ export function FeatureDialog({
   onSubmit,
 }: FeatureDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -45,6 +46,24 @@ export function FeatureDialog({
     isBug: false,
     isFeature: false,
   });
+
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      const newHeight = Math.min(textarea.scrollHeight, 400);
+      textarea.style.height = `${newHeight}px`;
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (isOpen) {
+      // Small timeout to ensure the dialog transition is far enough
+      // and the textarea is properly in the DOM
+      const timer = setTimeout(adjustHeight, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.description, isOpen, editingFeature]);
 
   useEffect(() => {
     if (editingFeature) {
@@ -120,12 +139,13 @@ export function FeatureDialog({
             <Label htmlFor="description">Leírás</Label>
             <Textarea
               id="description"
+              ref={textareaRef}
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
               placeholder="Részletes leírás..."
-              className="resize-none h-24"
+              className="resize-none min-h-24 overflow-y-auto"
             />
           </div>
 
