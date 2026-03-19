@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Log, Project, WorkPeriod } from '../types';
 
 export function useLogData(token: string | null, userId: number | undefined) {
@@ -38,6 +38,38 @@ export function useLogData(token: string | null, userId: number | undefined) {
 
   const [localError, setLocalError] = useState<string | null>(null);
 
+  const sortedProjects = useMemo(() => {
+    const projects = projectsQuery.data || [];
+    const logs = logsQuery.data || [];
+
+    if (projects.length === 0) return [];
+    if (logs.length === 0)
+      return [...projects].sort((a, b) => a.name.localeCompare(b.name));
+
+    // Get last logging date for each project (O(N) where N is logs count)
+    const lastLogDates = new Map<number, number>();
+    logs.forEach((log) => {
+      if (log.projectId) {
+        const date = new Date(log.date).getTime();
+        const currentMax = lastLogDates.get(log.projectId) || 0;
+        if (date > currentMax) {
+          lastLogDates.set(log.projectId, date);
+        }
+      }
+    });
+
+    // Sort projects (O(M log M) where M is projects count)
+    return [...projects].sort((a, b) => {
+      const dateA = lastLogDates.get(a.id) || 0;
+      const dateB = lastLogDates.get(b.id) || 0;
+
+      if (dateA !== dateB) {
+        return dateB - dateA; // Most recent first
+      }
+      return a.name.localeCompare(b.name); // Alphabetical secondary sort
+    });
+  }, [projectsQuery.data, logsQuery.data]);
+
   async function loadData() {
     try {
       await Promise.all([
@@ -54,7 +86,7 @@ export function useLogData(token: string | null, userId: number | undefined) {
 
   return {
     logs: logsQuery.data || [],
-    projects: projectsQuery.data || [],
+    projects: sortedProjects,
     workPeriods: workPeriodsQuery.data || [],
     currentWorkPeriod: currentWorkPeriodQuery.data || null,
     isLoading:
