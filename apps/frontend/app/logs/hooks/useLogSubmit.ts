@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { Log, LogFormData, WorkPeriod } from '../types';
 import { findWorkPeriodForDate } from '../utils/log-helpers';
 
@@ -15,6 +16,8 @@ export function useLogSubmit({
   workPeriods,
   onSuccess,
 }: UseLogSubmitProps) {
+  const queryClient = useQueryClient();
+
   async function handleSubmit(data: LogFormData, editingLog?: Log | null) {
     if (!user?.id || !token) return;
 
@@ -60,6 +63,12 @@ export function useLogSubmit({
             ? 'Bejegyzés sikeresen frissítve'
             : 'Bejegyzés sikeresen létrehozva',
         });
+
+        await queryClient.invalidateQueries({ queryKey: ['logs'] });
+        await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        await queryClient.invalidateQueries({ queryKey: ['projects'] });
+        await queryClient.invalidateQueries({ queryKey: ['work-periods'] });
+
         if (onSuccess) {
           onSuccess();
         }

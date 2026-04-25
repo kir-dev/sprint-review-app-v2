@@ -44,7 +44,6 @@ export default function LogsPage() {
     user,
     workPeriods,
     onSuccess: async () => {
-      await loadData();
       closeDialog();
     },
   });
