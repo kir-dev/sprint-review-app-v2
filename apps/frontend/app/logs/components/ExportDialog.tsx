@@ -31,10 +31,12 @@ export function ExportDialog({
   workPeriods,
   onClose,
 }: ExportDialogProps) {
-  const { users, isLoading: isLoadingUsers } = useUserData(token);
-
   const [allUsers, setAllUsers] = useState(true);
-  const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
+  const { users, isLoading: isLoadingUsers } = useUserData(token, !allUsers);
+
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [periodMode, setPeriodMode] = useState<PeriodMode>('dateRange');
   const [workPeriodId, setWorkPeriodId] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
@@ -70,7 +72,9 @@ export function ExportDialog({
       return;
     }
     if (!allUsers && selectedUserIds.size === 0) {
-      setError('Válassz ki legalább egy felhasználót, vagy az "Összes felhasználó" opciót.');
+      setError(
+        'Válassz ki legalább egy felhasználót, vagy az "Összes felhasználó" opciót.',
+      );
       return;
     }
 
@@ -104,7 +108,9 @@ export function ExportDialog({
 
       const disposition = response.headers.get('Content-Disposition') || '';
       const match = disposition.match(/filename="?([^";]+)"?/);
-      const filename = match?.[1] ?? `munkanaplok_${new Date().toISOString().split('T')[0]}.csv`;
+      const filename =
+        match?.[1] ??
+        `munkanaplok_${new Date().toISOString().split('T')[0]}.csv`;
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);

@@ -2,14 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { User } from '../types';
 
-export function useUserData(token: string | null) {
+export function useUserData(token: string | null, enabled: boolean = true) {
   const queryClient = useQueryClient();
   const headers = { Authorization: `Bearer ${token}` };
 
   const usersQuery = useQuery<User[]>({
     queryKey: ['users'],
     queryFn: () => fetch('/api/users', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    enabled: !!token && enabled,
   });
 
   const [localError, setLocalError] = useState<string | null>(null);

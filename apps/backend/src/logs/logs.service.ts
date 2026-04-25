@@ -255,7 +255,7 @@ export class LogsService {
     const logs = await this.prisma.log.findMany({
       where,
       include: {
-        user: { select: { id: true, fullName: true, email: true } },
+        user: { select: { id: true, fullName: true } },
         project: { select: { id: true, name: true } },
         event: { select: { id: true, name: true } },
         workPeriod: { select: { id: true, name: true } },
@@ -303,7 +303,7 @@ export class LogsService {
     } else if (filters.endDate) {
       filenameSuffix = `${filters.endDate}_ig`;
     } else if (filters.workPeriodId && logs[0]?.workPeriod?.name) {
-      filenameSuffix = logs[0].workPeriod.name.replace(/\s+/g, '_');
+      filenameSuffix = sanitizeFilename(logs[0].workPeriod.name);
     }
 
     this.logger.log(`Exported ${logs.length} logs (${filenameSuffix})`);
@@ -566,8 +566,16 @@ export class LogsService {
 
 function escapeCsvCell(value: string): string {
   if (value === '') return '';
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+
+  // Mitigate CSV injection: prefix cells starting with formula triggers
+  const safeValue = /^\s*[=+\-@]/.test(value) ? `'${value}` : value;
+
+  if (/[",\n\r]/.test(safeValue)) {
+    return `"${safeValue.replace(/"/g, '""')}"`;
   }
-  return value;
+  return safeValue;
+}
+
+function sanitizeFilename(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_-]/g, '_');
 }
