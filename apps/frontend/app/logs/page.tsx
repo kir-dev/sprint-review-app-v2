@@ -8,7 +8,9 @@ import { useAuth } from '@/context/AuthContext';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { canExportLogs } from '@/lib/permissions';
 import { useEventData } from '../events/hooks/useEventData';
+import { ExportDialog } from './components/ExportDialog';
 import { LogDialog } from './components/LogDialog';
 import { LogFilters } from './components/LogFilters';
 import { LogsHeader } from './components/LogsHeader';
@@ -63,6 +65,10 @@ export default function LogsPage() {
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [logToDelete, setLogToDelete] = useState<number | null>(null);
+
+  // Export dialog state (privileged users only)
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const canExport = canExportLogs(user?.position);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -138,6 +144,8 @@ export default function LogsPage() {
       <LogsHeader
         onCreateLog={() => openDialog()}
         onToggleFilters={() => setShowFilters(!showFilters)}
+        canExport={canExport}
+        onExport={() => setIsExportOpen(true)}
       />
 
       {isFiltersMounted && (
@@ -190,6 +198,15 @@ export default function LogsPage() {
         title="Bejegyzés Törlése"
         description="Biztosan törölni szeretnéd ezt a bejegyzést? Ez a művelet nem visszavonható."
       />
+
+      {canExport && (
+        <ExportDialog
+          isOpen={isExportOpen}
+          token={token}
+          workPeriods={workPeriods}
+          onClose={() => setIsExportOpen(false)}
+        />
+      )}
 
       {!isDialogOpen && !deleteConfirmOpen && (
         <MobileFloatingActionButton onClick={() => openDialog()} icon={Plus} />

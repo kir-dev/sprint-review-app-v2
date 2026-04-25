@@ -226,6 +226,90 @@ export class LogsService {
     }
   }
 
+  async exportLogs(filters: {
+    userIds?: number[];
+    workPeriodId?: number;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{ csv: string; filenameSuffix: string }> {
+    this.logger.log('Exporting logs with filters', filters);
+
+    const where: Prisma.LogWhereInput = {};
+
+    if (filters.userIds && filters.userIds.length > 0) {
+      where.userId = { in: filters.userIds };
+    }
+    if (filters.workPeriodId) {
+      where.workPeriodId = filters.workPeriodId;
+    }
+    if (filters.startDate || filters.endDate) {
+      where.date = {};
+      if (filters.startDate) {
+        where.date.gte = new Date(filters.startDate);
+      }
+      if (filters.endDate) {
+        where.date.lte = new Date(filters.endDate);
+      }
+    }
+
+    const logs = await this.prisma.log.findMany({
+      where,
+      include: {
+        user: { select: { id: true, fullName: true } },
+        project: { select: { id: true, name: true } },
+        event: { select: { id: true, name: true } },
+        workPeriod: { select: { id: true, name: true } },
+      },
+      orderBy: { date: 'desc' },
+    });
+
+    const headers = [
+      'Felhasználó',
+      'Dátum',
+      'Kategória',
+      'Projekt',
+      'Esemény',
+      'Időszak',
+      'Ráfordított idő (óra)',
+      'Nehézség',
+      'Leírás',
+    ];
+
+    const dateFormatter = new Intl.DateTimeFormat('hu-HU');
+
+    const rows = logs.map((log) =>
+      [
+        log.user?.fullName ?? '',
+        dateFormatter.format(log.date),
+        log.category,
+        log.project?.name ?? '',
+        log.event?.name ?? '',
+        log.workPeriod?.name ?? '',
+        log.timeSpent != null ? String(log.timeSpent) : '',
+        log.difficulty ?? '',
+        log.description ?? '',
+      ]
+        .map(escapeCsvCell)
+        .join(','),
+    );
+
+    const csv = [headers.map(escapeCsvCell).join(','), ...rows].join('\n');
+
+    let filenameSuffix = new Date().toISOString().split('T')[0];
+    if (filters.startDate && filters.endDate) {
+      filenameSuffix = `${filters.startDate}_${filters.endDate}`;
+    } else if (filters.startDate) {
+      filenameSuffix = `${filters.startDate}_tol`;
+    } else if (filters.endDate) {
+      filenameSuffix = `${filters.endDate}_ig`;
+    } else if (filters.workPeriodId && logs[0]?.workPeriod?.name) {
+      filenameSuffix = sanitizeFilename(logs[0].workPeriod.name);
+    }
+
+    this.logger.log(`Exported ${logs.length} logs (${filenameSuffix})`);
+    return { csv, filenameSuffix };
+  }
+
   async getStatsByUser(userId: number, workPeriodId?: number) {
     this.logger.log(
       `Fetching stats for user ID: ${userId}, work period: ${workPeriodId || 'all'}`,
@@ -478,4 +562,20 @@ export class LogsService {
       throw error;
     }
   }
+}
+
+function escapeCsvCell(value: string): string {
+  if (value === '') return '';
+
+  // Mitigate CSV injection: prefix cells starting with formula triggers
+  const safeValue = /^\s*[=+\-@]/.test(value) ? `'${value}` : value;
+
+  if (/[",\n\r]/.test(safeValue)) {
+    return `"${safeValue.replace(/"/g, '""')}"`;
+  }
+  return safeValue;
+}
+
+function sanitizeFilename(name: string): string {
+  return name.replace(/[^a-zA-Z0-9_-]/g, '_');
 }

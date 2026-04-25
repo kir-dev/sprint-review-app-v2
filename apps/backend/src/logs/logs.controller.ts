@@ -7,7 +7,10 @@ import {
   Patch,
   Post,
   Query,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBody,
   ApiOperation,
@@ -16,6 +19,10 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Position } from '@prisma/client';
+import { Response } from 'express';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateLogDto, LogCategory } from './dto/create-log.dto';
 import { UpdateLogDto } from './dto/update-log.dto';
 import { LogsService } from './logs.service';
@@ -130,6 +137,62 @@ export class LogsController {
       +projectId,
       workPeriodId ? +workPeriodId : undefined,
     );
+  }
+
+  @Get('export')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(
+    Position.KORVEZETO,
+    Position.KORVEZETO_HELYETTES,
+    Position.GAZDASAGIS,
+  )
+  @ApiOperation({
+    summary:
+      'Export logs as CSV (restricted to KORVEZETO, KORVEZETO_HELYETTES, GAZDASAGIS)',
+  })
+  @ApiQuery({
+    name: 'userIds',
+    required: false,
+    type: String,
+    description: 'Comma-separated user IDs. Omit to export logs for all users.',
+  })
+  @ApiQuery({
+    name: 'workPeriodId',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiResponse({ status: 200, description: 'CSV file' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async exportLogs(
+    @Res() res: Response,
+    @Query('userIds') userIds?: string,
+    @Query('workPeriodId') workPeriodId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const parsedUserIds = userIds
+      ? userIds
+          .split(',')
+          .map((id) => Number(id.trim()))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      : undefined;
+
+    const { csv, filenameSuffix } = await this.logsService.exportLogs({
+      userIds: parsedUserIds,
+      workPeriodId: workPeriodId ? +workPeriodId : undefined,
+      startDate,
+      endDate,
+    });
+
+    const filename = `munkanaplok_${filenameSuffix}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${filename}"`,
+    );
+    res.send('\uFEFF' + csv);
   }
 
   @Get(':id')
