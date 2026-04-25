@@ -53,7 +53,6 @@ export default function DashboardPage() {
     workPeriods,
     onSuccess: () => {
       closeDialog();
-      refetchAll();
     },
   });
 
