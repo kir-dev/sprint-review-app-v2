@@ -8,6 +8,9 @@
   "workspaces": [
     "apps/*"
   ],
+  "resolutions": {
+    "flatted": "3.4.2"
+  },
   "scripts": {
     "dev": "docker-compose up -d && concurrently \"yarn:start:*\"",
     "start:backend": "yarn workspace backend start:dev",
