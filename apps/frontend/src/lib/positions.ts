@@ -28,7 +28,7 @@ export const positionSortOrder: Position[] = [
 
 export const positionColors: Record<Position, string> = {
   [Position.UJONC]: 'bg-slate-500/10 text-foreground border-slate-500/20',
-  [Position.TAG]: 'bg-orange-500/10 text-foreground border-orange-500/20',
+  [Position.TAG]: 'bg-primary/10 text-foreground border-primary/20',
   [Position.HR_FELELOS]: 'bg-pink-500/10 text-foreground border-pink-500/20',
   [Position.PR_FELELOS]:
     'bg-purple-500/10 text-foreground border-purple-500/20',

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { ChevronDown, ChevronUp, Edit2, Plus, Shield, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Edit2, Plus, Trash2 } from 'lucide-react';
 import { PositionData, PositionDialog } from './PositionDialog';
 import { cn } from '@/lib/utils';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
@@ -224,26 +224,18 @@ export function RolesTab() {
                   </div>
                 </CardHeader>
                 <CardContent className="text-xs space-y-2 text-muted-foreground">
-                  {pos.isLeader ? (
-                    <div className="flex items-center gap-2 text-red-500 font-semibold mb-2">
-                      <Shield size={14} /> Szuper-adminisztrátor (Körvezető)
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <span>Admin beállítások:</span>
-                        <Badge variant={pos.canManageSettings ? 'default' : 'secondary'} className="text-[10px] px-1 py-0">
-                          {pos.canManageSettings ? 'Igen' : 'Nem'}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span>Naplók exportálása:</span>
-                        <Badge variant={pos.canExportLogs ? 'default' : 'secondary'} className="text-[10px] px-1 py-0">
-                          {pos.canExportLogs ? 'Igen' : 'Nem'}
-                        </Badge>
-                      </div>
-                    </>
-                  )}
+                  <div className="flex justify-between items-center">
+                    <span>Admin beállítások:</span>
+                    <Badge variant={pos.canManageSettings ? 'default' : 'secondary'} className="text-[10px] px-1 py-0">
+                      {pos.canManageSettings ? 'Igen' : 'Nem'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Naplók exportálása:</span>
+                    <Badge variant={pos.canExportLogs ? 'default' : 'secondary'} className="text-[10px] px-1 py-0">
+                      {pos.canExportLogs ? 'Igen' : 'Nem'}
+                    </Badge>
+                  </div>
                 </CardContent>
               </Card>
             ))}

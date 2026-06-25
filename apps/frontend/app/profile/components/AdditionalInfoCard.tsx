@@ -22,7 +22,7 @@ interface AdditionalInfoCardProps {
 
 const getFieldClass = (fieldState: ControllerFieldState) => {
   if (fieldState.isDirty) {
-    return 'bg-amber-500/10 dark:bg-amber-500/20';
+    return 'bg-primary/10 dark:bg-primary/20';
   }
   return '';
 };

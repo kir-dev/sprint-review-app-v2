@@ -17,21 +17,13 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
+import { useBranding } from '@/context/BrandingContext';
+import { getDynamicCategoryColors } from '@/lib/color-utils';
 
 interface CategoryBreakdownProps {
-  data: (CategoryBreakdownData & { [key: string]: any })[];
+  data: CategoryBreakdownData[];
   loading?: boolean;
 }
-
-// Specific colors for categories matching Visualizations.tsx
-const CATEGORY_COLORS: Record<string, string> = {
-  PROJECT: 'hsl(14, 100%, 60%)', // Primary Orange
-  RESPONSIBILITY: 'hsl(32, 95%, 60%)', // Orange-Yellow
-  EVENT: 'hsl(0, 0%, 40%)', // Gray
-  MAINTENANCE: 'hsl(14, 80%, 40%)', // Darker Primary
-  SIMONYI: 'hsl(48, 96%, 60%)', // Yellow
-  OTHER: 'hsl(0, 0%, 70%)', // Light Gray
-};
 
 const CATEGORY_LABELS: Record<string, string> = {
   PROJECT: 'Projekt',
@@ -44,7 +36,15 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const DEFAULT_COLOR = 'hsl(0, 0%, 50%)';
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { value: number; name: string; payload: { translatedName?: string } }[];
+  label?: string;
+}) => {
   if (active && payload && payload.length) {
     const name = payload[0].payload.translatedName || payload[0].name || label;
     return (
@@ -69,6 +69,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function CategoryBreakdown({ data, loading }: CategoryBreakdownProps) {
+  const { settings } = useBranding();
+  const categoryColors = getDynamicCategoryColors(settings.primaryColor);
+
   if (loading) {
     return <div className="animate-pulse h-80 bg-secondary rounded-lg" />;
   }
@@ -112,7 +115,7 @@ export function CategoryBreakdown({ data, loading }: CategoryBreakdownProps) {
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={CATEGORY_COLORS[entry.name] || DEFAULT_COLOR}
+                      fill={categoryColors[entry.name] || DEFAULT_COLOR}
                       stroke="var(--color-card)"
                       strokeWidth={2}
                     />

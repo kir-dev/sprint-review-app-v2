@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
-import { Palette, Sliders, AlertCircle, Settings, Calendar } from 'lucide-react';
+import { AlertCircle, Settings, Calendar } from 'lucide-react';
 import { BrandingTab } from './components/BrandingTab';
 import { RolesTab } from './components/RolesTab';
 import { EventCategoriesTab } from './components/EventCategoriesTab';
@@ -59,10 +59,10 @@ export default function AdminSettingsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid grid-cols-3 max-w-lg bg-card border">
           <TabsTrigger value="branding" className="flex items-center gap-2">
-            <Palette size={16} /> Arculat
+            Arculat
           </TabsTrigger>
           <TabsTrigger value="roles" className="flex items-center gap-2">
-            <Sliders size={16} /> Szerepkörök
+            Szerepkörök
           </TabsTrigger>
           <TabsTrigger value="event-categories" className="flex items-center gap-2">
             <Calendar size={16} /> Esemény Kategóriák

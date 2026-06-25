@@ -140,7 +140,6 @@ export function EventCategoriesTab() {
                     >
                       {cat.label}
                     </Badge>
-                    <span className="text-xs text-muted-foreground font-mono">({cat.name})</span>
                   </div>
                   <div className="flex gap-1">
                     <Button
