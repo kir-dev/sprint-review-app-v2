@@ -1,6 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Position } from './dto/position.enum';
 
 @Injectable()
 export class UsersService {
@@ -8,16 +7,38 @@ export class UsersService {
 
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Helper to map database User (with relation) to API User structure
+   * maintaining backward compatibility by setting `position` as string
+   */
+  private mapUser(user: any) {
+    if (!user) return null;
+    return {
+      ...user,
+      position: user.position?.name || null,
+      positionDetails: user.position || null,
+    };
+  }
+
   async create(data: {
     email: string;
     simonyiEmail?: string;
     githubUsername?: string;
     fullName: string;
     profileImage?: string;
-    position?: Position;
+    position?: string;
   }) {
     this.logger.log(`Creating user: ${data.email}`);
     try {
+      const positionName = data.position || 'UJONC';
+      const positionRecord = await this.prisma.position.findUnique({
+        where: { name: positionName.toUpperCase() },
+      });
+
+      if (!positionRecord) {
+        throw new BadRequestException(`Position ${positionName} not found`);
+      }
+
       const user = await this.prisma.user.create({
         data: {
           email: data.email,
@@ -25,11 +46,14 @@ export class UsersService {
           githubUsername: data.githubUsername,
           fullName: data.fullName,
           profileImage: data.profileImage,
-          position: data.position || Position.UJONC,
+          positionId: positionRecord.id,
+        },
+        include: {
+          position: true,
         },
       });
       this.logger.log(`User created successfully: ID ${user.id}`);
-      return user;
+      return this.mapUser(user);
     } catch (error) {
       this.logger.error(
         `Failed to create user: ${data.email}`,
@@ -44,6 +68,7 @@ export class UsersService {
     try {
       const users = await this.prisma.user.findMany({
         include: {
+          position: true,
           _count: {
             select: {
               logs: true,
@@ -54,7 +79,7 @@ export class UsersService {
         },
       });
       this.logger.log(`Found ${users.length} users`);
-      return users;
+      return users.map((user) => this.mapUser(user));
     } catch (error) {
       this.logger.error('Failed to fetch users', (error as Error).stack);
       throw error;
@@ -67,6 +92,7 @@ export class UsersService {
       const user = await this.prisma.user.findUnique({
         where: { id },
         include: {
+          position: true,
           logs: {
             include: {
               project: true,
@@ -93,7 +119,7 @@ export class UsersService {
       }
 
       this.logger.log(`User found: ${user.email}`);
-      return user;
+      return this.mapUser(user);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -111,6 +137,9 @@ export class UsersService {
     try {
       const user = await this.prisma.user.findUnique({
         where: { email },
+        include: {
+          position: true,
+        },
       });
 
       if (!user) {
@@ -118,7 +147,7 @@ export class UsersService {
         throw new NotFoundException(`User with email ${email} not found`);
       }
 
-      return user;
+      return this.mapUser(user);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -139,19 +168,30 @@ export class UsersService {
       githubUsername?: string;
       fullName?: string;
       profileImage?: string;
-      position?: Position;
+      position?: string;
     },
   ) {
     this.logger.log(`Updating user with ID: ${id}`);
     try {
-      // Handle Position History
+      let positionIdToSet: number | undefined;
+
       if (data.position) {
         const currentUser = await this.prisma.user.findUnique({
           where: { id },
+          include: { position: true },
         });
 
-        if (currentUser && currentUser.position !== data.position) {
+        if (currentUser && currentUser.position.name !== data.position) {
           const now = new Date();
+
+          const newPositionRecord = await this.prisma.position.findUnique({
+            where: { name: data.position.toUpperCase() },
+          });
+
+          if (!newPositionRecord) {
+            throw new BadRequestException(`Position ${data.position} not found`);
+          }
+          positionIdToSet = newPositionRecord.id;
 
           // 1. Close active history if exists
           const activeHistory = await this.prisma.positionHistory.findFirst({
@@ -167,13 +207,12 @@ export class UsersService {
               data: { endDate: now },
             });
           } else {
-            // Edge case: No history exists yet (first change since feature intro)
             // Save the OLD position as a history entry ending now
             await this.prisma.positionHistory.create({
               data: {
                 userId: id,
-                position: currentUser.position,
-                startDate: currentUser.createdAt, // Best guess for start logic
+                positionId: currentUser.positionId,
+                startDate: currentUser.createdAt,
                 endDate: now,
               },
             });
@@ -183,7 +222,7 @@ export class UsersService {
           await this.prisma.positionHistory.create({
             data: {
               userId: id,
-              position: data.position,
+              positionId: positionIdToSet,
               startDate: now,
               endDate: null,
             },
@@ -191,19 +230,27 @@ export class UsersService {
         }
       }
 
+      const updateData: any = {
+        email: data.email,
+        simonyiEmail: data.simonyiEmail,
+        githubUsername: data.githubUsername,
+        fullName: data.fullName,
+        profileImage: data.profileImage,
+      };
+
+      if (positionIdToSet !== undefined) {
+        updateData.positionId = positionIdToSet;
+      }
+
       const user = await this.prisma.user.update({
         where: { id },
-        data: {
-          email: data.email,
-          simonyiEmail: data.simonyiEmail,
-          githubUsername: data.githubUsername,
-          fullName: data.fullName,
-          profileImage: data.profileImage,
-          position: data.position,
+        data: updateData,
+        include: {
+          position: true,
         },
       });
       this.logger.log(`User updated successfully: ID ${user.id}`);
-      return user;
+      return this.mapUser(user);
     } catch (error) {
       this.logger.error(
         `Failed to update user with ID: ${id}`,

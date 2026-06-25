@@ -28,17 +28,24 @@ export class AuthService {
   }
 
   async getUserById(id: number) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        email: true,
-        simonyiEmail: true,
-        fullName: true,
-        githubUsername: true,
-        profileImage: true,
+      include: {
         position: true,
       },
     });
+
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      simonyiEmail: user.simonyiEmail,
+      fullName: user.fullName,
+      githubUsername: user.githubUsername,
+      profileImage: user.profileImage,
+      position: user.position?.name || null,
+      positionDetails: user.position || null,
+    };
   }
 }
