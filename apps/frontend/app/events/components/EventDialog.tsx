@@ -12,8 +12,7 @@ import { format } from 'date-fns';
 import { Loader2, X } from 'lucide-react';
 import React from 'react';
 import { DateRange } from 'react-day-picker';
-import { eventTypeLabels } from '../constants';
-import { EventFormData, EventType } from '../types';
+import { EventFormData, EventCategory } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Centralized strings for easier management and future i18n
@@ -37,8 +36,9 @@ interface EventDialogProps {
     name: string;
     startDate: string;
     endDate: string;
-    type: EventType;
+    categoryId: number;
   } | null;
+  categories: EventCategory[];
   formData: EventFormData;
   isPending: boolean;
   onFormDataChange: (data: EventFormData) => void;
@@ -49,6 +49,7 @@ interface EventDialogProps {
 export function EventDialog({
   isOpen,
   editingEvent,
+  categories,
   formData,
   isPending,
   onFormDataChange,
@@ -128,9 +129,9 @@ export function EventDialog({
               </label>
               <Select
                 required
-                value={formData.type}
+                value={formData.categoryId?.toString()}
                 onValueChange={(value) =>
-                  onFormDataChange({ ...formData, type: value as EventType })
+                  onFormDataChange({ ...formData, categoryId: parseInt(value, 10) })
                 }
                 disabled={isPending}
               >
@@ -138,9 +139,9 @@ export function EventDialog({
                   <SelectValue placeholder={DIALOG_TEXT.typePlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.values(EventType).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {eventTypeLabels[type]}
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
