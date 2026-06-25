@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Edit2, Plus, Shield, Trash2 } from 'lucide-react';
 import { PositionData, PositionDialog } from './PositionDialog';
 import { cn } from '@/lib/utils';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 const isHexColor = (val: string) => /^#[0-9A-F]{6}$/i.test(val);
 
@@ -22,6 +23,10 @@ export function RolesTab() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPosition, setEditingPosition] = useState<PositionData | null>(null);
+
+  // Delete confirmation states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [positionToDelete, setPositionToDelete] = useState<number | null>(null);
 
   // Fetch positions
   const fetchPositions = useCallback(async () => {
@@ -65,14 +70,18 @@ export function RolesTab() {
     setIsModalOpen(true);
   };
 
-  // Handle Delete Position
-  const handleDeletePosition = async (id: number) => {
-    if (!confirm('Biztosan törölni szeretnéd ezt a szerepkört? A művelet nem vonható vissza.')) {
-      return;
-    }
+  // Handle Click Delete
+  const handleDeleteClick = (id: number) => {
+    setPositionToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  // Handle Confirmed Delete
+  const handleDeleteConfirm = async () => {
+    if (!positionToDelete) return;
 
     try {
-      const res = await fetch(`/api/positions/${id}`, {
+      const res = await fetch(`/api/positions/${positionToDelete}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +90,7 @@ export function RolesTab() {
       });
 
       if (res.ok) {
-        toast.success('Szerepkör törölve!');
+        toast.success('Szerepkör sikeresen törölve!');
         fetchPositions();
       } else {
         const errorData = await res.json();
@@ -90,7 +99,16 @@ export function RolesTab() {
     } catch (err) {
       console.error(err);
       toast.error('Hálózati hiba történt a törlés során');
+    } finally {
+      setDeleteConfirmOpen(false);
+      setPositionToDelete(null);
     }
+  };
+
+  // Handle Cancel Delete
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setPositionToDelete(null);
   };
 
   return (
@@ -125,7 +143,6 @@ export function RolesTab() {
                     >
                       {pos.label}
                     </Badge>
-                    <span className="text-xs text-muted-foreground font-mono">({pos.name})</span>
                   </div>
                   <div className="flex gap-1">
                     <Button
@@ -140,7 +157,7 @@ export function RolesTab() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDeletePosition(pos.id)}
+                      onClick={() => handleDeleteClick(pos.id)}
                       disabled={pos.isLeader}
                     >
                       <Trash2 size={14} />
@@ -180,6 +197,14 @@ export function RolesTab() {
         onOpenChange={setIsModalOpen}
         editingPosition={editingPosition}
         onSuccess={fetchPositions}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        title="Szerepkör törlése"
+        description="Biztosan törölni szeretnéd ezt a szerepkört? A művelet nem vonható vissza."
       />
     </Card>
   );
