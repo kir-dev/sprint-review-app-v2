@@ -10,7 +10,6 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBody,
   ApiOperation,
@@ -140,12 +139,8 @@ export class LogsController {
   }
 
   @Get('export')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(
-    Position.KORVEZETO,
-    Position.KORVEZETO_HELYETTES,
-    Position.GAZDASAGIS,
-  )
+  @UseGuards(RolesGuard)
+  @Roles(Position.KORVEZETO, Position.KORVEZETO_HELYETTES, Position.GAZDASAGIS)
   @ApiOperation({
     summary:
       'Export logs as CSV (restricted to KORVEZETO, KORVEZETO_HELYETTES, GAZDASAGIS)',
@@ -188,10 +183,7 @@ export class LogsController {
 
     const filename = `munkanaplok_${filenameSuffix}.csv`;
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="${filename}"`,
-    );
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send('\uFEFF' + csv);
   }
 

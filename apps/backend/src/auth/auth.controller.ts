@@ -5,6 +5,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { AuthSchDedupGuard } from './authsch-dedup.guard';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -16,6 +17,7 @@ export class AuthController {
   /**
    * Redirects to the authsch login page
    */
+  @Public()
   @Get('login')
   @ApiOperation({ summary: 'Initiate AuthSCH login' })
   @ApiResponse({ status: 302, description: 'Redirects to AuthSCH login page' })
@@ -28,6 +30,7 @@ export class AuthController {
    * Endpoint for authsch to call after login
    * Redirects to the frontend with the jwt token
    */
+  @Public()
   @Get('callback')
   @ApiOperation({ summary: 'AuthSCH callback endpoint' })
   @ApiResponse({
@@ -58,7 +61,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Return current user' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @UseGuards(AuthGuard('jwt'))
   async getProfile(@CurrentUser() user: any) {
     // Fetch fresh user data from database to include latest updates
     const freshUser = await this.authService.getUserById(user.id);
