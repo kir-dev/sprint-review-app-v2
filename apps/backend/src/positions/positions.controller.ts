@@ -48,6 +48,17 @@ export class PositionsController {
     return this.positionsService.create(dto);
   }
 
+  @Patch('order')
+  @UseGuards(RolesGuard)
+  @Roles('canManageSettings')
+  @ApiOperation({ summary: 'Update positions order (restricted to settings managers)' })
+  @ApiBody({ schema: { type: 'object', properties: { ids: { type: 'array', items: { type: 'number' } } }, required: ['ids'] } })
+  @ApiResponse({ status: 200, description: 'Positions order updated successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  updateOrder(@Body('ids') ids: number[]) {
+    return this.positionsService.updateOrder(ids);
+  }
+
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('canManageSettings')

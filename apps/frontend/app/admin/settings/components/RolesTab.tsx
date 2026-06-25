@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Edit2, Plus, Shield, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Edit2, Plus, Shield, Trash2 } from 'lucide-react';
 import { PositionData, PositionDialog } from './PositionDialog';
 import { cn } from '@/lib/utils';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
@@ -111,6 +111,46 @@ export function RolesTab() {
     setPositionToDelete(null);
   };
 
+  // Handle Move position order up/down
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+    const newPositions = [...positions];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    // Bounds check
+    if (targetIndex < 0 || targetIndex >= newPositions.length) return;
+
+    // Swap elements
+    const temp = newPositions[index];
+    newPositions[index] = newPositions[targetIndex];
+    newPositions[targetIndex] = temp;
+
+    // Optimistic UI update
+    setPositions(newPositions);
+
+    try {
+      const res = await fetch('/api/positions/order', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ids: newPositions.map((p) => p.id) }),
+      });
+
+      if (res.ok) {
+        toast.success('Szerepkörök sorrendje sikeresen frissítve!');
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.message || 'Nem sikerült elmenteni a sorrendet');
+        fetchPositions(); // Revert to database state
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Hiba történt a sorrend mentésekor');
+      fetchPositions(); // Revert to database state
+    }
+  };
+
   return (
     <Card className="bg-card/50 backdrop-blur-md border">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -128,8 +168,8 @@ export function RolesTab() {
         {isLoadingPositions ? (
           <div className="py-8 text-center text-muted-foreground">Szerepkörök betöltése...</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {positions.map((pos) => (
+          <div className="flex flex-col gap-3">
+            {positions.map((pos, index) => (
               <Card key={pos.id} className="bg-background/50 border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
                   <div className="flex items-center gap-2">
@@ -144,7 +184,26 @@ export function RolesTab() {
                       {pos.label}
                     </Badge>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => handleMove(index, 'up')}
+                      disabled={index === 0}
+                    >
+                      <ChevronUp size={16} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => handleMove(index, 'down')}
+                      disabled={index === positions.length - 1}
+                    >
+                      <ChevronDown size={16} />
+                    </Button>
+                    <div className="w-[1px] h-4 bg-border mx-1" />
                     <Button
                       variant="ghost"
                       size="icon"

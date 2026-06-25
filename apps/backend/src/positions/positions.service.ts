@@ -8,11 +8,11 @@ export class PositionsService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Returns all positions
+   * Returns all positions ordered by their display priority
    */
   async findAll() {
     return this.prisma.position.findMany({
-      orderBy: { id: 'asc' },
+      orderBy: { order: 'asc' },
     });
   }
 
@@ -52,12 +52,34 @@ export class PositionsService {
       throw new BadRequestException(`Position with name ${normalizedName} already exists`);
     }
 
+    // Get max order to append the new position at the end
+    const lastPosition = await this.prisma.position.findFirst({
+      orderBy: { order: 'desc' },
+    });
+    const nextOrder = lastPosition ? lastPosition.order + 1 : 0;
+
     return this.prisma.position.create({
       data: {
         ...dto,
         name: normalizedName,
+        order: nextOrder,
       },
     });
+  }
+
+  /**
+   * Updates order values for positions based on a list of IDs
+   */
+  async updateOrder(ids: number[]) {
+    await this.prisma.$transaction(
+      ids.map((id, index) =>
+        this.prisma.position.update({
+          where: { id },
+          data: { order: index },
+        }),
+      ),
+    );
+    return { success: true };
   }
 
   /**

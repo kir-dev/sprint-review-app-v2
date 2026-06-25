@@ -97,6 +97,7 @@ model Position {
   name               String            @unique // pl. "KORVEZETO", "GAZDASAGIS", "PR_FELELOS"
   label              String            // pl. "Körvezető", "Gazdaságis"
   color              String            // CSS osztályok a Tailwind-hez
+  order              Int               @default(0) // Pozíció megjelenítési sorrendje
   canManageSettings  Boolean           @default(false) // Beállítások kezelése
   canExportLogs      Boolean           @default(false) // Logok CSV exportálása
   canManageEvents    Boolean           @default(false) // Események kezelése

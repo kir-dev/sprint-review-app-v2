@@ -64,7 +64,7 @@ export function UsersList({
       if (aIndex === -1 && bIndex === -1) return 0;
       if (aIndex === -1) return 1;
       if (bIndex === -1) return -1;
-      return bIndex - aIndex; // Reversed sorting order to bring leaders to the top
+      return aIndex - bIndex; // Natural order since positions are pre-sorted by the backend
     });
   }, [users, positions]);
 
