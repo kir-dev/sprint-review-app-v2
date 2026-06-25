@@ -19,6 +19,17 @@ interface User {
   githubUsername?: string;
   profileImage?: string;
   position: Position;
+  positionDetails?: {
+    id: number;
+    name: string;
+    label: string;
+    color: string;
+    canManageSettings: boolean;
+    canExportLogs: boolean;
+    canManageEvents: boolean;
+    canManageProjects: boolean;
+    isLeader: boolean;
+  };
   positionHistory?: PositionHistory[];
 }
 

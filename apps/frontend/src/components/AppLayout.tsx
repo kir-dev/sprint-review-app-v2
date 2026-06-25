@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import React from 'react';
 import { MobileBottomNav } from './MobileBottomNav';
 import { Sidebar } from './sidebar';
+import { useBranding } from '@/context/BrandingContext';
 
 // Pages that should NOT show the sidebar/bottom nav
 const pagesWithoutSidebar = ['/login'];
@@ -17,8 +18,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const showSidebar = !pagesWithoutSidebar.includes(pathname);
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { settings } = useBranding();
   const logoSrc =
-    theme === 'light' ? '/Kir-Dev-Black.png' : '/Kir-Dev-White.png';
+    theme === 'light' ? settings.logoLightUrl : settings.logoDarkUrl;
 
   if (!showSidebar) {
     return <>{children}</>;
@@ -38,11 +40,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="h-8 w-8 flex items-center justify-center">
               <img
                 src={logoSrc}
-                alt="Kir-Dev"
+                alt={settings.appName}
                 className="w-full h-full object-contain"
               />
             </div>
-            <span className="font-semibold text-lg">Sprint Review</span>
+            <span className="font-semibold text-lg">{settings.appName}</span>
           </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />

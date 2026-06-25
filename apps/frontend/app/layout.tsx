@@ -4,6 +4,7 @@ import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ThemedToaster } from '@/components/ThemedToaster';
 import { AuthProvider } from '@/context/AuthContext';
+import { BrandingProvider } from '@/context/BrandingContext';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type React from 'react';
@@ -19,39 +20,72 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export const metadata: Metadata = {
-  title: 'Sprint Review App - Kir-Dev',
-  description: 'Sprint review és munkanapló kezelő a Kir-Dev számára',
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/Kir-Dev-Black.png',
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Sprint Review',
-  },
-};
+export const dynamic = 'force-dynamic';
 
-export default function RootLayout({
+async function fetchBrandingSettings() {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+  try {
+    // Fetch directly from backend (without /api prefix) and disable cache for fresh settings on every load
+    const res = await fetch(`${backendUrl}/settings/public`, {
+      cache: 'no-store',
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (error) {
+    console.error('Failed to fetch branding settings', error);
+  }
+  return null;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await fetchBrandingSettings();
+  const appName = settings?.appName || 'Sprint Review App';
+
+  return {
+    title: appName,
+    description: `Sprint review és munkanapló kezelő a ${appName} számára`,
+    icons: {
+      icon: settings?.faviconUrl || '/favicon.ico',
+      apple: settings?.logoLightUrl || '/Kir-Dev-Black.png',
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: appName,
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await fetchBrandingSettings();
+  const primaryColor = settings?.primaryColor || '#f15a29';
+  const appName = settings?.appName || 'Sprint Review';
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      style={{ '--color-primary': primaryColor } as React.CSSProperties}
+    >
       <head>
-        <meta name="apple-mobile-web-app-title" content="Sprint Review" />
+        <meta name="apple-mobile-web-app-title" content={appName} />
       </head>
       <body className={`font-sans antialiased`}>
         <ThemeProvider defaultTheme="dark">
-          <QueryProvider>
-            <AuthProvider>
-              <ServiceWorkerRegister />
-              <AppLayout>{children}</AppLayout>
-              <ThemedToaster />
-            </AuthProvider>
-          </QueryProvider>
+          <BrandingProvider initialSettings={settings}>
+            <QueryProvider>
+              <AuthProvider>
+                <ServiceWorkerRegister />
+                <AppLayout>{children}</AppLayout>
+                <ThemedToaster />
+              </AuthProvider>
+            </QueryProvider>
+          </BrandingProvider>
         </ThemeProvider>
       </body>
     </html>
