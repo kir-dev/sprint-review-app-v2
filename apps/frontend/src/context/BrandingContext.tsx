@@ -41,6 +41,7 @@ export function BrandingProvider({
     if (typeof window !== 'undefined') {
       const root = document.documentElement;
       root.style.setProperty('--color-primary', settings.primaryColor);
+      root.style.setProperty('--color-ring', settings.primaryColor);
     }
   }, [settings.primaryColor]);
 

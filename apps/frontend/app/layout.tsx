@@ -43,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const appName = settings?.appName || 'Sprint Review App';
 
   return {
-    title: appName,
+    title: 'Sprint Review App',
     description: `Sprint review és munkanapló kezelő a ${appName} számára`,
     icons: {
       icon: settings?.faviconUrl || '/favicon.ico',
@@ -52,7 +52,7 @@ export async function generateMetadata(): Promise<Metadata> {
     appleWebApp: {
       capable: true,
       statusBarStyle: 'default',
-      title: appName,
+      title: 'Sprint Review App',
     },
   };
 }
@@ -70,7 +70,10 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      style={{ '--color-primary': primaryColor } as React.CSSProperties}
+      style={{
+        '--color-primary': primaryColor,
+        '--color-ring': primaryColor,
+      } as React.CSSProperties}
     >
       <head>
         <meta name="apple-mobile-web-app-title" content={appName} />
