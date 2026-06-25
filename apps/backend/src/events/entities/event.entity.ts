@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EventType } from '@prisma/client';
 
 export class Event {
   @ApiProperty()
@@ -14,6 +13,6 @@ export class Event {
   @ApiProperty()
   endDate: Date;
 
-  @ApiProperty({ enum: EventType })
-  type: EventType;
+  @ApiProperty()
+  categoryId: number;
 }

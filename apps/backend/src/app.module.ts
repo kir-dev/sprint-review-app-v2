@@ -15,6 +15,7 @@ import { UsersModule } from './users/users.module';
 import { WorkPeriodsModule } from './work-periods/work-periods.module';
 import { SettingsModule } from './settings/settings.module';
 import { PositionsModule } from './positions/positions.module';
+import { EventCategoriesModule } from './event-categories/event-categories.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { PositionsModule } from './positions/positions.module';
     DashboardModule,
     SettingsModule,
     PositionsModule,
+    EventCategoriesModule,
   ],
   providers: [
     {

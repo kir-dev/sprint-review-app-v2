@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -12,7 +11,7 @@ export class EventService {
     name: string;
     startDate: string;
     endDate: string;
-    type: EventType;
+    categoryId: number;
   }) {
     this.logger.log(`Creating event: ${data.name}`);
     try {
@@ -21,9 +20,10 @@ export class EventService {
           name: data.name,
           startDate: new Date(data.startDate),
           endDate: new Date(data.endDate),
-          type: data.type,
+          categoryId: data.categoryId,
         },
         include: {
+          category: true,
           _count: {
             select: { logs: true },
           },
@@ -45,6 +45,7 @@ export class EventService {
     try {
       const events = await this.prisma.event.findMany({
         include: {
+          category: true,
           _count: {
             select: { logs: true },
           },
@@ -67,6 +68,7 @@ export class EventService {
       const event = await this.prisma.event.findUnique({
         where: { id },
         include: {
+          category: true,
           logs: true,
           _count: {
             select: { logs: true },
@@ -94,7 +96,7 @@ export class EventService {
       name?: string;
       startDate?: string;
       endDate?: string;
-      type?: EventType;
+      categoryId?: number;
     },
   ) {
     this.logger.log(`Updating event with ID: ${id}`);
@@ -105,9 +107,10 @@ export class EventService {
           ...(data.name && { name: data.name }),
           ...(data.startDate && { startDate: new Date(data.startDate) }),
           ...(data.endDate && { endDate: new Date(data.endDate) }),
-          ...(data.type && { type: data.type }),
+          ...(data.categoryId && { categoryId: data.categoryId }),
         },
         include: {
+          category: true,
           _count: {
             select: { logs: true },
           },

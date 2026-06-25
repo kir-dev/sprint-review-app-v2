@@ -75,12 +75,21 @@ model Feature {
 }
 
 model Event {
-  id        Int       @id @default(autoincrement())
-  name      String
-  startDate DateTime
-  endDate   DateTime
-  type      EventType
-  logs      Log[]
+  id              Int           @id @default(autoincrement())
+  name            String
+  startDate       DateTime
+  endDate         DateTime
+  categoryId      Int
+  category        EventCategory @relation(fields: [categoryId], references: [id])
+  logs            Log[]
+}
+
+model EventCategory {
+  id     Int     @id @default(autoincrement())
+  name   String  @unique // pl. "KIR_DEV", "SIMONYI"
+  label  String  // pl. "Kir-Dev", "Simonyi"
+  color  String  // pl. "#f15a29"
+  events Event[]
 }
 
 model Position {
@@ -151,9 +160,4 @@ enum Difficulty {
   SMALL
   MEDIUM
   LARGE
-}
-
-enum EventType {
-  KIR_DEV
-  SIMONYI
 }
