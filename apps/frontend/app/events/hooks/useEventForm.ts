@@ -8,7 +8,7 @@ export function useEventForm() {
     name: '',
     startDate: '',
     endDate: '',
-    type: '',
+    categoryId: '',
   });
 
   function openDialog(event?: Event) {
@@ -18,7 +18,7 @@ export function useEventForm() {
         name: event.name,
         startDate: event.startDate.split('T')[0],
         endDate: event.endDate.split('T')[0],
-        type: event.type,
+        categoryId: event.categoryId,
       });
     } else {
       setEditingEvent(null);
@@ -26,7 +26,7 @@ export function useEventForm() {
         name: '',
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
-        type: 'KIR_DEV',
+        categoryId: '',
       });
     }
     setIsDialogOpen(true);
@@ -39,7 +39,7 @@ export function useEventForm() {
       name: '',
       startDate: '',
       endDate: '',
-      type: '',
+      categoryId: '',
     });
   }
 

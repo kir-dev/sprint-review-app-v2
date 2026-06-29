@@ -1,4 +1,5 @@
-import { EventType } from '../events/types';
+import { Event } from '../events/types';
+export type { Event };
 
 export enum LogCategory {
   RESPONSIBILITY = 'RESPONSIBILITY',
@@ -26,17 +27,6 @@ export enum Position {
   KORVEZETO = 'KORVEZETO',
   OREGTAG = 'OREGTAG',
   ARCHIVALT = 'ARCHIVALT',
-}
-
-export interface Event {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  type: EventType;
-  _count?: {
-    logs: number;
-  };
 }
 
 export interface Log {

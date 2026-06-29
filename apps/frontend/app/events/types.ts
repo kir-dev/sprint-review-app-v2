@@ -1,6 +1,8 @@
-export enum EventType {
-  KIR_DEV = 'KIR_DEV',
-  SIMONYI = 'SIMONYI',
+export interface EventCategory {
+  id: number;
+  name: string;
+  label: string;
+  color: string;
 }
 
 export interface Event {
@@ -8,7 +10,8 @@ export interface Event {
   name: string;
   startDate: string;
   endDate: string;
-  type: EventType;
+  categoryId: number;
+  category?: EventCategory;
   _count?: {
     logs: number;
   };
@@ -18,5 +21,5 @@ export interface EventFormData {
   name: string;
   startDate: string;
   endDate: string;
-  type: string;
+  categoryId: number | string;
 }

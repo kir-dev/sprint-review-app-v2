@@ -11,7 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { positionColors, positionLabels } from '@/lib/positions';
 import { Mail, User } from 'lucide-react';
-import { UserProfile } from '../types';
+import { Position, UserProfile } from '../types';
 
 interface AccountInfoCardProps {
   user: UserProfile;
@@ -47,9 +47,9 @@ export function AccountInfoCard({ user }: AccountInfoCardProps) {
           <label className="text-sm font-medium">Pozíció</label>
           <div className="flex items-center gap-2 mt-2">
             <Badge
-              className={`${positionColors[user.position]} whitespace-nowrap shrink-0`}
+              className={`${user.positionDetails?.color || positionColors[user.position as Position] || 'bg-slate-500/10 text-foreground border-slate-500/20'} whitespace-nowrap shrink-0`}
             >
-              {positionLabels[user.position]}
+              {user.positionDetails?.label || positionLabels[user.position as Position] || user.position}
             </Badge>
             <p className="text-xs text-muted-foreground">
               Jelenlegi pozíciód a Kir-Devben

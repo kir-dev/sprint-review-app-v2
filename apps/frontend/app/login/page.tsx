@@ -3,12 +3,23 @@
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, user, token, isLoading, error } = useAuth();
+  const [settings, setSettings] = useState<{ appName: string; logoDarkUrl: string } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/settings/public', { cache: 'no-store' })
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error();
+      })
+      .then((data) => setSettings(data))
+      .catch((err) => console.error('Failed to fetch public settings on login page', err));
+  }, []);
 
   useEffect(() => {
     // Check if JWT is in URL (from OAuth callback)
@@ -54,18 +65,21 @@ function LoginContent() {
     window.location.href = `${backendUrl}/auth/login`;
   };
 
+  const appName = settings?.appName || 'Sprint Review App';
+  const logoSrc = settings?.logoDarkUrl || '/Kir-Dev-White.png';
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark px-4">
       <div className="bg-dark-lighter border border-dark rounded-3xl shadow-2xl p-6 md:p-12 max-w-md w-full text-center">
         <div className="flex justify-center mb-6">
           <img
-            src="Kir-Dev-White.png"
-            alt="Kir-Dev Logo"
+            src={logoSrc}
+            alt={appName}
             className="max-w-48 h-auto"
           />
         </div>
         <h1 className="text-4xl font-bold text-white mb-3">
-          Sprint Review App
+          {appName}
         </h1>
         <p className="text-gray-400 mb-10">
           Jelentkezz be az AuthSCH-val a folytatáshoz

@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { CalendarDays, Edit2, FileText, Trash2 } from 'lucide-react';
-import { eventTypeColors, eventTypeLabels } from '../constants';
 import { Event } from '../types';
 
 interface EventsListProps {
@@ -113,12 +112,17 @@ export function EventsList({
 
               <div className="flex items-center gap-2">
                 <span
+                  style={{
+                    backgroundColor: event.category ? `${event.category.color}1a` : undefined,
+                    color: event.category ? event.category.color : undefined,
+                    borderColor: event.category ? `${event.category.color}33` : undefined,
+                  }}
                   className={cn(
                     'px-2 py-1 rounded text-xs font-medium border',
-                    eventTypeColors[event.type],
+                    !event.category && 'bg-primary/10 text-primary border-primary/20',
                   )}
                 >
-                  {eventTypeLabels[event.type]}
+                  {event.category?.label || 'Ismeretlen'}
                 </span>
               </div>
 

@@ -15,7 +15,6 @@ export enum Position {
   ARCHIVALT = 'ARCHIVALT',
 }
 
-// Based on apps/frontend/src/context/AuthContext.tsx
 export interface UserProfile {
   id: number;
   email: string;
@@ -24,7 +23,18 @@ export interface UserProfile {
   authschId: string;
   githubUsername?: string | null;
   profileImage?: string | null;
-  position: Position;
+  position: string;
+  positionDetails?: {
+    id: number;
+    name: string;
+    label: string;
+    color: string;
+    canManageSettings: boolean;
+    canExportLogs: boolean;
+    canManageEvents: boolean;
+    canManageProjects: boolean;
+    isLeader: boolean;
+  };
 }
 
 // Zod schema for form validation

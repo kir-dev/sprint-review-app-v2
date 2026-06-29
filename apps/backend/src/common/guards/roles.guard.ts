@@ -5,7 +5,6 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Position } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
@@ -17,7 +16,7 @@ export class RolesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles = this.reflector.getAllAndOverride<Position[]>(
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
@@ -37,10 +36,37 @@ export class RolesGuard implements CanActivate {
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { position: true },
+      include: { position: true },
     });
 
-    if (!user || !requiredRoles.includes(user.position)) {
+    if (!user || !user.position) {
+      throw new ForbiddenException(
+        'You do not have permission to access this resource',
+      );
+    }
+
+    // 1. The circle leader (isLeader: true) always has access to everything
+    if (user.position.isLeader) {
+      return true;
+    }
+
+    // 2. Check if the user has the required role name or permission flag
+    const hasRequiredRole = requiredRoles.some((role) => {
+      // Backward compatibility: match position name (e.g. "KORVEZETO", "GAZDASAGIS")
+      if (role === user.position.name) {
+        return true;
+      }
+
+      // Dynamic permissions: check if the position model has a boolean flag matching the role string
+      const permissionValue = user.position[role as keyof typeof user.position];
+      if (typeof permissionValue === 'boolean' && permissionValue === true) {
+        return true;
+      }
+
+      return false;
+    });
+
+    if (!hasRequiredRole) {
       throw new ForbiddenException(
         'You do not have permission to access this resource',
       );

@@ -1,8 +1,6 @@
-import { Position } from '../../../app/logs/types';
-
 export async function updateUserPosition(
   userId: number,
-  newPosition: Position,
+  newPosition: string,
   token: string,
 ) {
   const response = await fetch(`/api/users/${userId}`, {

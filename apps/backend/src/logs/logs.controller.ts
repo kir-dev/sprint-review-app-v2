@@ -18,7 +18,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Position } from '@prisma/client';
 import { Response } from 'express';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -140,10 +139,9 @@ export class LogsController {
 
   @Get('export')
   @UseGuards(RolesGuard)
-  @Roles(Position.KORVEZETO, Position.KORVEZETO_HELYETTES, Position.GAZDASAGIS)
+  @Roles('canExportLogs')
   @ApiOperation({
-    summary:
-      'Export logs as CSV (restricted to KORVEZETO, KORVEZETO_HELYETTES, GAZDASAGIS)',
+    summary: 'Export logs as CSV (requires canExportLogs permission)',
   })
   @ApiQuery({
     name: 'userIds',

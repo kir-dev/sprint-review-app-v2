@@ -17,14 +17,8 @@ import {
   YAxis,
 } from 'recharts';
 
-// Define strict color mapping for difficulties
-// Define strict color mapping for difficulties (Matching Pie Chart Colors)
-// Define strict color mapping for difficulties (Matching Pie Chart Colors)
-const DIFFICULTY_COLORS: Record<string, string> = {
-  SMALL: 'hsl(48, 96%, 60%)', // Yellow (Matches SIMONYI)
-  MEDIUM: 'hsl(32, 95%, 60%)', // Orange-Yellow (Matches RESPONSIBILITY)
-  LARGE: 'hsl(14, 100%, 60%)', // Primary Orange (Matches PROJECT)
-};
+import { useBranding } from '@/context/BrandingContext';
+import { getDynamicDifficultyColors } from '@/lib/color-utils';
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   SMALL: 'Kicsi',
@@ -37,12 +31,18 @@ interface DifficultyBreakdownProps {
   loading?: boolean;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { value: number; name: string }[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border bg-popover p-2 shadow-sm animate-in fade-in zoom-in-95 duration-200">
         <span className="text-[0.70rem] uppercase text-muted-foreground">
-          {DIFFICULTY_LABELS[label] || label}
+          {label && (DIFFICULTY_LABELS[label] || label)}
         </span>
         <div className="font-bold text-muted-foreground">
           {payload[0].value} feladat
@@ -57,6 +57,9 @@ export function DifficultyBreakdown({
   data,
   loading,
 }: DifficultyBreakdownProps) {
+  const { settings } = useBranding();
+  const difficultyColors = getDynamicDifficultyColors(settings.primaryColor);
+
   if (loading) {
     return <div className="animate-pulse h-64 bg-secondary rounded-lg" />;
   }
@@ -95,7 +98,7 @@ export function DifficultyBreakdown({
                 {chartData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={DIFFICULTY_COLORS[entry.name] || '#8884d8'}
+                    fill={difficultyColors[entry.name] || '#8884d8'}
                   />
                 ))}
               </Bar>

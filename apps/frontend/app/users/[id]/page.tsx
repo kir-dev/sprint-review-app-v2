@@ -31,15 +31,21 @@ export default function UserProfilePage() {
     error,
   } = useUserDetails(userId, token);
 
-  // Use search params for initial UI if available (fast transition)
-  const [initialUser] = useState(() => {
+  const [initialUser] = useState<{
+    id: number;
+    fullName: string;
+    position: string;
+    profileImage?: string;
+    positionDetails?: undefined;
+  } | null>(() => {
     const name = searchParams.get('name');
     if (name) {
       return {
         id: parseInt(userId),
         fullName: name,
-        position: (searchParams.get('position') as Position) || Position.UJONC,
+        position: searchParams.get('position') || 'UJONC',
         profileImage: searchParams.get('image') || undefined,
+        positionDetails: undefined,
       };
     }
     return null;
@@ -108,10 +114,10 @@ export default function UserProfilePage() {
                   variant="outline"
                   className={cn(
                     'mt-2',
-                    positionColors[user.position as Position],
+                    user.positionDetails?.color || positionColors[user.position as Position] || 'bg-slate-500/10 text-foreground border-slate-500/20',
                   )}
                 >
-                  {positionLabels[user.position as Position]}
+                  {user.positionDetails?.label || positionLabels[user.position as Position] || user.position}
                 </Badge>
               </div>
             </>

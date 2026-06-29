@@ -45,12 +45,12 @@ export function Gamification({ data }: GamificationProps) {
 
   return (
     <>
-      <Card className="bg-orange-50/10 border-orange-200/20 break-inside-avoid mb-6">
+      <Card className="bg-primary/10 border-primary/20 break-inside-avoid mb-6">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-orange-500">
+          <CardTitle className="text-sm font-medium text-primary">
             Streak
           </CardTitle>
-          <Flame className="h-4 w-4 text-orange-500" />
+          <Flame className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{data.currentStreak} Nap</div>

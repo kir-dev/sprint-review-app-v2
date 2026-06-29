@@ -13,6 +13,9 @@ import { ProjectsModule } from './projects/projects.module';
 import { StatsModule } from './stats/stats.module';
 import { UsersModule } from './users/users.module';
 import { WorkPeriodsModule } from './work-periods/work-periods.module';
+import { SettingsModule } from './settings/settings.module';
+import { PositionsModule } from './positions/positions.module';
+import { EventCategoriesModule } from './event-categories/event-categories.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { WorkPeriodsModule } from './work-periods/work-periods.module';
     EventsModule,
     StatsModule,
     DashboardModule,
+    SettingsModule,
+    PositionsModule,
+    EventCategoriesModule,
   ],
   providers: [
     {

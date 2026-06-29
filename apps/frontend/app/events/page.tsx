@@ -12,10 +12,30 @@ import { EventsHeader } from './components/EventsHeader';
 import { EventsList } from './components/EventsList';
 import { useEventData } from './hooks/useEventData';
 import { useEventForm } from './hooks/useEventForm';
+import { EventCategory } from './types';
 
 export default function EventsPage() {
   const { user, token, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
+
+  const [categories, setCategories] = useState<EventCategory[]>([]);
+
+  // Fetch event categories
+  useEffect(() => {
+    if (token) {
+      fetch('/api/event-categories', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to fetch categories');
+          return res.json();
+        })
+        .then((data) => {
+          if (Array.isArray(data)) setCategories(data);
+        })
+        .catch((err) => console.error('Error fetching categories:', err));
+    }
+  }, [token]);
 
   // Custom hooks
   const {
@@ -64,7 +84,7 @@ export default function EventsPage() {
       name: formData.name,
       startDate: formData.startDate,
       endDate: formData.endDate || formData.startDate,
-      type: formData.type,
+      categoryId: formData.categoryId,
     };
 
     try {
@@ -158,6 +178,7 @@ export default function EventsPage() {
         <EventDialog
           isOpen={isDialogOpen}
           editingEvent={editingEvent}
+          categories={categories}
           formData={formData}
           isPending={isSubmitting}
           onFormDataChange={setFormData}

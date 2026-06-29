@@ -1,12 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
-import { Position } from '../../logs/types';
 
 interface UserDetails {
   id: number;
   fullName: string;
   email: string;
-  position: Position;
+  position: string;
   profileImage?: string;
+  positionDetails?: {
+    id: number;
+    name: string;
+    label: string;
+    color: string;
+    canManageSettings: boolean;
+    canExportLogs: boolean;
+    canManageEvents: boolean;
+    canManageProjects: boolean;
+    isLeader: boolean;
+  };
 }
 
 interface UserStats {

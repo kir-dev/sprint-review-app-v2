@@ -37,15 +37,8 @@ interface VisualizationsProps {
   };
 }
 
-// Specific colors for categories
-const CATEGORY_COLORS: Record<string, string> = {
-  PROJECT: 'hsl(14, 100%, 60%)', // Primary Orange (Requested)
-  RESPONSIBILITY: 'hsl(32, 95%, 60%)', // Orange-Yellow
-  EVENT: 'hsl(0, 0%, 40%)', // Gray
-  MAINTENANCE: 'hsl(14, 80%, 40%)', // Darker Primary
-  SIMONYI: 'hsl(48, 96%, 60%)', // Yellow
-  OTHER: 'hsl(0, 0%, 70%)', // Light Gray
-};
+import { useBranding } from '@/context/BrandingContext';
+import { getDynamicCategoryColors } from '@/lib/color-utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
   PROJECT: 'Projekt',
@@ -58,7 +51,13 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const DEFAULT_COLOR = 'hsl(0, 0%, 50%)';
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { value: number; name: string; payload: { translatedName?: string } }[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     // Use localized name if available in payload
     const name = payload[0].payload.translatedName || payload[0].name || label;
@@ -87,6 +86,8 @@ export function Visualizations({
   breakdownData,
   historyData,
 }: VisualizationsProps) {
+  const { settings } = useBranding();
+  const categoryColors = getDynamicCategoryColors(settings.primaryColor);
   const [activeTab, setActiveTab] = useState('weekly');
 
   // Translate category names for display
@@ -95,14 +96,20 @@ export function Visualizations({
     translatedName: CATEGORY_LABELS[item.name] || item.name,
   }));
 
+  interface TrendDataItem {
+    date?: string;
+    name?: string;
+    hours: number;
+  }
+
   const formatData = (
-    data: any[],
+    data: TrendDataItem[],
     type: 'weekly' | 'monthly' | 'workPeriod',
   ) => {
     if (!data) return [];
     return data.map((item) => {
-      let displayDate = item.name || item.date;
-      if (type === 'weekly' || type === 'monthly') {
+      let displayDate = item.name || item.date || '';
+      if ((type === 'weekly' || type === 'monthly') && item.date) {
         const d = new Date(item.date);
         if (type === 'monthly') {
           displayDate = d.toLocaleDateString('hu-HU', {
@@ -167,7 +174,7 @@ export function Visualizations({
                 {translatedBreakdown.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={CATEGORY_COLORS[entry.name] || DEFAULT_COLOR}
+                    fill={categoryColors[entry.name] || DEFAULT_COLOR}
                     stroke="var(--color-card)"
                     strokeWidth={2}
                   />
@@ -232,7 +239,7 @@ export function Visualizations({
                   <Bar
                     dataKey="hours"
                     name="Feldolgozott Órák"
-                    fill={CATEGORY_COLORS.PROJECT}
+                    fill={categoryColors.PROJECT}
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>

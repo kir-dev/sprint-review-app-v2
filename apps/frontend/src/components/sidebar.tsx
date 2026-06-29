@@ -12,11 +12,13 @@ import {
   FileText,
   FolderKanban,
   LayoutDashboard,
+  Settings,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { useBranding } from '@/context/BrandingContext';
 
 export const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -37,10 +39,18 @@ export function Sidebar({
   const pathname = usePathname();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { settings } = useBranding();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const logoSrc =
-    theme === 'light' ? '/Kir-Dev-Black.png' : '/Kir-Dev-White.png';
+    theme === 'light' ? settings.logoLightUrl : settings.logoDarkUrl;
+
+  const canManageSettings = user?.positionDetails?.canManageSettings === true;
+
+  const menuItems = [...navigation];
+  if (canManageSettings) {
+    menuItems.push({ name: 'Beállítások', href: '/admin/settings', icon: Settings });
+  }
 
   const handleLinkClick = () => {
     if (onClose) {
@@ -66,13 +76,13 @@ export function Sidebar({
         {!isCollapsed && (
           <>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg transition-transform">
-              <img src={logoSrc} alt="kir-dev" />
+              <img src={logoSrc} alt={settings.appName} className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold leading-none">
                 Sprint Review
               </span>
-              <span className="text-xs text-muted-foreground">Kir-Dev</span>
+              <span className="text-xs text-muted-foreground">{settings.appName}</span>
             </div>
           </>
         )}
@@ -80,7 +90,7 @@ export function Sidebar({
           <div className="flex h-8 w-8 items-center justify-center rounded-lg transition-all mx-auto">
             <img
               src={logoSrc}
-              alt="kir-dev"
+              alt={settings.appName}
               className="w-full h-full object-contain"
             />
           </div>
@@ -106,7 +116,7 @@ export function Sidebar({
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">
-        {navigation.map((item, index) => {
+        {menuItems.map((item, index) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + '/');
           return (
