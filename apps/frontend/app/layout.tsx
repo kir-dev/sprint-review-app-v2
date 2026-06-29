@@ -7,6 +7,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { BrandingProvider } from '@/context/BrandingContext';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { cache } from 'react';
 import type React from 'react';
 import './globals.css';
 
@@ -22,10 +23,9 @@ export const viewport: Viewport = {
 
 export const dynamic = 'force-dynamic';
 
-async function fetchBrandingSettings() {
+const fetchBrandingSettings = cache(async function fetchBrandingSettings() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
   try {
-    // Fetch directly from backend (without /api prefix) and disable cache for fresh settings on every load
     const res = await fetch(`${backendUrl}/settings/public`, {
       cache: 'no-store',
     });
@@ -36,7 +36,7 @@ async function fetchBrandingSettings() {
     console.error('Failed to fetch branding settings', error);
   }
   return null;
-}
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchBrandingSettings();

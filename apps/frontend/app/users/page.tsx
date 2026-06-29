@@ -34,8 +34,13 @@ export default function UsersPage() {
       fetch('/api/positions', {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then((res) => res.json())
-        .then((data) => setPositions(data))
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to fetch positions');
+          return res.json();
+        })
+        .then((data) => {
+          if (Array.isArray(data)) setPositions(data);
+        })
         .catch((err) => console.error('Error fetching positions:', err));
     }
   }, [token]);

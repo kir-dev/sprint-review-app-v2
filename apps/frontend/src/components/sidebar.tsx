@@ -45,8 +45,7 @@ export function Sidebar({
   const logoSrc =
     theme === 'light' ? settings.logoLightUrl : settings.logoDarkUrl;
 
-  const canManageSettings =
-    user?.position === 'KORVEZETO' || user?.positionDetails?.canManageSettings === true;
+  const canManageSettings = user?.positionDetails?.canManageSettings === true;
 
   const menuItems = [...navigation];
   if (canManageSettings) {
@@ -77,7 +76,7 @@ export function Sidebar({
         {!isCollapsed && (
           <>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg transition-transform">
-              <img src={logoSrc} alt={settings.appName} />
+              <img src={logoSrc} alt={settings.appName} className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold leading-none">

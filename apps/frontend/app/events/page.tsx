@@ -26,8 +26,13 @@ export default function EventsPage() {
       fetch('/api/event-categories', {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then((res) => res.json())
-        .then((data) => setCategories(data))
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to fetch categories');
+          return res.json();
+        })
+        .then((data) => {
+          if (Array.isArray(data)) setCategories(data);
+        })
         .catch((err) => console.error('Error fetching categories:', err));
     }
   }, [token]);

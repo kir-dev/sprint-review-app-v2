@@ -66,7 +66,7 @@ function LoginContent() {
   };
 
   const appName = settings?.appName || 'Sprint Review App';
-  const logoSrc = settings?.logoDarkUrl || 'Kir-Dev-White.png';
+  const logoSrc = settings?.logoDarkUrl || '/Kir-Dev-White.png';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-dark px-4">
@@ -74,7 +74,7 @@ function LoginContent() {
         <div className="flex justify-center mb-6">
           <img
             src={logoSrc}
-            alt="Logo"
+            alt={appName}
             className="max-w-48 h-auto"
           />
         </div>

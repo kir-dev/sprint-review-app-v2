@@ -43,6 +43,7 @@ export function EventCategoryDialog({
   const [catName, setCatName] = useState('');
   const [catLabel, setCatLabel] = useState('');
   const [catColor, setCatColor] = useState('#64748b');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Sync form states when editingCategory changes
   useEffect(() => {
@@ -62,6 +63,9 @@ export function EventCategoryDialog({
       toast.error('Minden mező kitöltése kötelező!');
       return;
     }
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     const payload = {
       name: catName.toUpperCase(),
@@ -107,6 +111,8 @@ export function EventCategoryDialog({
     } catch (err) {
       console.error(err);
       toast.error('Hálózati hiba történt a mentés során');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -177,7 +183,9 @@ export function EventCategoryDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Mégse
           </Button>
-          <Button onClick={handleSaveCategory}>Kategória mentése</Button>
+          <Button onClick={handleSaveCategory} disabled={isSubmitting}>
+            {isSubmitting ? 'Mentés...' : 'Kategória mentése'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -25,11 +25,11 @@ export function BrandingTab() {
   // Initialize branding form values
   useEffect(() => {
     if (brandingSettings) {
-      setAppName(brandingSettings.appName);
+      setAppName(brandingSettings.appName ?? '');
       setPrimaryColor(brandingSettings.primaryColor);
-      setLogoLightUrl(brandingSettings.logoLightUrl);
-      setLogoDarkUrl(brandingSettings.logoDarkUrl);
-      setFaviconUrl(brandingSettings.faviconUrl);
+      setLogoLightUrl(brandingSettings.logoLightUrl ?? '');
+      setLogoDarkUrl(brandingSettings.logoDarkUrl ?? '');
+      setFaviconUrl(brandingSettings.faviconUrl ?? '');
     }
   }, [brandingSettings]);
 

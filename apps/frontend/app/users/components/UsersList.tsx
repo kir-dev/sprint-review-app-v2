@@ -51,10 +51,8 @@ export function UsersList({
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
   const canEditPosition =
-    currentUser?.positionDetails?.isLeader ||
-    currentUser?.positionDetails?.canManageSettings ||
-    currentUser?.position === 'KORVEZETO' ||
-    currentUser?.position === 'KORVEZETO_HELYETTES';
+    currentUser?.positionDetails?.isLeader === true ||
+    currentUser?.positionDetails?.canManageSettings === true;
 
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
