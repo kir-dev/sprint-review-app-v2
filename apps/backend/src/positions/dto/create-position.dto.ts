@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
 export class CreatePositionDto {
   @ApiProperty({
@@ -8,6 +8,9 @@ export class CreatePositionDto {
   })
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[A-Z0-9_]+$/, {
+    message: 'Name must contain only uppercase letters, numbers, and underscores',
+  })
   name: string;
 
   @ApiProperty({

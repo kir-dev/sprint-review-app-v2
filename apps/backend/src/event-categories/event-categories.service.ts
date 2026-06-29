@@ -66,7 +66,7 @@ export class EventCategoriesService {
   async update(id: number, dto: UpdateEventCategoryDto) {
     const category = await this.findOne(id);
 
-    const data: any = { ...dto };
+    const data: { name?: string; label?: string; color?: string } = { ...dto };
     if (dto.name) {
       data.name = dto.name.toUpperCase();
 

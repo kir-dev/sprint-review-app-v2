@@ -141,8 +141,7 @@ export class LogsController {
   @UseGuards(RolesGuard)
   @Roles('canExportLogs')
   @ApiOperation({
-    summary:
-      'Export logs as CSV (restricted to KORVEZETO, KORVEZETO_HELYETTES, GAZDASAGIS)',
+    summary: 'Export logs as CSV (requires canExportLogs permission)',
   })
   @ApiQuery({
     name: 'userIds',

@@ -13,6 +13,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { UpdatePositionDto } from './dto/update-position.dto';
+import { UpdatePositionOrderDto } from './dto/update-position-order.dto';
 import { PositionsService } from './positions.service';
 
 @ApiTags('positions')
@@ -52,11 +53,12 @@ export class PositionsController {
   @UseGuards(RolesGuard)
   @Roles('canManageSettings')
   @ApiOperation({ summary: 'Update positions order (restricted to settings managers)' })
-  @ApiBody({ schema: { type: 'object', properties: { ids: { type: 'array', items: { type: 'number' } } }, required: ['ids'] } })
+  @ApiBody({ type: UpdatePositionOrderDto })
   @ApiResponse({ status: 200, description: 'Positions order updated successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  updateOrder(@Body('ids') ids: number[]) {
-    return this.positionsService.updateOrder(ids);
+  updateOrder(@Body() dto: UpdatePositionOrderDto) {
+    return this.positionsService.updateOrder(dto.ids);
   }
 
   @Patch(':id')

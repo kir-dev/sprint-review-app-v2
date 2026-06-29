@@ -19,6 +19,5 @@ export class CreateEventDto {
 
   @ApiProperty({ example: 1, description: 'ID of the Event Category' })
   @IsInt()
-  @IsNotEmpty()
   categoryId: number;
 }

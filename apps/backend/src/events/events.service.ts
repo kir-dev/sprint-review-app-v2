@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -15,6 +15,13 @@ export class EventService {
   }) {
     this.logger.log(`Creating event: ${data.name}`);
     try {
+      const category = await this.prisma.eventCategory.findUnique({
+        where: { id: data.categoryId },
+      });
+      if (!category) {
+        throw new BadRequestException(`Event category with ID ${data.categoryId} not found`);
+      }
+
       const event = await this.prisma.event.create({
         data: {
           name: data.name,

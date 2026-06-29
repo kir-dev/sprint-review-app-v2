@@ -28,7 +28,7 @@ export class UsersService {
     profileImage?: string;
     position?: string;
   }) {
-    this.logger.log(`Creating user: ${data.email}`);
+    this.logger.log('Creating user');
     try {
       const positionName = data.position || 'UJONC';
       const positionRecord = await this.prisma.position.findUnique({
@@ -55,10 +55,7 @@ export class UsersService {
       this.logger.log(`User created successfully: ID ${user.id}`);
       return this.mapUser(user);
     } catch (error) {
-      this.logger.error(
-        `Failed to create user: ${data.email}`,
-        (error as Error).stack,
-      );
+      this.logger.error('Failed to create user', (error as Error).stack);
       throw error;
     }
   }
@@ -133,7 +130,7 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    this.logger.log(`Fetching user with email: ${email}`);
+    this.logger.log('Fetching user by email');
     try {
       const user = await this.prisma.user.findUnique({
         where: { email },
@@ -143,7 +140,7 @@ export class UsersService {
       });
 
       if (!user) {
-        this.logger.warn(`User not found with email: ${email}`);
+        this.logger.warn('User not found by email lookup');
         throw new NotFoundException(`User with email ${email} not found`);
       }
 
@@ -152,10 +149,7 @@ export class UsersService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(
-        `Failed to fetch user with email: ${email}`,
-        (error as Error).stack,
-      );
+      this.logger.error('Failed to fetch user by email', (error as Error).stack);
       throw error;
     }
   }
@@ -181,7 +175,7 @@ export class UsersService {
           include: { position: true },
         });
 
-        if (currentUser && currentUser.position.name !== data.position) {
+        if (currentUser && currentUser.position && currentUser.position.name !== data.position.toUpperCase()) {
           const now = new Date();
 
           const newPositionRecord = await this.prisma.position.findUnique({

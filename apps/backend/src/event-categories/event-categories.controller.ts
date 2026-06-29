@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   UseGuards,
@@ -33,8 +34,8 @@ export class EventCategoriesController {
   @ApiParam({ name: 'id', type: 'number', description: 'Event Category ID' })
   @ApiResponse({ status: 200, description: 'Return the event category' })
   @ApiResponse({ status: 404, description: 'Event category not found' })
-  findOne(@Param('id') id: string) {
-    return this.eventCategoriesService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.eventCategoriesService.findOne(id);
   }
 
   @Post()
@@ -61,8 +62,8 @@ export class EventCategoriesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Event category not found' })
-  update(@Param('id') id: string, @Body() dto: UpdateEventCategoryDto) {
-    return this.eventCategoriesService.update(+id, dto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateEventCategoryDto) {
+    return this.eventCategoriesService.update(id, dto);
   }
 
   @Delete(':id')
@@ -75,7 +76,7 @@ export class EventCategoriesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Event category not found' })
-  remove(@Param('id') id: string) {
-    return this.eventCategoriesService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.eventCategoriesService.remove(id);
   }
 }
