@@ -2,5 +2,7 @@ node_modules
 dist
 apps/*/node_modules
 apps/*/dist
+apps/*/.next
+apps/*/tsconfig.tsbuildinfo
 .git
 .env

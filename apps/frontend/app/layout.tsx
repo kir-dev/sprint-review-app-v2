@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ThemedToaster } from '@/components/ThemedToaster';
 import { AuthProvider } from '@/context/AuthContext';
 import { BrandingProvider } from '@/context/BrandingContext';
+import { backendUrl } from '@/lib/backend';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { cache } from 'react';
@@ -24,9 +25,8 @@ export const viewport: Viewport = {
 export const dynamic = 'force-dynamic';
 
 const fetchBrandingSettings = cache(async function fetchBrandingSettings() {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
   try {
-    const res = await fetch(`${backendUrl}/settings/public`, {
+    const res = await fetch(`${backendUrl()}/settings/public`, {
       cache: 'no-store',
     });
     if (res.ok) {
@@ -77,6 +77,17 @@ export default async function RootLayout({
     >
       <head>
         <meta name="apple-mobile-web-app-title" content={appName} />
+        {/* Runtime config for the browser. Only the AuthSCH login redirect
+            needs it: that navigation must land on the backend origin directly,
+            because the backend starts an express-session there. Read via
+            src/lib/clientEnv.ts. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__ENV__=${JSON.stringify({
+              backendUrl: backendUrl(),
+            }).replace(/</g, '\\u003c')}`,
+          }}
+        />
       </head>
       <body className={`font-sans antialiased`}>
         <ThemeProvider defaultTheme="dark">

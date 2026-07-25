@@ -1,6 +1,7 @@
 'use client';
 
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
+import { browserBackendUrl } from '@/lib/clientEnv';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -59,10 +60,9 @@ function LoginContent() {
   }
 
   const handleLogin = () => {
-    // Redirect to backend AuthSCH login
-    const backendUrl =
-      process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-    window.location.href = `${backendUrl}/auth/login`;
+    // Redirect the browser straight to the backend AuthSCH login (keeps the
+    // OAuth flow on the backend origin). URL comes from runtime config.
+    window.location.href = `${browserBackendUrl()}/auth/login`;
   };
 
   const appName = settings?.appName || 'Sprint Review App';
