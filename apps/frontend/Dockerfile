@@ -1,12 +1,13 @@
 # --- Build Stage ---
-# node:24-slim is the Active LTS line (EOL 2028-04-30) and mirrors the official
-# Next.js Docker example. Debian-based rather than Alpine, so native deps that
-# Next pulls in (sharp) get glibc prebuilds and no libc6-compat shim is needed.
+# node:24-alpine is the Active LTS line (EOL 2028-04-30). Alpine rather than
+# Debian slim: the Debian base alone costs ~110MB more, and the native deps we
+# actually ship (sharp, @next/swc) all publish musl prebuilds that yarn already
+# resolves from yarn.lock, so no libc6-compat shim is needed.
 #
 # Rebuilds should get the latest 24.x.
 # Reproducibility comes from yarn.lock and the immutable sha-<commit> tag the
 # build workflow publishes to Harbor.
-FROM node:24-slim AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -27,11 +28,29 @@ COPY apps/frontend ./apps/frontend
 # deployed instances. See the runner stage / k8s Deployment.
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the frontend (produces apps/frontend/.next/standalone)
-RUN yarn workspace frontend build
+# Build the frontend (produces apps/frontend/.next/standalone), then prune the
+# traced node_modules. The tracer is conservative and yarn v1 ignores the `libc`
+# field on optional deps, so ~35MB of the 80MB tree is unreachable at runtime:
+#
+#   typescript (19MB)                   only used by `next build` type-checking
+#   @img/sharp-libvips-linux-* (16MB)   glibc libvips; this image is musl/Alpine
+#   @img/sharp-linux-* (0.5MB)          ditto, the glibc binding
+#
+# The musl variants (@img/*-linuxmusl-*) are deliberately kept — sharp resolves
+# them at runtime for next/image. Note the `linux-` hyphen in the globs: it is
+# what keeps `linuxmusl-` from matching.
+#
+# This has to happen in the builder, not the runner: an `rm` after the COPY
+# would add a whitelist layer without shrinking the image below it.
+# outputFileTracingExcludes would be the idiomatic fix, but Turbopack builds
+# ignore it (see next.config.mjs).
+RUN yarn workspace frontend build \
+  && rm -rf apps/frontend/.next/standalone/node_modules/typescript \
+    apps/frontend/.next/standalone/node_modules/@img/sharp-libvips-linux-* \
+    apps/frontend/.next/standalone/node_modules/@img/sharp-linux-*
 
 # --- Production Stage ---
-FROM node:24-slim AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 
