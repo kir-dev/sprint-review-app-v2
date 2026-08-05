@@ -31,7 +31,13 @@ services:
       AUTHSCH_CLIENT_ID: ${AUTHSCH_CLIENT_ID}
       AUTHSCH_CLIENT_SECRET: ${AUTHSCH_CLIENT_SECRET}
       JWT_SECRET: ${JWT_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: development
       PORT: 3001
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3001}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-true}
     networks:
       - app-network
     volumes:

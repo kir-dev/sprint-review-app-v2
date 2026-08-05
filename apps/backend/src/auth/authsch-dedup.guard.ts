@@ -19,12 +19,11 @@ export class AuthSchDedupGuard extends AuthGuard('authsch') {
     const response = context.switchToHttp().getResponse<Response>();
     const code = request.query?.code;
 
-    this.logger.log(`🛡️  Guard checking code: ${code}`);
-    this.logger.log(`🛡️  Request headers: ${JSON.stringify(request.headers)}`);
+    this.logger.log('Checking AuthSCH callback for duplicate code');
 
     // Check if code was already processed
     if (code && this.processedCodes.has(code)) {
-      this.logger.warn(`⚠️  BLOCKED: Code already processed: ${code}`);
+      this.logger.warn('Blocked duplicate AuthSCH callback');
 
       // Return 204 No Content - acknowledges the request but provides no body
       // This is the cleanest way to handle duplicate requests
@@ -36,19 +35,19 @@ export class AuthSchDedupGuard extends AuthGuard('authsch') {
 
     // Mark code as being processed
     if (code) {
-      this.logger.log(`✅ New code, marking as processed: ${code}`);
+      this.logger.log('Tracking new AuthSCH callback code');
       this.processedCodes.add(code);
 
       // Cleanup after 5 minutes
       setTimeout(() => {
         this.processedCodes.delete(code);
-        this.logger.log(`🗑️  Cleaned up code from cache: ${code}`);
+        this.logger.log('Expired AuthSCH callback code');
       }, 300000);
     }
 
     // Proceed with normal AuthGuard logic
     const result = (await super.canActivate(context)) as boolean;
-    this.logger.log(`🛡️  Guard result: ${result}`);
+    this.logger.log(`AuthSCH guard completed: ${result}`);
 
     return result;
   }

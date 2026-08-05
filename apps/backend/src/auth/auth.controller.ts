@@ -39,19 +39,17 @@ export class AuthController {
   })
   @UseGuards(AuthSchDedupGuard)
   oauthRedirect(@CurrentUser() user: any, @Res() res: Response) {
-    this.logger.log(
-      `🔵 Controller: Processing successful auth for ${user?.email}`,
-    );
+    this.logger.log('Processing successful AuthSCH callback');
 
     const jwt = this.authService.login(user);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-
-    this.logger.log(
-      `🔍 DEBUG: process.env.FRONTEND_URL = "${process.env.FRONTEND_URL}"`,
+    const frontendUrl = new URL(
+      process.env.FRONTEND_URL || 'http://localhost:3000',
     );
-    this.logger.log(`🔍 DEBUG: Resolved frontendUrl = "${frontendUrl}"`);
-    this.logger.log(`🚀 Redirecting to: ${frontendUrl}/login?jwt=...`);
-    return res.redirect(`${frontendUrl}/login?jwt=${jwt}`);
+
+    this.logger.log('Redirecting authenticated user to frontend');
+    const redirectUrl = new URL('/login', frontendUrl);
+    redirectUrl.searchParams.set('jwt', jwt);
+    return res.redirect(redirectUrl.toString());
   }
 
   /**

@@ -1,31 +1,28 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+
+type PrismaLogLevel = 'query' | 'info' | 'warn' | 'error';
+
+export function getPrismaLogLevels(
+  nodeEnv: string | undefined,
+): PrismaLogLevel[] {
+  return nodeEnv === 'production' ? [] : ['query', 'info', 'warn', 'error'];
+}
 
 @Injectable()
 export class PrismaService
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
+  implements OnApplicationShutdown
 {
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
     super({
-      log: ['query', 'info', 'warn', 'error'],
+      log: getPrismaLogLevels(process.env.NODE_ENV),
     });
   }
 
-  async onModuleInit() {
-    this.logger.log('Connecting to database...');
-    await this.$connect();
-    this.logger.log('Database connected successfully');
-  }
-
-  async onModuleDestroy() {
+  async onApplicationShutdown() {
     this.logger.log('Disconnecting from database...');
     await this.$disconnect();
     this.logger.log('Database disconnected');

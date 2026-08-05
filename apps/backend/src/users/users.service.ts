@@ -1,5 +1,11 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { logServiceError } from '../common/logging/safe-logger';
 
 @Injectable()
 export class UsersService {
@@ -55,7 +61,7 @@ export class UsersService {
       this.logger.log(`User created successfully: ID ${user.id}`);
       return this.mapUser(user);
     } catch (error) {
-      this.logger.error('Failed to create user', (error as Error).stack);
+      logServiceError(this.logger, 'create_user');
       throw error;
     }
   }
@@ -78,7 +84,7 @@ export class UsersService {
       this.logger.log(`Found ${users.length} users`);
       return users.map((user) => this.mapUser(user));
     } catch (error) {
-      this.logger.error('Failed to fetch users', (error as Error).stack);
+      logServiceError(this.logger, 'list_users');
       throw error;
     }
   }
@@ -115,16 +121,13 @@ export class UsersService {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
 
-      this.logger.log(`User found: ${user.email}`);
+      this.logger.log(`User found: ID ${user.id}`);
       return this.mapUser(user);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(
-        `Failed to fetch user with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_user');
       throw error;
     }
   }
@@ -149,7 +152,7 @@ export class UsersService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error('Failed to fetch user by email', (error as Error).stack);
+      logServiceError(this.logger, 'get_user_by_email');
       throw error;
     }
   }
@@ -175,7 +178,11 @@ export class UsersService {
           include: { position: true },
         });
 
-        if (currentUser && currentUser.position && currentUser.position.name !== data.position.toUpperCase()) {
+        if (
+          currentUser &&
+          currentUser.position &&
+          currentUser.position.name !== data.position.toUpperCase()
+        ) {
           const now = new Date();
 
           const newPositionRecord = await this.prisma.position.findUnique({
@@ -183,7 +190,9 @@ export class UsersService {
           });
 
           if (!newPositionRecord) {
-            throw new BadRequestException(`Position ${data.position} not found`);
+            throw new BadRequestException(
+              `Position ${data.position} not found`,
+            );
           }
           positionIdToSet = newPositionRecord.id;
 
@@ -246,10 +255,7 @@ export class UsersService {
       this.logger.log(`User updated successfully: ID ${user.id}`);
       return this.mapUser(user);
     } catch (error) {
-      this.logger.error(
-        `Failed to update user with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'update_user');
       throw error;
     }
   }
@@ -263,10 +269,7 @@ export class UsersService {
       this.logger.log(`User deleted successfully: ID ${user.id}`);
       return user;
     } catch (error) {
-      this.logger.error(
-        `Failed to delete user with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'delete_user');
       throw error;
     }
   }
@@ -301,10 +304,7 @@ export class UsersService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(
-        `Failed to fetch projects for user with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_user_projects');
       throw error;
     }
   }
@@ -338,10 +338,7 @@ export class UsersService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(
-        `Failed to fetch logs for user with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_user_logs');
       throw error;
     }
   }
