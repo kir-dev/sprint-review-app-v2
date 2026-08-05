@@ -23,9 +23,9 @@ RUN yarn install --frozen-lockfile
 # Copy the source code for the frontend
 COPY apps/frontend ./apps/frontend
 
-# NOTE: the backend URL is NOT baked in here. It is resolved at runtime from
-# the BACKEND_PUBLIC_URL env var, so this single image can serve any number of
-# deployed instances. See the runner stage / k8s Deployment.
+# NOTE: backend URLs are NOT baked in here. They are resolved from runtime env
+# vars, so this single image can serve any number of deployed instances. See
+# the runner stage / k8s Deployment.
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the frontend (produces apps/frontend/.next/standalone), then prune the

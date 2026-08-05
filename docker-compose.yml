@@ -35,8 +35,8 @@ services:
     networks:
       - app-network
     volumes:
-       - ./apps/backend:/app/apps/backend
-       - /app/apps/backend/node_modules
+      - ./apps/backend:/app/apps/backend
+      - /app/apps/backend/node_modules
 
   # Production frontend image (Next.js standalone server).
   # Behind the "prod" profile so `docker-compose up` (used by `yarn dev`) does
@@ -51,7 +51,9 @@ services:
     ports:
       - '127.0.0.1:3000:3000'
     environment:
-      # Resolved at runtime (no rebuild needed to change the target backend).
+      # Server-side requests use the Compose service name. The public URL is
+      # injected into the browser for the AuthSCH redirect.
+      BACKEND_INTERNAL_URL: http://backend:3001
       BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3001}
       PORT: 3000
     networks:

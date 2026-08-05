@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
   // Produce a self-contained server build (.next/standalone) for a small
   // production Docker image. See apps/frontend/Dockerfile.
   output: 'standalone',

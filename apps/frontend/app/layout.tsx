@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ThemedToaster } from '@/components/ThemedToaster';
 import { AuthProvider } from '@/context/AuthContext';
 import { BrandingProvider } from '@/context/BrandingContext';
-import { backendUrl } from '@/lib/backend';
+import { backendUrl, publicBackendUrl } from '@/lib/backend';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { cache } from 'react';
@@ -70,10 +70,12 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      style={{
-        '--color-primary': primaryColor,
-        '--color-ring': primaryColor,
-      } as React.CSSProperties}
+      style={
+        {
+          '--color-primary': primaryColor,
+          '--color-ring': primaryColor,
+        } as React.CSSProperties
+      }
     >
       <head>
         <meta name="apple-mobile-web-app-title" content={appName} />
@@ -84,7 +86,7 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `window.__ENV__=${JSON.stringify({
-              backendUrl: backendUrl(),
+              backendUrl: publicBackendUrl(),
             }).replace(/</g, '\\u003c')}`,
           }}
         />
