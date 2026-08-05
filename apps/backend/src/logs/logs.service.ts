@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { LogCategory, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { logServiceError } from '../common/logging/safe-logger';
 import { CreateLogDto } from './dto/create-log.dto';
 import { UpdateLogDto } from './dto/update-log.dto';
 
@@ -43,10 +44,7 @@ export class LogsService {
       this.logger.log(`Log created successfully: ID ${log.id}`);
       return log;
     } catch (error) {
-      this.logger.error(
-        `Failed to create log for user ID: ${dto.userId}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'create_log');
       throw error;
     }
   }
@@ -60,7 +58,7 @@ export class LogsService {
     startDate?: string;
     endDate?: string;
   }) {
-    this.logger.log('Fetching logs with filters', filters);
+    this.logger.log('Fetching logs');
     try {
       const where: Prisma.LogWhereInput = {};
 
@@ -125,7 +123,7 @@ export class LogsService {
       this.logger.log(`Found ${logs.length} logs`);
       return logs;
     } catch (error) {
-      this.logger.error('Failed to fetch logs', (error as Error).stack);
+      logServiceError(this.logger, 'list_logs');
       throw error;
     }
   }
@@ -154,10 +152,7 @@ export class LogsService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(
-        `Failed to fetch log with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_log');
       throw error;
     }
   }
@@ -201,10 +196,7 @@ export class LogsService {
       this.logger.log(`Log updated successfully: ID ${log.id}`);
       return log;
     } catch (error) {
-      this.logger.error(
-        `Failed to update log with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'update_log');
       throw error;
     }
   }
@@ -218,10 +210,7 @@ export class LogsService {
       this.logger.log(`Log deleted successfully: ID ${log.id}`);
       return log;
     } catch (error) {
-      this.logger.error(
-        `Failed to delete log with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'delete_log');
       throw error;
     }
   }
@@ -232,7 +221,7 @@ export class LogsService {
     startDate?: string;
     endDate?: string;
   }): Promise<{ csv: string; filenameSuffix: string }> {
-    this.logger.log('Exporting logs with filters', filters);
+    this.logger.log('Exporting logs');
 
     const where: Prisma.LogWhereInput = {};
 
@@ -306,7 +295,7 @@ export class LogsService {
       filenameSuffix = sanitizeFilename(logs[0].workPeriod.name);
     }
 
-    this.logger.log(`Exported ${logs.length} logs (${filenameSuffix})`);
+    this.logger.log(`Exported ${logs.length} logs`);
     return { csv, filenameSuffix };
   }
 
@@ -391,10 +380,7 @@ export class LogsService {
         logsByProject,
       };
     } catch (error) {
-      this.logger.error(
-        `Failed to fetch stats for user ID: ${userId}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_user_log_stats');
       throw error;
     }
   }
@@ -555,10 +541,7 @@ export class LogsService {
         contributorsList,
       };
     } catch (error) {
-      this.logger.error(
-        `Failed to fetch stats for project ID: ${projectId}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_project_log_stats');
       throw error;
     }
   }

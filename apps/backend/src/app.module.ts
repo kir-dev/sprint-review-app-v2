@@ -16,6 +16,7 @@ import { WorkPeriodsModule } from './work-periods/work-periods.module';
 import { SettingsModule } from './settings/settings.module';
 import { PositionsModule } from './positions/positions.module';
 import { EventCategoriesModule } from './event-categories/event-categories.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { EventCategoriesModule } from './event-categories/event-categories.modul
     SettingsModule,
     PositionsModule,
     EventCategoriesModule,
+    HealthModule,
   ],
   providers: [
     {

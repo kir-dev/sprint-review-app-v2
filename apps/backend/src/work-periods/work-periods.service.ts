@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { logServiceError } from '../common/logging/safe-logger';
 import { WorkPeriod } from './entities/work-period.entity';
 
 @Injectable()
@@ -9,7 +10,7 @@ export class WorkPeriodsService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: { name: string; startDate: string; endDate: string }) {
-    this.logger.log(`Creating work period: ${data.name}`);
+    this.logger.log('Creating work period');
     try {
       const workPeriod = await this.prisma.workPeriod.create({
         data: {
@@ -21,10 +22,7 @@ export class WorkPeriodsService {
       this.logger.log(`Work period created successfully: ID ${workPeriod.id}`);
       return workPeriod;
     } catch (error) {
-      this.logger.error(
-        `Failed to create work period: ${data.name}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'create_work_period');
       throw error;
     }
   }
@@ -47,7 +45,7 @@ export class WorkPeriodsService {
       this.logger.log(`Found ${workPeriods.length} work periods`);
       return workPeriods;
     } catch (error) {
-      this.logger.error('Failed to fetch work periods', (error as Error).stack);
+      logServiceError(this.logger, 'list_work_periods');
       throw error;
     }
   }
@@ -73,16 +71,13 @@ export class WorkPeriodsService {
         throw new NotFoundException(`Work period with ID ${id} not found`);
       }
 
-      this.logger.log(`Work period found: ${workPeriod.name}`);
+      this.logger.log(`Work period found: ID ${workPeriod.id}`);
       return workPeriod;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(
-        `Failed to fetch work period with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_work_period');
       throw error;
     }
   }
@@ -140,7 +135,7 @@ export class WorkPeriodsService {
           endDate = new Date(year, 11, 31); // December 31
         }
 
-        this.logger.log(`Creating new work period: ${name}`);
+        this.logger.log('Creating current work period automatically');
         workPeriod = await this.prisma.workPeriod.create({
           data: {
             name,
@@ -156,19 +151,14 @@ export class WorkPeriodsService {
           },
         });
 
-        this.logger.log(
-          `Work period created automatically: ${workPeriod.name}`,
-        );
+        this.logger.log('Current work period created automatically');
       } else {
-        this.logger.log(`Current work period found: ${workPeriod.name}`);
+        this.logger.log('Current work period found');
       }
 
       return workPeriod;
     } catch (error) {
-      this.logger.error(
-        'Failed to fetch or create current work period',
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_or_create_current_work_period');
       throw error;
     }
   }
@@ -201,10 +191,7 @@ export class WorkPeriodsService {
       this.logger.log(`Work period updated successfully: ID ${workPeriod.id}`);
       return workPeriod;
     } catch (error) {
-      this.logger.error(
-        `Failed to update work period with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'update_work_period');
       throw error;
     }
   }
@@ -218,10 +205,7 @@ export class WorkPeriodsService {
       this.logger.log(`Work period deleted successfully: ID ${workPeriod.id}`);
       return workPeriod;
     } catch (error) {
-      this.logger.error(
-        `Failed to delete work period with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'delete_work_period');
       throw error;
     }
   }
@@ -255,10 +239,7 @@ export class WorkPeriodsService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(
-        `Failed to fetch logs for work period with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_work_period_logs');
       throw error;
     }
   }
@@ -314,7 +295,7 @@ export class WorkPeriodsService {
         {} as Record<string, number>,
       );
 
-      this.logger.log(`Stats calculated for work period: ${workPeriod.name}`);
+      this.logger.log(`Stats calculated for work period ID: ${workPeriod.id}`);
 
       return {
         workPeriod: {
@@ -336,10 +317,7 @@ export class WorkPeriodsService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      this.logger.error(
-        `Failed to fetch stats for work period with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_work_period_stats');
       throw error;
     }
   }

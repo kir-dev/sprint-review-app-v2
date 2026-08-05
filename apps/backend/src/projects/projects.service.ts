@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { logServiceError } from '../common/logging/safe-logger';
 
 @Injectable()
 export class ProjectService {
@@ -14,9 +15,7 @@ export class ProjectService {
     projectManagerId?: number;
     memberIds?: number[];
   }) {
-    this.logger.log(
-      `Creating project: ${data.name} with ${data.memberIds?.length || 0} members`,
-    );
+    this.logger.log('Creating project');
     try {
       const project = await this.prisma.project.create({
         data: {
@@ -36,10 +35,7 @@ export class ProjectService {
       this.logger.log(`Project created successfully: ID ${project.id}`);
       return project;
     } catch (error) {
-      this.logger.error(
-        `Failed to create project: ${data.name}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'create_project');
       throw error;
     }
   }
@@ -56,7 +52,7 @@ export class ProjectService {
       this.logger.log(`Found ${projects.length} projects`);
       return projects;
     } catch (error) {
-      this.logger.error('Failed to fetch projects', (error as Error).stack);
+      logServiceError(this.logger, 'list_projects');
       throw error;
     }
   }
@@ -72,16 +68,13 @@ export class ProjectService {
         },
       });
       if (project) {
-        this.logger.log(`Project found: ${project.name}`);
+        this.logger.log(`Project found: ID ${project.id}`);
       } else {
         this.logger.warn(`Project with ID ${id} not found`);
       }
       return project;
     } catch (error) {
-      this.logger.error(
-        `Failed to fetch project with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_project');
       throw error;
     }
   }
@@ -116,13 +109,10 @@ export class ProjectService {
           projectManager: true,
         },
       });
-      this.logger.log(`Project updated successfully: ${project.name}`);
+      this.logger.log(`Project updated successfully: ID ${project.id}`);
       return project;
     } catch (error) {
-      this.logger.error(
-        `Failed to update project with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'update_project');
       throw error;
     }
   }
@@ -133,13 +123,10 @@ export class ProjectService {
       const project = await this.prisma.project.delete({
         where: { id },
       });
-      this.logger.log(`Project deleted successfully: ${project.name}`);
+      this.logger.log(`Project deleted successfully: ID ${project.id}`);
       return project;
     } catch (error) {
-      this.logger.error(
-        `Failed to delete project with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'delete_project');
       throw error;
     }
   }

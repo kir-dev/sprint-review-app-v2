@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { logServiceError } from '../common/logging/safe-logger';
 
 @Injectable()
 export class EventService {
@@ -13,13 +14,15 @@ export class EventService {
     endDate: string;
     categoryId: number;
   }) {
-    this.logger.log(`Creating event: ${data.name}`);
+    this.logger.log('Creating event');
     try {
       const category = await this.prisma.eventCategory.findUnique({
         where: { id: data.categoryId },
       });
       if (!category) {
-        throw new BadRequestException(`Event category with ID ${data.categoryId} not found`);
+        throw new BadRequestException(
+          `Event category with ID ${data.categoryId} not found`,
+        );
       }
 
       const event = await this.prisma.event.create({
@@ -39,10 +42,7 @@ export class EventService {
       this.logger.log(`Event created successfully: ID ${event.id}`);
       return event;
     } catch (error) {
-      this.logger.error(
-        `Failed to create event: ${data.name}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'create_event');
       throw error;
     }
   }
@@ -64,7 +64,7 @@ export class EventService {
       this.logger.log(`Found ${events.length} events`);
       return events;
     } catch (error) {
-      this.logger.error('Failed to fetch events', (error as Error).stack);
+      logServiceError(this.logger, 'list_events');
       throw error;
     }
   }
@@ -83,16 +83,13 @@ export class EventService {
         },
       });
       if (event) {
-        this.logger.log(`Event found: ${event.name}`);
+        this.logger.log(`Event found: ID ${event.id}`);
       } else {
         this.logger.warn(`Event with ID ${id} not found`);
       }
       return event;
     } catch (error) {
-      this.logger.error(
-        `Failed to fetch event with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'get_event');
       throw error;
     }
   }
@@ -123,13 +120,10 @@ export class EventService {
           },
         },
       });
-      this.logger.log(`Event updated successfully: ${event.name}`);
+      this.logger.log(`Event updated successfully: ID ${event.id}`);
       return event;
     } catch (error) {
-      this.logger.error(
-        `Failed to update event with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'update_event');
       throw error;
     }
   }
@@ -140,13 +134,10 @@ export class EventService {
       const event = await this.prisma.event.delete({
         where: { id },
       });
-      this.logger.log(`Event deleted successfully: ${event.name}`);
+      this.logger.log(`Event deleted successfully: ID ${event.id}`);
       return event;
     } catch (error) {
-      this.logger.error(
-        `Failed to delete event with ID: ${id}`,
-        (error as Error).stack,
-      );
+      logServiceError(this.logger, 'delete_event');
       throw error;
     }
   }

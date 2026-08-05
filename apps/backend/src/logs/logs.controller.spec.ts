@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { Difficulty, LogCategory } from './dto/create-log.dto';
 import { LogsController } from './logs.controller';
 import { LogsService } from './logs.service';
@@ -24,7 +25,10 @@ describe('LogsController', () => {
           },
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<LogsController>(LogsController);
     service = module.get<LogsService>(LogsService);
