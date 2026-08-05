@@ -1,6 +1,7 @@
 'use client';
 
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
+import { browserBackendUrl } from '@/lib/clientEnv';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -9,7 +10,10 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, user, token, isLoading, error } = useAuth();
-  const [settings, setSettings] = useState<{ appName: string; logoDarkUrl: string } | null>(null);
+  const [settings, setSettings] = useState<{
+    appName: string;
+    logoDarkUrl: string;
+  } | null>(null);
 
   useEffect(() => {
     fetch('/api/settings/public', { cache: 'no-store' })
@@ -18,7 +22,9 @@ function LoginContent() {
         throw new Error();
       })
       .then((data) => setSettings(data))
-      .catch((err) => console.error('Failed to fetch public settings on login page', err));
+      .catch((err) =>
+        console.error('Failed to fetch public settings on login page', err),
+      );
   }, []);
 
   useEffect(() => {
@@ -59,10 +65,9 @@ function LoginContent() {
   }
 
   const handleLogin = () => {
-    // Redirect to backend AuthSCH login
-    const backendUrl =
-      process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-    window.location.href = `${backendUrl}/auth/login`;
+    // Redirect the browser straight to the backend AuthSCH login (keeps the
+    // OAuth flow on the backend origin). URL comes from runtime config.
+    window.location.href = `${browserBackendUrl()}/auth/login`;
   };
 
   const appName = settings?.appName || 'Sprint Review App';
@@ -72,15 +77,9 @@ function LoginContent() {
     <div className="min-h-screen flex items-center justify-center bg-dark px-4">
       <div className="bg-dark-lighter border border-dark rounded-3xl shadow-2xl p-6 md:p-12 max-w-md w-full text-center">
         <div className="flex justify-center mb-6">
-          <img
-            src={logoSrc}
-            alt={appName}
-            className="max-w-48 h-auto"
-          />
+          <img src={logoSrc} alt={appName} className="max-w-48 h-auto" />
         </div>
-        <h1 className="text-4xl font-bold text-white mb-3">
-          {appName}
-        </h1>
+        <h1 className="text-4xl font-bold text-white mb-3">{appName}</h1>
         <p className="text-gray-400 mb-10">
           Jelentkezz be az AuthSCH-val a folytatáshoz
         </p>
