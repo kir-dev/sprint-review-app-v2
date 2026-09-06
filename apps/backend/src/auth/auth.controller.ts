@@ -1,69 +1,55 @@
 import { CurrentUser } from '@kir-dev/passport-authsch';
-import { Controller, Get, Logger, Res, UseGuards } from '@nestjs/common';
+import type { AuthSchProfile } from '@kir-dev/passport-authsch';
+import { Controller, Get, Res, UseFilters, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import type { Response } from 'express';
+import { Public } from '../common/decorators/public.decorator';
+import { AuthCallbackFilter } from './auth-callback.filter';
 import { AuthService } from './auth.service';
 import { AuthSchDedupGuard } from './authsch-dedup.guard';
-import { Public } from '../common/decorators/public.decorator';
 
+/** Handles AuthSCH redirects and current-user reads. */
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
+  constructor(
+    private readonly auth: AuthService,
+    private readonly config: ConfigService,
+  ) {}
 
-  constructor(private authService: AuthService) {}
-
-  /**
-   * Redirects to the authsch login page
-   */
   @Public()
   @Get('login')
+  @UseFilters(AuthCallbackFilter)
   @ApiOperation({ summary: 'Initiate AuthSCH login' })
   @ApiResponse({ status: 302, description: 'Redirects to AuthSCH login page' })
   @UseGuards(AuthGuard('authsch'))
-  login() {
-    // never called, AuthGuard redirects to AuthSCH
-  }
+  login() {}
 
-  /**
-   * Endpoint for authsch to call after login
-   * Redirects to the frontend with the jwt token
-   */
   @Public()
   @Get('callback')
-  @ApiOperation({ summary: 'AuthSCH callback endpoint' })
-  @ApiResponse({
-    status: 302,
-    description: 'Redirects to frontend with JWT token',
-  })
+  @UseFilters(AuthCallbackFilter)
   @UseGuards(AuthSchDedupGuard)
-  oauthRedirect(@CurrentUser() user: any, @Res() res: Response) {
-    this.logger.log(
-      `🔵 Controller: Processing successful auth for ${user?.email}`,
+  @ApiOperation({ summary: 'Validate group membership and issue an application session' })
+  @ApiResponse({ status: 302, description: 'Redirects to login with a session or an error code' })
+  async oauthRedirect(@CurrentUser() profile: AuthSchProfile, @Res() res: Response) {
+    const jwt = await this.auth.login(profile);
+    const url = new URL(
+      '/login',
+      this.config.get<string>('FRONTEND_URL') || 'http://localhost:3000',
     );
-
-    const jwt = this.authService.login(user);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-
-    this.logger.log(
-      `🔍 DEBUG: process.env.FRONTEND_URL = "${process.env.FRONTEND_URL}"`,
-    );
-    this.logger.log(`🔍 DEBUG: Resolved frontendUrl = "${frontendUrl}"`);
-    this.logger.log(`🚀 Redirecting to: ${frontendUrl}/login?jwt=...`);
-    return res.redirect(`${frontendUrl}/login?jwt=${jwt}`);
+    url.searchParams.set('jwt', jwt);
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    return res.redirect(url.toString());
   }
 
-  /**
-   * Get current user profile
-   */
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Return current user' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getProfile(@CurrentUser() user: any) {
-    // Fetch fresh user data from database to include latest updates
-    const freshUser = await this.authService.getUserById(user.id);
-    return freshUser || user;
+  @ApiResponse({ status: 401, description: 'Invalid or expired membership session' })
+  getProfile(@CurrentUser() user: { id: number }) {
+    return this.auth.getUserById(user.id);
   }
 }

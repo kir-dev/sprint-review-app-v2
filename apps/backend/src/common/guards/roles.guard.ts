@@ -45,7 +45,7 @@ export class RolesGuard implements CanActivate {
       );
     }
 
-    // 1. The circle leader (isLeader: true) always has access to everything
+    // 1. The group leader (isLeader: true) always has access to everything
     if (user.position.isLeader) {
       return true;
     }

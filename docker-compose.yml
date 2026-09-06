@@ -31,6 +31,7 @@ services:
       AUTHSCH_CLIENT_ID: ${AUTHSCH_CLIENT_ID}
       AUTHSCH_CLIENT_SECRET: ${AUTHSCH_CLIENT_SECRET}
       JWT_SECRET: ${JWT_SECRET}
+      AUTHSCH_GROUP_ID: ${AUTHSCH_GROUP_ID}
       PORT: 3001
     networks:
       - app-network

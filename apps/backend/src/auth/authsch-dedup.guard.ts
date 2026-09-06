@@ -1,55 +1,28 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Response } from 'express';
+import { createHash } from 'node:crypto';
+import type { Request, Response } from 'express';
 
-/**
- * Custom AuthSCH Guard that prevents duplicate authorization code usage.
- *
- * OAuth authorization codes are single-use tokens. Due to browser behavior
- * (duplicate requests, redirects, etc.), the same code might be submitted twice.
- * This guard caches recently seen codes to prevent the second attempt.
- */
+const CODE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+/** Prevents repeat authorization-code use without retaining or logging credentials. */
 @Injectable()
 export class AuthSchDedupGuard extends AuthGuard('authsch') {
-  private readonly logger = new Logger(AuthSchDedupGuard.name);
   private readonly processedCodes = new Set<string>();
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
-    const code = request.query?.code;
-
-    this.logger.log(`🛡️  Guard checking code: ${code}`);
-    this.logger.log(`🛡️  Request headers: ${JSON.stringify(request.headers)}`);
-
-    // Check if code was already processed
-    if (code && this.processedCodes.has(code)) {
-      this.logger.warn(`⚠️  BLOCKED: Code already processed: ${code}`);
-
-      // Return 204 No Content - acknowledges the request but provides no body
-      // This is the cleanest way to handle duplicate requests
-      response.status(204).end();
-
-      // Return false to stop further processing
-      return false;
+    const code = request.query.code;
+    if (typeof code === 'string') {
+      const hash = createHash('sha256').update(code).digest('hex');
+      if (this.processedCodes.has(hash)) {
+        response.status(204).end();
+        return false;
+      }
+      this.processedCodes.add(hash);
+      setTimeout(() => this.processedCodes.delete(hash), CODE_CACHE_TTL_MS).unref();
     }
-
-    // Mark code as being processed
-    if (code) {
-      this.logger.log(`✅ New code, marking as processed: ${code}`);
-      this.processedCodes.add(code);
-
-      // Cleanup after 5 minutes
-      setTimeout(() => {
-        this.processedCodes.delete(code);
-        this.logger.log(`🗑️  Cleaned up code from cache: ${code}`);
-      }, 300000);
-    }
-
-    // Proceed with normal AuthGuard logic
-    const result = (await super.canActivate(context)) as boolean;
-    this.logger.log(`🛡️  Guard result: ${result}`);
-
-    return result;
+    return (await super.canActivate(context)) as boolean;
   }
 }

@@ -25,12 +25,6 @@ async function bootstrap() {
     }),
   );
 
-  // Raw request logger
-  app.use((req, res, next) => {
-    logger.log(`📥 INCOMING REQUEST: ${req.method} ${req.url}`);
-    next();
-  });
-
   // Increase body size limit for image uploads (10MB)
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));

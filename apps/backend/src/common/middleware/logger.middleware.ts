@@ -7,11 +7,12 @@ export class LoggerMiddleware implements NestMiddleware {
 
   use(request: Request, response: Response, next: NextFunction): void {
     const { ip, method, originalUrl } = request;
+    const path = originalUrl.split('?')[0];
     const userAgent = request.get('user-agent') || '';
     const startTime = Date.now();
 
     this.logger.log(
-      `[${method}] ${originalUrl} - IP: ${ip} - User-Agent: ${userAgent}`,
+      `[${method}] ${path} - IP: ${ip} - User-Agent: ${userAgent}`,
     );
 
     response.on('finish', () => {
@@ -19,7 +20,7 @@ export class LoggerMiddleware implements NestMiddleware {
       const contentLength = response.get('content-length');
       const duration = Date.now() - startTime;
 
-      const logMessage = `[${method}] ${originalUrl} - Status: ${statusCode} - ${duration}ms - ${contentLength || 0} bytes`;
+      const logMessage = `[${method}] ${path} - Status: ${statusCode} - ${duration}ms - ${contentLength || 0} bytes`;
 
       if (statusCode >= 500) {
         this.logger.error(logMessage);

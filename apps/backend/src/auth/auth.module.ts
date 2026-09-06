@@ -1,3 +1,6 @@
+import { GroupAccessModule } from '../group-access/group-access.module';
+import { AuthCallbackFilter } from './auth-callback.filter';
+import { AuthSchDedupGuard } from './authsch-dedup.guard';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -10,6 +13,7 @@ import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
+    GroupAccessModule,
     ConfigModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -22,7 +26,7 @@ import { JwtStrategy } from './jwt.strategy';
     }),
     UsersModule,
   ],
-  providers: [AuthService, AuthSchStrategy, JwtStrategy],
+  providers: [AuthService, AuthSchStrategy, JwtStrategy, AuthCallbackFilter, AuthSchDedupGuard],
   controllers: [AuthController],
   exports: [AuthService],
 })
