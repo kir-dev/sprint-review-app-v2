@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Event } from '../types';
@@ -8,7 +9,7 @@ export function useEventData(token: string | null) {
 
   const eventsQuery = useQuery<Event[]>({
     queryKey: ['events'],
-    queryFn: () => fetch('/api/events', { headers }).then((res) => res.json()),
+    queryFn: () => apiFetch('/api/events', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { MobileFloatingActionButton } from '@/components/MobileFloatingActionButton';
@@ -103,7 +105,7 @@ export default function LogsPage() {
     if (!logToDelete) return;
 
     try {
-      const response = await fetch(`/api/logs/${logToDelete}`, {
+      const response = await apiFetch(`/api/logs/${logToDelete}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

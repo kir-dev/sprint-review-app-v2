@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { User } from '../types';
@@ -8,7 +9,7 @@ export function useUserData(token: string | null, enabled: boolean = true) {
 
   const usersQuery = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: () => fetch('/api/users', { headers }).then((res) => res.json()),
+    queryFn: () => apiFetch('/api/users', { headers }).then((res) => res.json()),
     enabled: !!token && enabled,
   });
 

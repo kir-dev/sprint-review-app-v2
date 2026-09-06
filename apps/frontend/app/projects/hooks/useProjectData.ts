@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Project, User } from '../types';
@@ -9,13 +10,13 @@ export function useProjectData(token: string | null) {
   const projectsQuery = useQuery<Project[]>({
     queryKey: ['projects'],
     queryFn: () =>
-      fetch('/api/projects', { headers }).then((res) => res.json()),
+      apiFetch('/api/projects', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 
   const usersQuery = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: () => fetch('/api/users', { headers }).then((res) => res.json()),
+    queryFn: () => apiFetch('/api/users', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 

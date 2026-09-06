@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +34,7 @@ export function RolesTab() {
   const fetchPositions = useCallback(async () => {
     setIsLoadingPositions(true);
     try {
-      const res = await fetch('/api/positions', {
+      const res = await apiFetch('/api/positions', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -81,7 +83,7 @@ export function RolesTab() {
     if (!positionToDelete) return;
 
     try {
-      const res = await fetch(`/api/positions/${positionToDelete}`, {
+      const res = await apiFetch(`/api/positions/${positionToDelete}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +130,7 @@ export function RolesTab() {
     setPositions(newPositions);
 
     try {
-      const res = await fetch('/api/positions/order', {
+      const res = await apiFetch('/api/positions/order', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

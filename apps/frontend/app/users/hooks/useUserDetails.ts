@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useQuery } from '@tanstack/react-query';
 
 interface UserDetails {
@@ -33,7 +34,7 @@ export function useUserDetails(userId: string, token: string | null) {
   const userQuery = useQuery<UserDetails>({
     queryKey: ['users', userId],
     queryFn: () =>
-      fetch(`/api/users/${userId}`, { headers }).then((res) => {
+      apiFetch(`/api/users/${userId}`, { headers }).then((res) => {
         if (!res.ok) throw new Error('Felhasználó nem található');
         return res.json();
       }),
@@ -43,7 +44,7 @@ export function useUserDetails(userId: string, token: string | null) {
   const statsQuery = useQuery<UserStats>({
     queryKey: ['users', userId, 'stats'],
     queryFn: () =>
-      fetch(`/api/logs/stats/user/${userId}`, { headers }).then((res) =>
+      apiFetch(`/api/logs/stats/user/${userId}`, { headers }).then((res) =>
         res.json(),
       ),
     enabled: !!token && !!userId,

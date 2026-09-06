@@ -1,9 +1,10 @@
+import { apiFetch } from '@/lib/api-fetch';
 export async function updateUserPosition(
   userId: number,
   newPosition: string,
   token: string,
 ) {
-  const response = await fetch(`/api/users/${userId}`, {
+  const response = await apiFetch(`/api/users/${userId}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,

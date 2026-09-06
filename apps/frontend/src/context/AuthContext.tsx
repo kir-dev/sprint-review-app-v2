@@ -6,9 +6,12 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Position } from '../../app/logs/types';
+import { apiFetch, authErrorMessage, SESSION_REJECTED_EVENT } from '@/lib/api-fetch';
 
 interface User {
   id: number;
@@ -70,87 +73,94 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const currentToken = useRef<string | null>(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // Check for token in localStorage
-    const storedToken = localStorage.getItem('jwt');
-    if (storedToken) {
-      setToken(storedToken);
-      fetchUser(storedToken);
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const fetchUser = useCallback(async (authToken: string) => {
-    if (!authToken) return;
-
-    console.log(
-      '🔍 Fetching user with token:',
-      authToken.substring(0, 20) + '...',
-    );
-    try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-
-      console.log('📡 Response status:', response.status);
-
-      if (response.ok) {
-        const userData = await response.json();
-        console.log('✅ User data loaded:', userData);
-        setUser(userData);
-        setError(null);
-      } else {
-        console.error('❌ Token invalid, status:', response.status);
-        // Token invalid, clear it
-        localStorage.removeItem('jwt');
-        setToken(null);
-        setError(
-          'A munkamenet lejárt vagy érvénytelen. Kérjük, jelentkezz be újra.',
-        );
-      }
-    } catch (error) {
-      console.error('❌ Error fetching user:', error);
+  const clearSession = useCallback(
+    (message: string | null = null) => {
+      currentToken.current = null;
       localStorage.removeItem('jwt');
       setToken(null);
-      setError('Hiba történt a felhasználói adatok lekérése közben.');
-    } finally {
+      setUser(null);
+      setError(message);
       setIsLoading(false);
-      console.log('✓ isLoading set to false');
+      queryClient.clear();
+    },
+    [queryClient],
+  );
+
+  const fetchUser = useCallback(
+    async (authToken: string) => {
+      try {
+        const response = await apiFetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        if (!response.ok) {
+          throw new Error(
+            response.status === 503
+              ? authErrorMessage('GROUP_ACCESS_UNAVAILABLE')
+              : 'A felhasználói adatok nem érhetők el. Jelentkezz be újra.',
+          );
+        }
+        const userData: User = await response.json();
+        if (currentToken.current === authToken) {
+          setUser(userData);
+          setError(null);
+        }
+      } catch (cause) {
+        if (currentToken.current === authToken) {
+          clearSession(cause instanceof Error ? cause.message : 'Hiba történt a belépés során.');
+        }
+      } finally {
+        if (currentToken.current === authToken) setIsLoading(false);
+      }
+    },
+    [clearSession],
+  );
+
+  useEffect(() => {
+    const onRejected = (event: Event) => {
+      const { token: rejectedToken, code } = (event as CustomEvent<{ token: string; code: string }>)
+        .detail;
+      if (rejectedToken === currentToken.current) clearSession(authErrorMessage(code));
+    };
+    window.addEventListener(SESSION_REJECTED_EVENT, onRejected);
+    const params = new URLSearchParams(window.location.search);
+    // The callback result takes precedence over a previously stored session.
+    if (window.location.pathname === '/login' && (params.has('error') || params.has('jwt'))) {
+      clearSession();
+    } else {
+      const storedToken = localStorage.getItem('jwt');
+      currentToken.current = storedToken;
+      if (storedToken) {
+        setToken(storedToken);
+        void fetchUser(storedToken);
+      } else setIsLoading(false);
     }
-  }, []);
+    return () => window.removeEventListener(SESSION_REJECTED_EVENT, onRejected);
+  }, [clearSession, fetchUser]);
 
   const login = useCallback(
     (newToken: string) => {
+      queryClient.clear();
+      currentToken.current = newToken;
       localStorage.setItem('jwt', newToken);
       setToken(newToken);
+      setUser(null);
       setError(null);
       setIsLoading(true);
-      fetchUser(newToken);
+      void fetchUser(newToken);
     },
-    [fetchUser],
+    [fetchUser, queryClient],
   );
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('jwt');
-    setToken(null);
-    setUser(null);
-    setError(null);
-  }, []);
-
+  const logout = useCallback(() => clearSession(), [clearSession]);
   const refreshUser = useCallback(async () => {
-    if (token) {
-      await fetchUser(token);
-    }
-  }, [token, fetchUser]);
+    if (currentToken.current) await fetchUser(currentToken.current);
+  }, [fetchUser]);
 
   return (
-    <AuthContext.Provider
-      value={{ user, token, login, logout, refreshUser, isLoading, error }}
-    >
+    <AuthContext.Provider value={{ user, token, login, logout, refreshUser, isLoading, error }}>
       {children}
     </AuthContext.Provider>
   );

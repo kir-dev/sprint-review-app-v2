@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -82,14 +84,14 @@ export function EventCategoryDialog({
       let res;
       if (editingCategory) {
         // Update
-        res = await fetch(`/api/event-categories/${editingCategory.id}`, {
+        res = await apiFetch(`/api/event-categories/${editingCategory.id}`, {
           method: 'PATCH',
           headers,
           body: JSON.stringify(payload),
         });
       } else {
         // Create
-        res = await fetch('/api/event-categories', {
+        res = await apiFetch('/api/event-categories', {
           method: 'POST',
           headers,
           body: JSON.stringify(payload),
