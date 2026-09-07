@@ -1,0 +1,63 @@
+# Builds and publishes the generic frontend image. It does NOT deploy:
+#   - the original sprint-review frontend runs on Vercel (deployed by Vercel's
+#     own GitHub integration), so there is no k8s Deployment to restart;
+#   - new instances live in the ArgoCD-managed cluster, where the k8s repo pins
+#     the image tag and rolls out the change (no imperative kubectl from CI).
+name: Build Frontend Image
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'apps/frontend/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - '.dockerignore'
+      - '.github/workflows/deploy-frontend.yaml'
+
+env:
+  REGISTRY: harbor.sch.bme.hu
+  IMAGE_NAME: org-kir-dev/sprint-review-app-v2-frontend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
+        with:
+          context: .
+          file: apps/frontend/Dockerfile
+          push: true
+          # No build args: backend URLs are resolved at runtime (per instance),
+          # so this one image is shared by every deployed instance.
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # The immutable sha tag is what the k8s repo should pin per instance;
+      # :latest exists only for local docker-compose convenience.
+      - name: Report published tags
+        run: echo "${{ steps.meta.outputs.tags }}"

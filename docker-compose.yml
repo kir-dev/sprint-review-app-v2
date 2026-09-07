@@ -32,12 +32,39 @@ services:
       AUTHSCH_CLIENT_SECRET: ${AUTHSCH_CLIENT_SECRET}
       JWT_SECRET: ${JWT_SECRET}
       AUTHSCH_GROUP_ID: ${AUTHSCH_GROUP_ID}
+      SESSION_SECRET: ${SESSION_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+      NODE_ENV: development
       PORT: 3001
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3001}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-true}
     networks:
       - app-network
     volumes:
-       - ./apps/backend:/app/apps/backend
-       - /app/apps/backend/node_modules
+      - ./apps/backend:/app/apps/backend
+      - /app/apps/backend/node_modules
+
+  # Production frontend image (Next.js standalone server).
+  # Behind the "prod" profile so `docker-compose up` (used by `yarn dev`) does
+  # NOT start it and clash with the host `next dev` on port 3000.
+  # Run it explicitly with:  docker compose --profile prod up -d frontend
+  frontend:
+    profiles: ['prod']
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: sprint_review_frontend
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      # Server-side requests use the Compose service name. The public URL is
+      # injected into the browser for the AuthSCH redirect.
+      BACKEND_INTERNAL_URL: http://backend:3001
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3001}
+      PORT: 3000
+    networks:
+      - app-network
 
 # volumes:
 #   sprintreview_db_folder_v2:

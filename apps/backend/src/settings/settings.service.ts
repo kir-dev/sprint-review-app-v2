@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { logServiceError } from '../common/logging/safe-logger';
 import { UpdateSettingsDto } from './dto/update-settings.dto';
 
 @Injectable()
@@ -20,14 +21,17 @@ export class SettingsService {
   /**
    * Helper to fetch setting from database or return default
    */
-  private async getSettingWithDefault(key: string, defaultValue: string): Promise<string> {
+  private async getSettingWithDefault(
+    key: string,
+    defaultValue: string,
+  ): Promise<string> {
     try {
       const setting = await this.prisma.systemSetting.findUnique({
         where: { key },
       });
       return setting ? setting.value : defaultValue;
-    } catch (error) {
-      this.logger.error(`Error fetching setting: ${key}`, error);
+    } catch {
+      logServiceError(this.logger, 'get_system_setting');
       return defaultValue;
     }
   }
@@ -36,11 +40,26 @@ export class SettingsService {
    * Retrieves public branding settings
    */
   async getPublicSettings() {
-    const appName = await this.getSettingWithDefault('appName', this.defaults.appName);
-    const primaryColor = await this.getSettingWithDefault('primaryColor', this.defaults.primaryColor);
-    const logoLightUrl = await this.getSettingWithDefault('logoLightUrl', this.defaults.logoLightUrl);
-    const logoDarkUrl = await this.getSettingWithDefault('logoDarkUrl', this.defaults.logoDarkUrl);
-    const faviconUrl = await this.getSettingWithDefault('faviconUrl', this.defaults.faviconUrl);
+    const appName = await this.getSettingWithDefault(
+      'appName',
+      this.defaults.appName,
+    );
+    const primaryColor = await this.getSettingWithDefault(
+      'primaryColor',
+      this.defaults.primaryColor,
+    );
+    const logoLightUrl = await this.getSettingWithDefault(
+      'logoLightUrl',
+      this.defaults.logoLightUrl,
+    );
+    const logoDarkUrl = await this.getSettingWithDefault(
+      'logoDarkUrl',
+      this.defaults.logoDarkUrl,
+    );
+    const faviconUrl = await this.getSettingWithDefault(
+      'faviconUrl',
+      this.defaults.faviconUrl,
+    );
 
     return {
       appName,

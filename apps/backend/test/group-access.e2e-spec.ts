@@ -12,10 +12,7 @@ import request from 'supertest';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthModule } from '../src/auth/auth.module';
 import { AuthSchDedupGuard } from '../src/auth/authsch-dedup.guard';
-import {
-  GroupAccessPolicy,
-  SESSION_MAX_AGE_SECONDS,
-} from '../src/group-access/group-access.types';
+import { GroupAccessPolicy, SESSION_MAX_AGE_SECONDS } from '../src/group-access/group-access.types';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
 import { SettingsModule } from '../src/settings/settings.module';
 
@@ -43,6 +40,7 @@ describe('Group access HTTP integration', () => {
   let policyValue: string | null;
   let callbackProfile: unknown;
   let callbackFails: boolean;
+  let useProviderCallback: boolean;
   let manager: boolean;
   let leader: boolean;
   const db = {
@@ -72,6 +70,7 @@ describe('Group access HTTP integration', () => {
       .overrideGuard(AuthSchDedupGuard)
       .useValue({
         canActivate: (context: ExecutionContext) => {
+          if (useProviderCallback) return new AuthSchDedupGuard().canActivate(context);
           if (callbackFails) throw new UnauthorizedException();
           context.switchToHttp().getRequest<{ user: unknown }>().user = callbackProfile;
           return true;
@@ -91,6 +90,7 @@ describe('Group access HTTP integration', () => {
     policyValue = JSON.stringify(initialPolicy);
     callbackProfile = memberProfile;
     callbackFails = false;
+    useProviderCallback = false;
     manager = true;
     leader = false;
     db.systemSetting.findUnique.mockImplementation(async ({ where }: { where: { key: string } }) =>
@@ -115,6 +115,10 @@ describe('Group access HTTP integration', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const sign = (overrides: Record<string, unknown> = {}) =>
@@ -144,6 +148,52 @@ describe('Group access HTTP integration', () => {
     const response = await request(app.getHttpServer()).get('/auth/login').expect(302);
     const scope = new URL(response.headers.location).searchParams.get('scope');
     expect(scope).toContain('pek.sch.bme.hu:profile');
+  });
+
+  it.each([42, 43])('checks group %i after the safe provider callback', async (providerGroupId) => {
+    useProviderCallback = true;
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: 'test-provider-token' })))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            sub: 'test-member',
+            email: memberProfile.email,
+            name: memberProfile.fullName,
+            'pek.sch.bme.hu:executiveAt/v1': [],
+            'pek.sch.bme.hu:activeMemberships/v1': [
+              {
+                id: providerGroupId,
+                name: 'Test group',
+                title: [],
+              },
+            ],
+            'pek.sch.bme.hu:alumniMemberships/v1': [],
+          }),
+        ),
+      );
+
+    const response = await request(app.getHttpServer())
+      .get('/auth/callback?code=provider-callback-test')
+      .expect(302);
+    const destination = new URL(response.headers.location);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    if (providerGroupId === initialPolicy.groupId) {
+      const token = destination.searchParams.get('jwt');
+      expect(token).toBeTruthy();
+      const claims = jwt.verify<{ exp: number; iat: number }>(token!);
+      expect(claims.exp - claims.iat).toBe(SESSION_MAX_AGE_SECONDS);
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+    } else {
+      expect(destination.searchParams.get('error')).toBe('GROUP_MEMBERSHIP_REQUIRED');
+      expect(destination.searchParams.has('jwt')).toBe(false);
+      expect(db.user.findUnique).not.toHaveBeenCalled();
+      expect(db.user.create).not.toHaveBeenCalled();
+    }
   });
 
   it('issues a seven-day JWT after an authorized callback', async () => {

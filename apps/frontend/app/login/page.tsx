@@ -1,5 +1,6 @@
 'use client';
 
+import { browserBackendUrl } from '@/lib/clientEnv';
 import { authErrorMessage } from '@/lib/api-fetch';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
@@ -48,8 +49,7 @@ function LoginContent() {
   const handleLogin = () => {
     logout();
     // Redirect to backend AuthSCH login
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-    window.location.href = `${backendUrl}/auth/login`;
+    window.location.href = `${browserBackendUrl()}/auth/login`;
   };
 
   const appName = settings?.appName || 'Sprint Review App';

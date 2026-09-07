@@ -13,6 +13,9 @@ describe('UsersService', () => {
         {
           provide: PrismaService,
           useValue: {
+            position: {
+              findUnique: jest.fn(),
+            },
             user: {
               create: jest.fn(),
               findMany: jest.fn(),
@@ -41,13 +44,32 @@ describe('UsersService', () => {
         githubUsername: 'testuser',
       };
 
-      const expectedUser = { id: 1, ...userData, createdAt: new Date() };
-      jest.spyOn(prisma.user, 'create').mockResolvedValue(expectedUser);
+      const position = { id: 1, name: 'UJONC' };
+      const storedUser = {
+        id: 1,
+        ...userData,
+        createdAt: new Date(),
+        position,
+      };
+      jest.spyOn(prisma.position, 'findUnique').mockResolvedValue(position);
+      jest.spyOn(prisma.user, 'create').mockResolvedValue(storedUser);
 
       const result = await service.create(userData);
-      expect(result).toEqual(expectedUser);
+      expect(result).toEqual({
+        ...storedUser,
+        position: 'UJONC',
+        positionDetails: position,
+      });
       expect(prisma.user.create).toHaveBeenCalledWith({
-        data: userData,
+        data: {
+          email: userData.email,
+          simonyiEmail: undefined,
+          githubUsername: userData.githubUsername,
+          fullName: userData.fullName,
+          profileImage: undefined,
+          positionId: position.id,
+        },
+        include: { position: true },
       });
     });
   });
@@ -68,7 +90,13 @@ describe('UsersService', () => {
       jest.spyOn(prisma.user, 'findMany').mockResolvedValue(expectedUsers);
 
       const result = await service.findAll();
-      expect(result).toEqual(expectedUsers);
+      expect(result).toEqual([
+        {
+          ...expectedUsers[0],
+          position: null,
+          positionDetails: null,
+        },
+      ]);
     });
   });
 });
