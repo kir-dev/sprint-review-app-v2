@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
@@ -31,7 +33,7 @@ export default function UsersPage() {
   // Fetch roles/positions dynamically
   useEffect(() => {
     if (token) {
-      fetch('/api/positions', {
+      apiFetch('/api/positions', {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => {

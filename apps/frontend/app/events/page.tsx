@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { MobileFloatingActionButton } from '@/components/MobileFloatingActionButton';
@@ -23,7 +25,7 @@ export default function EventsPage() {
   // Fetch event categories
   useEffect(() => {
     if (token) {
-      fetch('/api/event-categories', {
+      apiFetch('/api/event-categories', {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => {
@@ -93,7 +95,7 @@ export default function EventsPage() {
         : '/api/events';
       const method = editingEvent ? 'PATCH' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -126,7 +128,7 @@ export default function EventsPage() {
     if (!eventToDelete) return;
     // NOTE: We could add a separate isDeleting state here for the confirmation dialog
     try {
-      const response = await fetch(`/api/events/${eventToDelete}`, {
+      const response = await apiFetch(`/api/events/${eventToDelete}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

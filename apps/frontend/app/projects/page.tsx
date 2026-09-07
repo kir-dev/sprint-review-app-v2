@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { MobileFloatingActionButton } from '@/components/MobileFloatingActionButton';
@@ -70,7 +72,7 @@ export default function ProjectsPage() {
         : '/api/projects';
       const method = editingProject ? 'PATCH' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           Authorization: `Bearer ${token}`,
@@ -103,7 +105,7 @@ export default function ProjectsPage() {
     if (!projectToDelete) return;
 
     try {
-      const response = await fetch(`/api/projects/${projectToDelete}`, {
+      const response = await apiFetch(`/api/projects/${projectToDelete}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

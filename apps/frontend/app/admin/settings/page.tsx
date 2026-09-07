@@ -9,15 +9,16 @@ import { PageHeader } from '@/components/PageHeader';
 import { AlertCircle, Settings, Calendar } from 'lucide-react';
 import { BrandingTab } from './components/BrandingTab';
 import { RolesTab } from './components/RolesTab';
+import { AccessTab } from './components/access-tab';
 import { EventCategoriesTab } from './components/EventCategoriesTab';
 
 export default function AdminSettingsPage() {
   const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('branding');
 
-  // Check permissions: Circle leader (KORVEZETO) or users with settings manage flag
+  // Check permissions: Group leader (KORVEZETO) or users with settings manage flag
   const canAccess =
-    user?.position === 'KORVEZETO' || user?.positionDetails?.canManageSettings === true;
+    user?.positionDetails?.isLeader === true || user?.positionDetails?.canManageSettings === true;
 
   if (isLoading) {
     return (
@@ -57,7 +58,7 @@ export default function AdminSettingsPage() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-3 max-w-lg bg-card border">
+        <TabsList className="grid h-auto grid-cols-2 gap-1 sm:grid-cols-4 max-w-2xl bg-card border">
           <TabsTrigger value="branding" className="flex items-center gap-2">
             Arculat
           </TabsTrigger>
@@ -67,6 +68,7 @@ export default function AdminSettingsPage() {
           <TabsTrigger value="event-categories" className="flex items-center gap-2">
             <Calendar size={16} /> Esemény Kategóriák
           </TabsTrigger>
+          <TabsTrigger value="access">Hozzáférés</TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Branding */}
@@ -82,6 +84,9 @@ export default function AdminSettingsPage() {
         {/* Tab 3: Event Categories */}
         <TabsContent value="event-categories">
           <EventCategoriesTab />
+        </TabsContent>
+        <TabsContent value="access">
+          <AccessTab />
         </TabsContent>
       </Tabs>
     </div>

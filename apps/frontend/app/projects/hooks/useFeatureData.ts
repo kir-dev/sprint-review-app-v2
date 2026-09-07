@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Feature } from '../types';
 
@@ -26,7 +27,7 @@ export function useFeatureData(
   } = useQuery<Feature[]>({
     queryKey: ['projects', projectId, 'features'],
     queryFn: () =>
-      fetch(`/api/projects/${projectId}/features`, { headers }).then((res) =>
+      apiFetch(`/api/projects/${projectId}/features`, { headers }).then((res) =>
         res.json(),
       ),
     enabled: !!token && !!projectId,
@@ -34,7 +35,7 @@ export function useFeatureData(
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Feature>) =>
-      fetch(`/api/projects/${projectId}/features`, {
+      apiFetch(`/api/projects/${projectId}/features`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +58,7 @@ export function useFeatureData(
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Feature> }) =>
-      fetch(`/api/features/${id}`, {
+      apiFetch(`/api/features/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +106,7 @@ export function useFeatureData(
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) =>
-      fetch(`/api/features/${id}`, {
+      apiFetch(`/api/features/${id}`, {
         method: 'DELETE',
         headers,
       }).then((res) => {

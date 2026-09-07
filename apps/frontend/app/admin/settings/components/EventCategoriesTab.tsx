@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +31,7 @@ export function EventCategoriesTab() {
   const fetchCategories = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/event-categories', {
+      const res = await apiFetch('/api/event-categories', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -78,7 +80,7 @@ export function EventCategoriesTab() {
     if (!categoryToDelete) return;
 
     try {
-      const res = await fetch(`/api/event-categories/${categoryToDelete}`, {
+      const res = await apiFetch(`/api/event-categories/${categoryToDelete}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

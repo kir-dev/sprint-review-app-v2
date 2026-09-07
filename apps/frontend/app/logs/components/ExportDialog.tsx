@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -93,7 +94,7 @@ export function ExportDialog({
     setError(null);
 
     try {
-      const response = await fetch(`/api/logs/export?${params.toString()}`, {
+      const response = await apiFetch(`/api/logs/export?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

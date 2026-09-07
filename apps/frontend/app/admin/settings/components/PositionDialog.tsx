@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -112,14 +114,14 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
       let res;
       if (editingPosition) {
         // Update
-        res = await fetch(`/api/positions/${editingPosition.id}`, {
+        res = await apiFetch(`/api/positions/${editingPosition.id}`, {
           method: 'PATCH',
           headers,
           body: JSON.stringify(payload),
         });
       } else {
         // Create
-        res = await fetch('/api/positions', {
+        res = await apiFetch('/api/positions', {
           method: 'POST',
           headers,
           body: JSON.stringify(payload),

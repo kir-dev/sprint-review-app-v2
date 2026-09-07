@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useQuery } from '@tanstack/react-query';
 import {
   DashboardEventStats,
@@ -14,21 +15,21 @@ export function useDashboardData(token: string | null) {
   const summaryQuery = useQuery<DashboardSummary>({
     queryKey: ['dashboard', 'summary'],
     queryFn: () =>
-      fetch('/api/dashboard/summary', { headers }).then((res) => res.json()),
+      apiFetch('/api/dashboard/summary', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 
   const projectsQuery = useQuery<DashboardProjectStats>({
     queryKey: ['dashboard', 'projects'],
     queryFn: () =>
-      fetch('/api/dashboard/projects', { headers }).then((res) => res.json()),
+      apiFetch('/api/dashboard/projects', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 
   const topUsersQuery = useQuery<DashboardTopUser[]>({
     queryKey: ['dashboard', 'top-users'],
     queryFn: () =>
-      fetch('/api/dashboard/top-users', { headers }).then((res) => res.json()),
+      apiFetch('/api/dashboard/top-users', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 
@@ -39,14 +40,14 @@ export function useDashboardData(token: string | null) {
   }>({
     queryKey: ['dashboard', 'stats'],
     queryFn: () =>
-      fetch('/api/dashboard/stats', { headers }).then((res) => res.json()),
+      apiFetch('/api/dashboard/stats', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 
   const eventsQuery = useQuery<DashboardEventStats>({
     queryKey: ['dashboard', 'events'],
     queryFn: () =>
-      fetch('/api/dashboard/events', { headers }).then((res) => res.json()),
+      apiFetch('/api/dashboard/events', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 

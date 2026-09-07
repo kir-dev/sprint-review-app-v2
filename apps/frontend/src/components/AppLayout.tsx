@@ -4,8 +4,8 @@ import { useTheme } from '@/components/ThemeProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
 import { MobileBottomNav } from './MobileBottomNav';
 import { Sidebar } from './sidebar';
 import { useBranding } from '@/context/BrandingContext';
@@ -17,7 +17,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const showSidebar = !pagesWithoutSidebar.includes(pathname);
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { user, token, isLoading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (showSidebar && !isLoading && (!user || !token)) router.replace('/login');
+  }, [showSidebar, isLoading, user, token, router]);
   const { settings } = useBranding();
   const logoSrc =
     theme === 'light' ? settings.logoLightUrl : settings.logoDarkUrl;
@@ -25,6 +29,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   if (!showSidebar) {
     return <>{children}</>;
   }
+
+  if (isLoading || !user || !token) return <div role="status" className="p-8">Betöltés...</div>;
 
   return (
     <div className="flex h-screen overflow-hidden">

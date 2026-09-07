@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Log, LogFormData, WorkPeriod } from '../types';
@@ -48,7 +49,7 @@ export function useLogSubmit({
       const url = editingLog ? `/api/logs/${editingLog.id}` : '/api/logs';
       const method = editingLog ? 'PATCH' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
           Authorization: `Bearer ${token}`,

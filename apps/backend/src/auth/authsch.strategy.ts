@@ -10,10 +10,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
-import { UsersService } from '../users/users.service';
 
 const AUTHSCH_REQUEST_TIMEOUT_MS = 5000;
 
+/** Retrieves AuthSCH profiles without exposing provider credentials in callback errors. */
 @Injectable()
 export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
   private readonly logger = new Logger(AuthSchStrategy.name);
@@ -22,10 +22,7 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
   private readonly authSchRedirectUri: string;
   private readonly authSchProvider: string;
 
-  constructor(
-    private configService: ConfigService,
-    private usersService: UsersService,
-  ) {
+  constructor(configService: ConfigService) {
     const redirectUri = buildAuthSchRedirectUri(configService);
 
     super({
@@ -35,13 +32,13 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
         AuthSchScope.PROFILE,
         AuthSchScope.EMAIL,
         AuthSchScope.SCHACC_ID,
+        AuthSchScope.PEK_PROFILE,
       ],
       redirectUri,
     });
 
     this.authSchClientId = configService.get<string>('AUTHSCH_CLIENT_ID') || '';
-    this.authSchClientSecret =
-      configService.get<string>('AUTHSCH_CLIENT_SECRET') || '';
+    this.authSchClientSecret = configService.get<string>('AUTHSCH_CLIENT_SECRET') || '';
     this.authSchRedirectUri = redirectUri;
     this.authSchProvider = (
       configService.get<string>('AUTHSCH_PROVIDER') || 'https://auth.sch.bme.hu'
@@ -66,24 +63,21 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
     }
 
     try {
-      const tokenResponse = await fetch(
-        `${this.authSchProvider}/oauth2/token`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Authorization: `Basic ${Buffer.from(
-              `${this.authSchClientId}:${this.authSchClientSecret}`,
-            ).toString('base64')}`,
-          },
-          body: new URLSearchParams({
-            grant_type: 'authorization_code',
-            code: authorizationCode,
-            redirect_uri: this.authSchRedirectUri,
-          }),
-          signal: AbortSignal.timeout(AUTHSCH_REQUEST_TIMEOUT_MS),
+      const tokenResponse = await fetch(`${this.authSchProvider}/oauth2/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${Buffer.from(
+            `${this.authSchClientId}:${this.authSchClientSecret}`,
+          ).toString('base64')}`,
         },
-      );
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: authorizationCode,
+          redirect_uri: this.authSchRedirectUri,
+        }),
+        signal: AbortSignal.timeout(AUTHSCH_REQUEST_TIMEOUT_MS),
+      });
 
       if (!tokenResponse.ok) {
         this.logger.warn('AuthSCH token request failed');
@@ -98,13 +92,10 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
         return;
       }
 
-      const profileResponse = await fetch(
-        `${this.authSchProvider}/oidc/userinfo`,
-        {
-          headers: { Authorization: `Bearer ${token.access_token}` },
-          signal: AbortSignal.timeout(AUTHSCH_REQUEST_TIMEOUT_MS),
-        },
-      );
+      const profileResponse = await fetch(`${this.authSchProvider}/oidc/userinfo`, {
+        headers: { Authorization: `Bearer ${token.access_token}` },
+        signal: AbortSignal.timeout(AUTHSCH_REQUEST_TIMEOUT_MS),
+      });
 
       if (!profileResponse.ok) {
         this.logger.warn('AuthSCH profile request failed');
@@ -113,9 +104,7 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
       }
 
       const rawProfile = (await profileResponse.json()) as RawAuthSchProfile;
-      const validatedUser = await this.validate(
-        parseAuthSchProfile(rawProfile),
-      );
+      const validatedUser = await this.validate(parseAuthSchProfile(rawProfile));
 
       if (!validatedUser) {
         this.failAuthentication();
@@ -138,25 +127,9 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
     (this as unknown as { success(user: unknown): void }).success(user);
   }
 
-  async validate(profile: AuthSchProfile): Promise<any> {
-    this.logger.log('Validating AuthSCH profile');
-
-    // Check if user exists
-    try {
-      const existingUser = await this.usersService.findByEmail(profile.email);
-      this.logger.log('AuthSCH user resolved');
-      return existingUser;
-    } catch {
-      // User doesn't exist, create new one
-      this.logger.log('Creating user from AuthSCH profile');
-      const newUser = await this.usersService.create({
-        email: profile.email,
-        fullName: profile.fullName,
-        githubUsername: profile.schAcc?.schAccUsername ?? undefined,
-      });
-      this.logger.log('AuthSCH user created');
-      return newUser;
-    }
+  /** Leaves local account access to the callback service, after membership authorization. */
+  async validate(profile: AuthSchProfile): Promise<AuthSchProfile> {
+    return profile;
   }
 }
 

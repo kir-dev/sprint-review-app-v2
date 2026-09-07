@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { Log, Project, WorkPeriod } from '../types';
@@ -9,7 +10,7 @@ export function useLogData(token: string | null, userId: number | undefined) {
   const logsQuery = useQuery<Log[]>({
     queryKey: ['logs', userId],
     queryFn: () =>
-      fetch(`/api/logs${userId ? `?userId=${userId}` : ''}`, { headers }).then(
+      apiFetch(`/api/logs${userId ? `?userId=${userId}` : ''}`, { headers }).then(
         (res) => res.json(),
       ),
     enabled: !!token,
@@ -18,21 +19,21 @@ export function useLogData(token: string | null, userId: number | undefined) {
   const projectsQuery = useQuery<Project[]>({
     queryKey: ['projects'],
     queryFn: () =>
-      fetch('/api/projects', { headers }).then((res) => res.json()),
+      apiFetch('/api/projects', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 
   const workPeriodsQuery = useQuery<WorkPeriod[]>({
     queryKey: ['work-periods'],
     queryFn: () =>
-      fetch('/api/work-periods', { headers }).then((res) => res.json()),
+      apiFetch('/api/work-periods', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 
   const currentWorkPeriodQuery = useQuery<WorkPeriod | null>({
     queryKey: ['work-periods', 'current'],
     queryFn: () =>
-      fetch('/api/work-periods/current', { headers }).then((res) => res.json()),
+      apiFetch('/api/work-periods/current', { headers }).then((res) => res.json()),
     enabled: !!token,
   });
 

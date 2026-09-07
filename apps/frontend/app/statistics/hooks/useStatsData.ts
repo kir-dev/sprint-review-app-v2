@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useQuery } from '@tanstack/react-query';
 
 export function useStatsData(userId: number, token: string | null) {
@@ -6,7 +7,7 @@ export function useStatsData(userId: number, token: string | null) {
   const breakdownQuery = useQuery({
     queryKey: ['stats', userId, 'breakdown'],
     queryFn: () =>
-      fetch(`/api/stats/${userId}/breakdown`, { headers }).then((res) =>
+      apiFetch(`/api/stats/${userId}/breakdown`, { headers }).then((res) =>
         res.json(),
       ),
     enabled: !!token && !!userId,
@@ -15,7 +16,7 @@ export function useStatsData(userId: number, token: string | null) {
   const historyQuery = useQuery({
     queryKey: ['stats', userId, 'history'],
     queryFn: () =>
-      fetch(`/api/stats/${userId}/history`, { headers }).then((res) =>
+      apiFetch(`/api/stats/${userId}/history`, { headers }).then((res) =>
         res.json(),
       ),
     enabled: !!token && !!userId,
@@ -24,7 +25,7 @@ export function useStatsData(userId: number, token: string | null) {
   const gamificationQuery = useQuery({
     queryKey: ['stats', userId, 'gamification'],
     queryFn: () =>
-      fetch(`/api/stats/${userId}/gamification`, { headers }).then((res) =>
+      apiFetch(`/api/stats/${userId}/gamification`, { headers }).then((res) =>
         res.json(),
       ),
     enabled: !!token && !!userId,
@@ -33,7 +34,7 @@ export function useStatsData(userId: number, token: string | null) {
   const positionsQuery = useQuery({
     queryKey: ['stats', userId, 'positions'],
     queryFn: () =>
-      fetch(`/api/stats/${userId}/positions`, { headers }).then((res) =>
+      apiFetch(`/api/stats/${userId}/positions`, { headers }).then((res) =>
         res.json(),
       ),
     enabled: !!token && !!userId,

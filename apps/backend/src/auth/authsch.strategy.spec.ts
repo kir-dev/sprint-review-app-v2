@@ -1,7 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { Request } from 'express';
-import { UsersService } from '../users/users.service';
 import { AuthSchStrategy, buildAuthSchRedirectUri } from './authsch.strategy';
 
 describe('AuthSchStrategy', () => {
@@ -15,7 +14,6 @@ describe('AuthSchStrategy', () => {
   const configService = {
     get: jest.fn((key: string) => values[key]),
   } as unknown as ConfigService;
-  const usersService = {} as UsersService;
 
   afterEach(() => {
     jest.restoreAllMocks();
@@ -26,7 +24,7 @@ describe('AuthSchStrategy', () => {
       'https://backend.example.test/auth/callback',
     );
 
-    const strategy = new AuthSchStrategy(configService, usersService);
+    const strategy = new AuthSchStrategy(configService);
     const redirect = jest.fn();
     Object.assign(strategy, { redirect });
 
@@ -41,18 +39,12 @@ describe('AuthSchStrategy', () => {
   it('does not log OAuth query values when callback processing fails', async () => {
     const oauthCode = 'oauth-code-must-not-leak';
     const clientSecret = values.AUTHSCH_CLIENT_SECRET;
-    const loggerWarn = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => undefined);
-    const consoleError = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => undefined);
-    const strategy = new AuthSchStrategy(configService, usersService);
+    const loggerWarn = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const strategy = new AuthSchStrategy(configService);
     const fail = jest.fn();
     Object.assign(strategy, { fail });
-    jest
-      .spyOn(global, 'fetch')
-      .mockRejectedValueOnce(new Error(`request failed: ${oauthCode}`));
+    jest.spyOn(global, 'fetch').mockRejectedValueOnce(new Error(`request failed: ${oauthCode}`));
 
     await strategy.callback({
       query: { code: oauthCode },
