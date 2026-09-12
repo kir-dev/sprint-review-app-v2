@@ -18,7 +18,7 @@ import { Position } from '../../logs/types';
 import { useUserDetails } from '../hooks/useUserDetails';
 
 export default function UserProfilePage() {
-  const { token, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -29,7 +29,7 @@ export default function UserProfilePage() {
     stats,
     isLoading: dataLoading,
     error,
-  } = useUserDetails(userId, token);
+  } = useUserDetails(userId, isAuthenticated);
 
   const [initialUser] = useState<{
     id: number;
@@ -54,10 +54,10 @@ export default function UserProfilePage() {
   const user = fetchedUser || initialUser;
 
   useEffect(() => {
-    if (!isAuthLoading && !token) {
+    if (!isAuthLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [token, isAuthLoading, router]);
+  }, [isAuthenticated, isAuthLoading, router]);
 
   if (isAuthLoading) return null;
 
@@ -114,10 +114,14 @@ export default function UserProfilePage() {
                   variant="outline"
                   className={cn(
                     'mt-2',
-                    user.positionDetails?.color || positionColors[user.position as Position] || 'bg-slate-500/10 text-foreground border-slate-500/20',
+                    user.positionDetails?.color ||
+                      positionColors[user.position as Position] ||
+                      'bg-slate-500/10 text-foreground border-slate-500/20',
                   )}
                 >
-                  {user.positionDetails?.label || positionLabels[user.position as Position] || user.position}
+                  {user.positionDetails?.label ||
+                    positionLabels[user.position as Position] ||
+                    user.position}
                 </Badge>
               </div>
             </>

@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Feature } from '../types';
 
@@ -14,10 +15,9 @@ interface UseFeatureDataReturn {
 
 export function useFeatureData(
   projectId: string,
-  token: string | null,
+  isAuthenticated: boolean | null,
 ): UseFeatureDataReturn {
   const queryClient = useQueryClient();
-  const headers = { Authorization: `Bearer ${token}` };
 
   const {
     data: features = [],
@@ -26,19 +26,16 @@ export function useFeatureData(
   } = useQuery<Feature[]>({
     queryKey: ['projects', projectId, 'features'],
     queryFn: () =>
-      fetch(`/api/projects/${projectId}/features`, { headers }).then((res) =>
-        res.json(),
-      ),
-    enabled: !!token && !!projectId,
+      apiFetch(`/api/projects/${projectId}/features`).then((res) => res.json()),
+    enabled: !!isAuthenticated && !!projectId,
   });
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<Feature>) =>
-      fetch(`/api/projects/${projectId}/features`, {
+      apiFetch(`/api/projects/${projectId}/features`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...headers,
         },
         body: JSON.stringify(data),
       }).then(async (res) => {
@@ -57,11 +54,10 @@ export function useFeatureData(
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Feature> }) =>
-      fetch(`/api/features/${id}`, {
+      apiFetch(`/api/features/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...headers,
         },
         body: JSON.stringify(data),
       }).then((res) => {
@@ -105,9 +101,8 @@ export function useFeatureData(
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) =>
-      fetch(`/api/features/${id}`, {
+      apiFetch(`/api/features/${id}`, {
         method: 'DELETE',
-        headers,
       }).then((res) => {
         if (!res.ok) throw new Error('Failed to delete feature');
         return res.json();

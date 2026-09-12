@@ -20,10 +20,11 @@ import { LogDialog } from '../logs/components/LogDialog';
 import { useLogData } from '../logs/hooks/useLogData';
 import { useLogForm } from '../logs/hooks/useLogForm';
 import { useLogSubmit } from '../logs/hooks/useLogSubmit';
+import { LogFormData } from '../logs/types';
 import { useDashboardData } from './hooks/useDashboardData';
 
 export default function DashboardPage() {
-  const { user, token, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
   const {
@@ -33,22 +34,21 @@ export default function DashboardPage() {
     stats,
     eventStats,
     isLoading: dataLoading,
-    refetchAll,
-  } = useDashboardData(token);
+  } = useDashboardData(isAuthenticated);
 
   // Log creation hooks
   const { projects, workPeriods, currentWorkPeriod } = useLogData(
-    token,
+    isAuthenticated,
     user?.id,
   );
-  const { events } = useEventData(token);
+  const { events } = useEventData(isAuthenticated);
   const { isDialogOpen, formData, openDialog, closeDialog } = useLogForm(
     workPeriods,
     currentWorkPeriod,
   );
 
   const { handleSubmit } = useLogSubmit({
-    token,
+    isAuthenticated,
     user,
     workPeriods,
     onSuccess: () => {
@@ -56,15 +56,15 @@ export default function DashboardPage() {
     },
   });
 
-  const onLogSubmit = async (data: any) => {
+  const onLogSubmit = async (data: LogFormData) => {
     await handleSubmit(data);
   };
 
   useEffect(() => {
-    if (!authLoading && !token) {
+    if (!authLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [authLoading, token, router]);
+  }, [authLoading, isAuthenticated, router]);
 
   if (authLoading) {
     return (
@@ -74,7 +74,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user || !token) {
+  if (!user || !isAuthenticated) {
     return null;
   }
 
@@ -153,7 +153,7 @@ export default function DashboardPage() {
           editingLog={null}
           formData={formData}
           projects={projects}
-          events={events as any}
+          events={events}
           workPeriods={workPeriods}
           onSubmit={onLogSubmit}
           onClose={closeDialog}

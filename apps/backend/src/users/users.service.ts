@@ -4,14 +4,42 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { logServiceError } from '../common/logging/safe-logger';
+
+const SERIALIZABLE_TRANSACTION_ATTEMPTS = 3;
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(private prisma: PrismaService) {}
+
+  /** Retries a complete serializable transaction after PostgreSQL write conflicts. */
+  private async runSerializableTransaction<T>(
+    operation: (transaction: Prisma.TransactionClient) => Promise<T>,
+  ): Promise<T> {
+    for (
+      let attempt = 1;
+      attempt <= SERIALIZABLE_TRANSACTION_ATTEMPTS;
+      attempt++
+    ) {
+      try {
+        return await this.prisma.$transaction(operation, {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        });
+      } catch (error) {
+        const retryable =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2034';
+        if (!retryable || attempt === SERIALIZABLE_TRANSACTION_ATTEMPTS) {
+          throw error;
+        }
+      }
+    }
+    throw new Error('Serializable transaction retry limit exhausted');
+  }
 
   /**
    * Helper to map database User (with relation) to API User structure
@@ -170,88 +198,92 @@ export class UsersService {
   ) {
     this.logger.log(`Updating user with ID: ${id}`);
     try {
-      let positionIdToSet: number | undefined;
+      const user = await this.runSerializableTransaction(
+        async (transaction) => {
+          let positionIdToSet: number | undefined;
 
-      if (data.position) {
-        const currentUser = await this.prisma.user.findUnique({
-          where: { id },
-          include: { position: true },
-        });
+          if (data.position) {
+            const currentUser = await transaction.user.findUnique({
+              where: { id },
+              include: { position: true },
+            });
 
-        if (
-          currentUser &&
-          currentUser.position &&
-          currentUser.position.name !== data.position.toUpperCase()
-        ) {
-          const now = new Date();
+            if (!currentUser) {
+              throw new NotFoundException(`User with ID ${id} not found`);
+            }
 
-          const newPositionRecord = await this.prisma.position.findUnique({
-            where: { name: data.position.toUpperCase() },
-          });
+            const targetPositionName = data.position.toUpperCase();
+            const newPositionRecord = await transaction.position.findUnique({
+              where: { name: targetPositionName },
+            });
 
-          if (!newPositionRecord) {
-            throw new BadRequestException(
-              `Position ${data.position} not found`,
-            );
+            if (!newPositionRecord) {
+              throw new BadRequestException(
+                `Position ${data.position} not found`,
+              );
+            }
+
+            if (currentUser.positionId !== newPositionRecord.id) {
+              const now = new Date();
+              positionIdToSet = newPositionRecord.id;
+
+              const activeHistory = await transaction.positionHistory.findFirst(
+                {
+                  where: {
+                    userId: id,
+                    endDate: null,
+                  },
+                },
+              );
+
+              if (activeHistory) {
+                await transaction.positionHistory.update({
+                  where: { id: activeHistory.id },
+                  data: { endDate: now },
+                });
+              } else if (currentUser.positionId !== null) {
+                await transaction.positionHistory.create({
+                  data: {
+                    userId: id,
+                    positionId: currentUser.positionId,
+                    startDate: currentUser.createdAt,
+                    endDate: now,
+                  },
+                });
+              }
+
+              await transaction.positionHistory.create({
+                data: {
+                  userId: id,
+                  positionId: positionIdToSet,
+                  startDate: now,
+                  endDate: null,
+                },
+              });
+            }
           }
-          positionIdToSet = newPositionRecord.id;
 
-          // 1. Close active history if exists
-          const activeHistory = await this.prisma.positionHistory.findFirst({
-            where: {
-              userId: id,
-              endDate: null,
+          const updateData: Prisma.UserUncheckedUpdateInput = {
+            email: data.email,
+            simonyiEmail: data.simonyiEmail,
+            githubUsername: data.githubUsername,
+            fullName: data.fullName,
+            profileImage: data.profileImage,
+          };
+
+          if (positionIdToSet !== undefined) {
+            updateData.positionId = positionIdToSet;
+          }
+
+          return transaction.user.update({
+            where: { id },
+            data: updateData,
+            include: {
+              position: true,
             },
           });
-
-          if (activeHistory) {
-            await this.prisma.positionHistory.update({
-              where: { id: activeHistory.id },
-              data: { endDate: now },
-            });
-          } else {
-            // Save the OLD position as a history entry ending now
-            await this.prisma.positionHistory.create({
-              data: {
-                userId: id,
-                positionId: currentUser.positionId,
-                startDate: currentUser.createdAt,
-                endDate: now,
-              },
-            });
-          }
-
-          // 2. Open new history
-          await this.prisma.positionHistory.create({
-            data: {
-              userId: id,
-              positionId: positionIdToSet,
-              startDate: now,
-              endDate: null,
-            },
-          });
-        }
-      }
-
-      const updateData: any = {
-        email: data.email,
-        simonyiEmail: data.simonyiEmail,
-        githubUsername: data.githubUsername,
-        fullName: data.fullName,
-        profileImage: data.profileImage,
-      };
-
-      if (positionIdToSet !== undefined) {
-        updateData.positionId = positionIdToSet;
-      }
-
-      const user = await this.prisma.user.update({
-        where: { id },
-        data: updateData,
-        include: {
-          position: true,
         },
-      });
+      );
       this.logger.log(`User updated successfully: ID ${user.id}`);
       return this.mapUser(user);
     } catch (error) {

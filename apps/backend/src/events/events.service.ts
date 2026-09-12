@@ -105,13 +105,26 @@ export class EventService {
   ) {
     this.logger.log(`Updating event with ID: ${id}`);
     try {
+      if (data.categoryId !== undefined) {
+        const category = await this.prisma.eventCategory.findUnique({
+          where: { id: data.categoryId },
+        });
+        if (!category) {
+          throw new BadRequestException(
+            `Event category with ID ${data.categoryId} not found`,
+          );
+        }
+      }
+
       const event = await this.prisma.event.update({
         where: { id },
         data: {
           ...(data.name && { name: data.name }),
           ...(data.startDate && { startDate: new Date(data.startDate) }),
           ...(data.endDate && { endDate: new Date(data.endDate) }),
-          ...(data.categoryId && { categoryId: data.categoryId }),
+          ...(data.categoryId !== undefined && {
+            categoryId: data.categoryId,
+          }),
         },
         include: {
           category: true,

@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { MobileFloatingActionButton } from '@/components/MobileFloatingActionButton';
@@ -15,17 +17,15 @@ import { useEventForm } from './hooks/useEventForm';
 import { EventCategory } from './types';
 
 export default function EventsPage() {
-  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
   const [categories, setCategories] = useState<EventCategory[]>([]);
 
   // Fetch event categories
   useEffect(() => {
-    if (token) {
-      fetch('/api/event-categories', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    if (isAuthenticated) {
+      apiFetch('/api/event-categories', {})
         .then((res) => {
           if (!res.ok) throw new Error('Failed to fetch categories');
           return res.json();
@@ -35,7 +35,7 @@ export default function EventsPage() {
         })
         .catch((err) => console.error('Error fetching categories:', err));
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   // Custom hooks
   const {
@@ -45,7 +45,7 @@ export default function EventsPage() {
     error,
     setError,
     loadData,
-  } = useEventData(token);
+  } = useEventData(isAuthenticated);
   const {
     isDialogOpen,
     editingEvent,
@@ -64,10 +64,10 @@ export default function EventsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthLoading && !token) {
+    if (!isAuthLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [token, isAuthLoading, router]);
+  }, [isAuthenticated, isAuthLoading, router]);
 
   // Handlers
   async function handleSubmit(e: React.FormEvent) {
@@ -93,10 +93,9 @@ export default function EventsPage() {
         : '/api/events';
       const method = editingEvent ? 'PATCH' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -126,9 +125,8 @@ export default function EventsPage() {
     if (!eventToDelete) return;
     // NOTE: We could add a separate isDeleting state here for the confirmation dialog
     try {
-      const response = await fetch(`/api/events/${eventToDelete}`, {
+      const response = await apiFetch(`/api/events/${eventToDelete}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {

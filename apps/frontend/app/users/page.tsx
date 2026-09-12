@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import { ErrorAlert } from '@/components/ErrorAlert';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
@@ -23,17 +25,15 @@ interface PositionData {
 }
 
 export default function UsersPage() {
-  const { user, token, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   const [positions, setPositions] = useState<PositionData[]>([]);
 
   // Fetch roles/positions dynamically
   useEffect(() => {
-    if (token) {
-      fetch('/api/positions', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    if (isAuthenticated) {
+      apiFetch('/api/positions', {})
         .then((res) => {
           if (!res.ok) throw new Error('Failed to fetch positions');
           return res.json();
@@ -43,7 +43,7 @@ export default function UsersPage() {
         })
         .catch((err) => console.error('Error fetching positions:', err));
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   const {
     users,
@@ -51,22 +51,22 @@ export default function UsersPage() {
     isLoading: isLoadingUsers,
     error,
     setError,
-  } = useUserData(token);
+  } = useUserData(isAuthenticated);
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isLoading && !token) {
+    if (!isLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [token, isLoading, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   async function handlePositionChange(userId: number, newPosition: string) {
-    if (!token) {
-      setError('Autentikációs token nem található. Jelentkezz be újra.');
+    if (!isAuthenticated) {
+      setError('Nincs aktív munkamenet. Jelentkezz be újra.');
       return;
     }
     try {
-      const updatedUser = await updateUserPosition(userId, newPosition, token);
+      const updatedUser = await updateUserPosition(userId, newPosition);
       // Preserve the _count field from the original user
       setUsers(
         users.map((u) =>
@@ -76,7 +76,10 @@ export default function UsersPage() {
       setError(null);
     } catch (err) {
       console.error('Error updating user position:', err);
-      const message = err instanceof Error ? err.message : 'Nem sikerült frissíteni a felhasználó pozícióját. Próbáld újra.';
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Nem sikerült frissíteni a felhasználó pozícióját. Próbáld újra.';
       setError(message);
     }
   }
@@ -90,7 +93,8 @@ export default function UsersPage() {
     );
   }
 
-  const isInitialLoading = (isLoadingUsers || positions.length === 0) && users.length === 0;
+  const isInitialLoading =
+    (isLoadingUsers || positions.length === 0) && users.length === 0;
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-7xl mx-auto">

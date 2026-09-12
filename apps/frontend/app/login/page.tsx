@@ -1,15 +1,17 @@
 'use client';
 
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
-import { browserBackendUrl } from '@/lib/clientEnv';
 import { useAuth } from '@/context/AuthContext';
+import { authErrorMessage } from '@/lib/api-fetch';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, user, token, isLoading, error } = useAuth();
+  const { user, isAuthenticated, isLoading, error } = useAuth();
+  const callbackError = searchParams.get('error');
+  const visibleError = callbackError ? authErrorMessage(callbackError) : error;
   const [settings, setSettings] = useState<{
     appName: string;
     logoDarkUrl: string;
@@ -22,53 +24,22 @@ function LoginContent() {
         throw new Error();
       })
       .then((data) => setSettings(data))
-      .catch((err) =>
-        console.error('Failed to fetch public settings on login page', err),
+      .catch((cause) =>
+        console.error('Failed to fetch public settings on login page', cause),
       );
   }, []);
 
   useEffect(() => {
-    // Check if JWT is in URL (from OAuth callback)
-    const jwtFromUrl = searchParams.get('jwt');
-    if (jwtFromUrl && !error && !token) {
-      console.log('🔑 JWT found in URL, calling login()');
-      login(jwtFromUrl);
-      // Don't redirect immediately to allow fetchUser to complete/fail
-      // The other useEffect will handle the redirect on success
-    }
-  }, [searchParams, login, error, token]);
+    if (!isLoading && user && isAuthenticated) router.replace('/dashboard');
+  }, [user, isAuthenticated, isLoading, router]);
 
-  // Redirect to dashboard when user is loaded
-  useEffect(() => {
-    console.log('🔄 Auth state:', {
-      isLoading,
-      hasUser: !!user,
-      hasToken: !!token,
-    });
-    if (!isLoading && user && token) {
-      console.log('✅ Redirecting to dashboard');
-      router.push('/dashboard');
-    }
-  }, [user, token, isLoading, router]);
-
-  // If JWT is in URL, show loading instead of login form
-  // But ONLY if we don't have an error
-  const jwtFromUrl = searchParams.get('jwt');
-  const showLoading = (jwtFromUrl || (token && user)) && !error;
-
-  if (showLoading) {
+  if (!visibleError && (isLoading || isAuthenticated === true)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark px-4">
         <LoadingLogo size={60} />
       </div>
     );
   }
-
-  const handleLogin = () => {
-    // Redirect the browser straight to the backend AuthSCH login (keeps the
-    // OAuth flow on the backend origin). URL comes from runtime config.
-    window.location.href = `${browserBackendUrl()}/auth/login`;
-  };
 
   const appName = settings?.appName || 'Sprint Review App';
   const logoSrc = settings?.logoDarkUrl || '/Kir-Dev-White.png';
@@ -84,14 +55,14 @@ function LoginContent() {
           Jelentkezz be az AuthSCH-val a folytatáshoz
         </p>
 
-        {error && (
+        {visibleError && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-xl mb-6">
-            <p className="text-sm font-medium">{error}</p>
+            <p className="text-sm font-medium">{visibleError}</p>
           </div>
         )}
 
         <button
-          onClick={handleLogin}
+          onClick={() => window.location.assign('/api/auth/login')}
           className="w-full bg-primary hover:bg-primary-600 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-[1.02]"
         >
           Bejelentkezés AuthSCH-val
@@ -103,13 +74,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-dark px-4">
-          <LoadingLogo size={60} />
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingLogo size={60} />}>
       <LoginContent />
     </Suspense>
   );

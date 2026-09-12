@@ -21,7 +21,7 @@ import { LoadingLogo } from '@/components/ui/LoadingLogo';
 
 interface ProjectKanbanProps {
   projectId: string;
-  token: string | null;
+  isAuthenticated: boolean | null;
   users: User[];
   onFeatureChange?: () => void;
 }
@@ -52,12 +52,12 @@ const PRIORITY_VALUES: Record<FeaturePriority, number> = {
 
 export function ProjectKanban({
   projectId,
-  token,
+  isAuthenticated,
   users,
   onFeatureChange,
 }: ProjectKanbanProps) {
   const { features, isLoading, createFeature, updateFeature, deleteFeature } =
-    useFeatureData(projectId, token);
+    useFeatureData(projectId, isAuthenticated);
 
   // Dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);

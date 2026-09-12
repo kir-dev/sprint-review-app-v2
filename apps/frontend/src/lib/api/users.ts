@@ -1,12 +1,8 @@
-export async function updateUserPosition(
-  userId: number,
-  newPosition: string,
-  token: string,
-) {
-  const response = await fetch(`/api/users/${userId}`, {
+import { apiFetch } from '@/lib/api-fetch';
+export async function updateUserPosition(userId: number, newPosition: string) {
+  const response = await apiFetch(`/api/users/${userId}`, {
     method: 'PATCH',
     headers: {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ position: newPosition }),

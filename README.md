@@ -154,3 +154,53 @@ Once the servers are running, you can:
 3. Backend generates JWT → redirects to `/dashboard.html?jwt=<token>`
 4. Frontend stores JWT in localStorage
 5. All API requests use `Authorization: Bearer <token>` header
+## Körtagsági hozzáférés (AuthSCH / PÉK)
+
+Egy telepítést egy kör használ. A hozzáférés alapja kizárólag a backend
+`AUTHSCH_GROUP_ID` környezeti változója; az adminfelület és az API nem módosíthatja.
+A szükséges érték a **kör** számszerű PÉK-azonosítója, nem a felhasználó személyes PÉK-ID-ja.
+Hiányzó vagy hibás értékkel a backend nem indul el. Példa a 106-os körhöz:
+
+```dotenv
+AUTHSCH_GROUP_ID=106
+```
+
+A változót az `apps/backend/.env` fájlban vagy a telepítési környezetben kell megadni.
+Docker Compose esetén a gyökér `.env` fájljából kerül a backend konténerbe.
+A változtatás backend-újraindítást igényel. A frontendhez nem kell `NEXT_PUBLIC_` változat.
+Az AuthSCH-kliensnek át kell adnia a `pek.sch.bme.hu:profile` scope adatait.
+Az aktív tagok és körvezetők beléphetnek; az öregtagok hozzáférése külön engedélyezhető.
+
+Az első beállításkor, a környezeti változó megadása után inicializálni kell a körnevet
+és az öregtagok szabályát. A parancs a backend `DATABASE_URL` célját módosítja:
+
+```bash
+cd apps/backend
+yarn access:configure --group-name "A kör neve"
+yarn access:configure --show
+```
+
+A **Kör adminisztráció → Hozzáférés** fülön a kör-ID csak olvasható. A megjelenített
+körnév és az öregtagok engedélyezése szerkeszthető `canManageSettings` vagy helyi
+körvezetői jogosultsággal. Minden mentés megerősítő modalt nyit a pontos változással.
+A Mégse gomb, az Escape és a modal bezárása nem ment. A körtagság önmagában nem ad adminjogot:
+az első admin legyen jogosult körtag, megfelelő helyi szerepkörrel.
+
+**Helyreállítás:** hibás kör-ID esetén javítsd az `AUTHSCH_GROUP_ID` értékét, és indítsd
+újra a backendet. Ha az öregtagok szabálya vagy a tárolt konfiguráció miatt van kizárás,
+az üzemeltető a fenti parancsot `--replace` kapcsolóval használhatja. Az
+`--allow-alumni` engedélyezi az öregtagokat; nélküle tiltottak. A parancs nem hoz létre
+felhasználót és nem módosít helyi szerepköröket. Kör-ID átadására nincs CLI-kapcsoló.
+
+A munkamenet **7 napos**, automatikus AuthSCH-tokenfrissítés nincs. Minden új belépés
+friss AuthSCH-profilt ellenőriz. A PÉK-tagság megszűnése a következő belépéskor, legfeljebb
+a 7 napos helyi munkamenet lejárta után érvényesül, az AuthSCH adatfrissítésének esetleges
+késésével. Az öregtag-szabály módosítása a következő védett kérésnél minden régi munkamenetet
+elutasít; körnév-változás nem. A JWT-ben szereplő kör-ID-nak egyeznie kell az env-ben rögzített ID-val.
+
+A meglévő `SystemSetting` tábla csak a megjelenített nevet, az öregtag-szabályt és a
+verziókat tárolja a `groupAccess` kulcs alatt; sémamigráció nem szükséges.
+Indítás előtt kötelező beállítani az env-változót; az adatbázisban tárolt kör-ID
+nem írhatja felül a környezeti változót.
+A korábbi felhasználók és munkaidőnaplók megmaradnak. Új telepítésnél ellenőrizni kell a
+scope tényleges átadását jogosult és nem jogosult AuthSCH-fiókkal.

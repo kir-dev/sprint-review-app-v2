@@ -1,17 +1,18 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Log, LogFormData, WorkPeriod } from '../types';
 import { findWorkPeriodForDate } from '../utils/log-helpers';
 
 interface UseLogSubmitProps {
-  token: string | null;
+  isAuthenticated: boolean | null;
   user: { id: number } | null;
   workPeriods: WorkPeriod[];
   onSuccess?: () => void;
 }
 
 export function useLogSubmit({
-  token,
+  isAuthenticated,
   user,
   workPeriods,
   onSuccess,
@@ -19,7 +20,7 @@ export function useLogSubmit({
   const queryClient = useQueryClient();
 
   async function handleSubmit(data: LogFormData, editingLog?: Log | null) {
-    if (!user?.id || !token) return;
+    if (!user?.id || !isAuthenticated) return;
 
     const resolvedWorkPeriodId = data.workPeriodId
       ? parseInt(data.workPeriodId)
@@ -48,10 +49,9 @@ export function useLogSubmit({
       const url = editingLog ? `/api/logs/${editingLog.id}` : '/api/logs';
       const method = editingLog ? 'PATCH' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),

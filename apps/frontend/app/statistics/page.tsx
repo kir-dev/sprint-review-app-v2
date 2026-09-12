@@ -9,11 +9,10 @@ import { Visualizations } from '@/components/statistics/Visualizations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/context/AuthContext';
 import { BarChart3 } from 'lucide-react';
-import { useEffect } from 'react';
 import { useStatsData } from './hooks/useStatsData';
 
 export default function StatisticsPage() {
-  const { user, token, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const {
     breakdown,
@@ -22,7 +21,7 @@ export default function StatisticsPage() {
     positionHistory,
     isLoading: statsLoading,
     isError,
-  } = useStatsData(user?.id || 0, token);
+  } = useStatsData(user?.id || 0, isAuthenticated);
 
   if (!user && !authLoading) {
     return (

@@ -81,4 +81,27 @@ describe('validateEnvironment', () => {
       }),
     ).toMatchObject({ NODE_ENV: 'development', PORT: 3001 });
   });
+
+  it.each([
+    ['FRONTEND_URL', 'http://review.example.com'],
+    ['BACKEND_PUBLIC_URL', 'http://api.review.example.com'],
+  ])('rejects insecure %s outside production too', (name, value) => {
+    expect(() =>
+      validateEnvironment({ NODE_ENV: 'development', [name]: value }),
+    ).toThrow(name);
+  });
+
+  it.each([
+    'http://auth.example.com',
+    'not-a-url',
+    'https://user:password@auth.example.com',
+    'https://auth.example.com/base',
+  ])('rejects an unsafe AuthSCH provider URL: %s', (provider) => {
+    expect(() =>
+      validateEnvironment({
+        NODE_ENV: 'development',
+        AUTHSCH_PROVIDER: provider,
+      }),
+    ).toThrow('AUTHSCH_PROVIDER');
+  });
 });

@@ -1,7 +1,15 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
@@ -11,7 +19,7 @@ import { EventCategoryData, EventCategoryDialog } from './EventCategoryDialog';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 export function EventCategoriesTab() {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // Categories states
   const [categories, setCategories] = useState<EventCategoryData[]>([]);
@@ -19,7 +27,8 @@ export function EventCategoriesTab() {
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<EventCategoryData | null>(null);
+  const [editingCategory, setEditingCategory] =
+    useState<EventCategoryData | null>(null);
 
   // Delete confirmation states
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -29,10 +38,9 @@ export function EventCategoriesTab() {
   const fetchCategories = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/event-categories', {
+      const res = await apiFetch('/api/event-categories', {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
       });
       if (res.ok) {
@@ -47,13 +55,13 @@ export function EventCategoriesTab() {
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
-    if (token) {
+    if (isAuthenticated) {
       fetchCategories();
     }
-  }, [token, fetchCategories]);
+  }, [isAuthenticated, fetchCategories]);
 
   // Open modal for Create
   const handleOpenCreate = () => {
@@ -78,11 +86,10 @@ export function EventCategoriesTab() {
     if (!categoryToDelete) return;
 
     try {
-      const res = await fetch(`/api/event-categories/${categoryToDelete}`, {
+      const res = await apiFetch(`/api/event-categories/${categoryToDelete}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -114,7 +121,8 @@ export function EventCategoriesTab() {
         <div>
           <CardTitle>Esemény Kategóriák</CardTitle>
           <CardDescription>
-            Itt hozhatsz létre, szerkeszthetsz és törölhetsz különböző típusú esemény kategóriákat.
+            Itt hozhatsz létre, szerkeszthetsz és törölhetsz különböző típusú
+            esemény kategóriákat.
           </CardDescription>
         </div>
         <Button onClick={handleOpenCreate} className="flex items-center gap-2">
@@ -123,11 +131,16 @@ export function EventCategoriesTab() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="py-8 text-center text-muted-foreground">Kategóriák betöltése...</div>
+          <div className="py-8 text-center text-muted-foreground">
+            Kategóriák betöltése...
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categories.map((cat) => (
-              <Card key={cat.id} className="bg-background/50 border hover:shadow-md transition-shadow">
+              <Card
+                key={cat.id}
+                className="bg-background/50 border hover:shadow-md transition-shadow"
+              >
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Badge

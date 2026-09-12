@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+
+const CSS_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 
 export class UpdateSettingsDto {
   @ApiProperty({
@@ -11,11 +13,14 @@ export class UpdateSettingsDto {
   appName: string;
 
   @ApiProperty({
-    description: 'Primary theme color in HEX or HSL format',
+    description: 'Primary theme color as a six-digit HEX value',
     example: '#f15a29',
   })
   @IsString()
   @IsNotEmpty()
+  @Matches(CSS_COLOR_PATTERN, {
+    message: 'primaryColor must be a six-digit HEX color',
+  })
   primaryColor: string;
 
   @ApiProperty({

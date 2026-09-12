@@ -25,7 +25,7 @@ export function ProfileForm() {
   } = useProfileMutations();
 
   const methods = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema as any) as any,
+    resolver: zodResolver(profileSchema),
     defaultValues: {
       githubUsername: user?.githubUsername || '',
       simonyiEmail: user?.simonyiEmail || '',

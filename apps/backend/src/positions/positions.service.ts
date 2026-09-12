@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { UpdatePositionDto } from './dto/update-position.dto';
@@ -49,36 +54,66 @@ export class PositionsService {
     // Check if name is unique
     const existing = await this.findByName(normalizedName);
     if (existing) {
-      throw new BadRequestException(`Position with name ${normalizedName} already exists`);
+      throw new BadRequestException(
+        `Position with name ${normalizedName} already exists`,
+      );
     }
 
-    // Get max order to append the new position at the end
-    const lastPosition = await this.prisma.position.findFirst({
-      orderBy: { order: 'desc' },
-    });
-    const nextOrder = lastPosition ? lastPosition.order + 1 : 0;
+    return this.prisma.$transaction(
+      async (transaction) => {
+        if (dto.isLeader) {
+          const leader = await transaction.position.findFirst({
+            where: { isLeader: true },
+          });
+          if (leader) {
+            throw new BadRequestException('A leader position already exists');
+          }
+        }
 
-    return this.prisma.position.create({
-      data: {
-        ...dto,
-        name: normalizedName,
-        order: nextOrder,
+        const lastPosition = await transaction.position.findFirst({
+          orderBy: { order: 'desc' },
+        });
+        return transaction.position.create({
+          data: {
+            ...dto,
+            name: normalizedName,
+            order: lastPosition ? lastPosition.order + 1 : 0,
+          },
+        });
       },
-    });
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
 
   /**
    * Updates order values for positions based on a list of IDs
    */
   async updateOrder(ids: number[]) {
-    await this.prisma.$transaction(
-      ids.map((id, index) =>
-        this.prisma.position.update({
-          where: { id },
-          data: { order: index },
-        }),
-      ),
-    );
+    await this.prisma.$transaction(async (transaction) => {
+      const currentPositions = await transaction.position.findMany({
+        select: { id: true },
+      });
+      const uniqueIds = new Set(ids);
+      const currentIds = new Set(currentPositions.map(({ id }) => id));
+      if (
+        uniqueIds.size !== ids.length ||
+        currentIds.size !== uniqueIds.size ||
+        ids.some((id) => !currentIds.has(id))
+      ) {
+        throw new BadRequestException(
+          'Position order must contain every position exactly once',
+        );
+      }
+
+      await Promise.all(
+        ids.map((id, index) =>
+          transaction.position.update({
+            where: { id },
+            data: { order: index },
+          }),
+        ),
+      );
+    });
     return { success: true };
   }
 
@@ -94,27 +129,44 @@ export class PositionsService {
         throw new BadRequestException('Cannot rename the leader position');
       }
       if (dto.isLeader === false) {
-        throw new BadRequestException('Cannot remove leader status from the leader position');
+        throw new BadRequestException(
+          'Cannot remove leader status from the leader position',
+        );
       }
     }
 
-    const data: any = { ...dto };
+    const data: Prisma.PositionUpdateInput = { ...dto };
     if (dto.name) {
-      data.name = dto.name.toUpperCase();
+      const normalizedName = dto.name.toUpperCase();
+      data.name = normalizedName;
 
       // Check uniqueness if renaming
-      if (data.name !== position.name) {
-        const existing = await this.findByName(data.name);
+      if (normalizedName !== position.name) {
+        const existing = await this.findByName(normalizedName);
         if (existing) {
-          throw new BadRequestException(`Position with name ${data.name} already exists`);
+          throw new BadRequestException(
+            `Position with name ${normalizedName} already exists`,
+          );
         }
       }
     }
 
-    return this.prisma.position.update({
-      where: { id },
-      data,
-    });
+    if (dto.isLeader === true && !position.isLeader) {
+      return this.prisma.$transaction(
+        async (transaction) => {
+          const leader = await transaction.position.findFirst({
+            where: { isLeader: true, id: { not: id } },
+          });
+          if (leader) {
+            throw new BadRequestException('A leader position already exists');
+          }
+          return transaction.position.update({ where: { id }, data });
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+    }
+
+    return this.prisma.position.update({ where: { id }, data });
   }
 
   /**

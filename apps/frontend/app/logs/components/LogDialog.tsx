@@ -48,7 +48,7 @@ export function LogDialog({
     watch,
     setValue,
   } = useForm<LogFormData>({
-    resolver: zodResolver(logFormSchema as any),
+    resolver: zodResolver(logFormSchema),
     defaultValues: formData,
   });
 
@@ -88,17 +88,7 @@ export function LogDialog({
                 {(field) => (
                   <Calendar22
                     id="date"
-                    value={
-                      (field.value as any) instanceof Date
-                        ? new Date(
-                            (field.value as any as Date).getTime() -
-                              (field.value as any as Date).getTimezoneOffset() *
-                                60000,
-                          )
-                            .toISOString()
-                            .slice(0, 10)
-                        : field.value
-                    }
+                    value={typeof field.value === 'string' ? field.value : ''}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
                     className="w-full"

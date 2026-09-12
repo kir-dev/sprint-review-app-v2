@@ -66,7 +66,7 @@ export class CreatePositionDto {
   canManageProjects?: boolean;
 
   @ApiProperty({
-    description: 'Whether this role is the circle leader (cannot be deleted)',
+    description: 'Whether this role is the group leader (cannot be deleted)',
     example: false,
     required: false,
   })

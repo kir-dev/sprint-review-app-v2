@@ -3,6 +3,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';
+import { isApiAuthenticationError } from '@/lib/api-fetch';
+
+const MAX_QUERY_RETRIES = 3;
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -12,6 +15,9 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
           queries: {
             staleTime: 1000 * 60 * 5, // 5 minutes
             refetchOnWindowFocus: false,
+            retry: (failureCount, error) =>
+              !isApiAuthenticationError(error) &&
+              failureCount < MAX_QUERY_RETRIES,
           },
         },
       }),

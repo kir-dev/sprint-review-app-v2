@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types -- react-day-picker supplies typed component props. */
 import * as React from 'react';
 import {
   ChevronDownIcon,

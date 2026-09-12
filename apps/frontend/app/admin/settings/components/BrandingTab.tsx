@@ -1,19 +1,27 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/context/AuthContext';
 import { useBranding } from '@/context/BrandingContext';
 import { toast } from 'sonner';
 import { Trash2, Upload } from 'lucide-react';
 import { ColorPicker } from '@/components/ui/color-picker';
 
 export function BrandingTab() {
-  const { token } = useAuth();
-  const { settings: brandingSettings, updateSettings: updateBrandingContext } = useBranding();
+  const { settings: brandingSettings, updateSettings: updateBrandingContext } =
+    useBranding();
 
   // Branding states
   const [appName, setAppName] = useState('');
@@ -33,7 +41,10 @@ export function BrandingTab() {
     }
   }, [brandingSettings]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (val: string) => void,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -54,11 +65,10 @@ export function BrandingTab() {
   const handleSaveBranding = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/settings', {
+      const res = await apiFetch('/api/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           appName,
@@ -88,7 +98,8 @@ export function BrandingTab() {
         <CardHeader>
           <CardTitle>Arculati beállítások</CardTitle>
           <CardDescription>
-            Módosíthatod a kör sajátos megjelenését. Mentés után a változások azonnal alkalmazásra kerülnek minden tagnál.
+            Módosíthatod a kör sajátos megjelenését. Mentés után a változások
+            azonnal alkalmazásra kerülnek minden tagnál.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -112,7 +123,9 @@ export function BrandingTab() {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold border-b pb-2">Logók és ikonok</h3>
+            <h3 className="text-sm font-semibold border-b pb-2">
+              Logók és ikonok
+            </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
@@ -120,7 +133,11 @@ export function BrandingTab() {
                 <div className="flex flex-col gap-3">
                   {logoLightUrl ? (
                     <div className="relative h-28 w-full border border-border/80 rounded-xl p-3 flex items-center justify-center bg-zinc-950/10 shadow-inner group">
-                      <img src={logoLightUrl} alt="Light logo preview" className="max-h-full max-w-full object-contain transition-transform group-hover:scale-[1.02] duration-300" />
+                      <img
+                        src={logoLightUrl}
+                        alt="Light logo preview"
+                        className="max-h-full max-w-full object-contain transition-transform group-hover:scale-[1.02] duration-300"
+                      />
                       <Button
                         type="button"
                         variant="destructive"
@@ -137,8 +154,12 @@ export function BrandingTab() {
                         <Upload className="h-5 w-5" />
                       </div>
                       <div className="text-center">
-                        <p className="text-xs font-semibold">Kattints a logó feltöltéséhez</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">Legfeljebb 2MB</p>
+                        <p className="text-xs font-semibold">
+                          Kattints a logó feltöltéséhez
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Legfeljebb 2MB
+                        </p>
                       </div>
                       <input
                         id="logoLight"
@@ -157,7 +178,11 @@ export function BrandingTab() {
                 <div className="flex flex-col gap-3">
                   {logoDarkUrl ? (
                     <div className="relative h-28 w-full border border-border/80 rounded-xl p-3 flex items-center justify-center bg-zinc-950/30 shadow-inner group">
-                      <img src={logoDarkUrl} alt="Dark logo preview" className="max-h-full max-w-full object-contain transition-transform group-hover:scale-[1.02] duration-300" />
+                      <img
+                        src={logoDarkUrl}
+                        alt="Dark logo preview"
+                        className="max-h-full max-w-full object-contain transition-transform group-hover:scale-[1.02] duration-300"
+                      />
                       <Button
                         type="button"
                         variant="destructive"
@@ -174,8 +199,12 @@ export function BrandingTab() {
                         <Upload className="h-5 w-5" />
                       </div>
                       <div className="text-center">
-                        <p className="text-xs font-semibold">Kattints a logó feltöltéséhez</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">Legfeljebb 2MB</p>
+                        <p className="text-xs font-semibold">
+                          Kattints a logó feltöltéséhez
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Legfeljebb 2MB
+                        </p>
                       </div>
                       <input
                         id="logoDark"
@@ -195,7 +224,11 @@ export function BrandingTab() {
                   {faviconUrl ? (
                     <div className="relative h-28 w-full border border-border/80 rounded-xl p-3 flex items-center justify-center bg-zinc-950/10 shadow-inner group">
                       <div className="relative h-16 w-16 p-1.5 border rounded-lg bg-zinc-950/20 flex items-center justify-center">
-                        <img src={faviconUrl} alt="Favicon preview" className="max-h-full max-w-full object-contain" />
+                        <img
+                          src={faviconUrl}
+                          alt="Favicon preview"
+                          className="max-h-full max-w-full object-contain"
+                        />
                       </div>
                       <Button
                         type="button"
@@ -213,8 +246,12 @@ export function BrandingTab() {
                         <Upload className="h-5 w-5" />
                       </div>
                       <div className="text-center">
-                        <p className="text-xs font-semibold">Kattints a favicon feltöltéséhez</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">Legfeljebb 2MB (1:1 javasolt)</p>
+                        <p className="text-xs font-semibold">
+                          Kattints a favicon feltöltéséhez
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Legfeljebb 2MB (1:1 javasolt)
+                        </p>
                       </div>
                       <input
                         id="favicon"
@@ -231,7 +268,10 @@ export function BrandingTab() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-end border-t pt-6 bg-card/20">
-          <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2 rounded-lg">
+          <Button
+            type="submit"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2 rounded-lg"
+          >
             Változások mentése
           </Button>
         </CardFooter>

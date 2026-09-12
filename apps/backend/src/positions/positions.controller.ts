@@ -1,5 +1,6 @@
 import {
   Body,
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -8,13 +9,30 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CreatePositionDto } from './dto/create-position.dto';
 import { UpdatePositionDto } from './dto/update-position.dto';
 import { UpdatePositionOrderDto } from './dto/update-position-order.dto';
 import { PositionsService } from './positions.service';
+
+function requirePositiveId(value: string): number {
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new BadRequestException('Position ID must be a positive integer');
+  }
+  const id = Number(value);
+  if (!Number.isSafeInteger(id)) {
+    throw new BadRequestException('Position ID must be a positive integer');
+  }
+  return id;
+}
 
 @ApiTags('positions')
 @Controller('positions')
@@ -34,13 +52,15 @@ export class PositionsController {
   @ApiResponse({ status: 200, description: 'Return the position' })
   @ApiResponse({ status: 404, description: 'Position not found' })
   findOne(@Param('id') id: string) {
-    return this.positionsService.findOne(+id);
+    return this.positionsService.findOne(requirePositiveId(id));
   }
 
   @Post()
   @UseGuards(RolesGuard)
   @Roles('canManageSettings')
-  @ApiOperation({ summary: 'Create a new position (restricted to settings managers)' })
+  @ApiOperation({
+    summary: 'Create a new position (restricted to settings managers)',
+  })
   @ApiBody({ type: CreatePositionDto })
   @ApiResponse({ status: 201, description: 'Position created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
@@ -52,9 +72,14 @@ export class PositionsController {
   @Patch('order')
   @UseGuards(RolesGuard)
   @Roles('canManageSettings')
-  @ApiOperation({ summary: 'Update positions order (restricted to settings managers)' })
+  @ApiOperation({
+    summary: 'Update positions order (restricted to settings managers)',
+  })
   @ApiBody({ type: UpdatePositionOrderDto })
-  @ApiResponse({ status: 200, description: 'Positions order updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Positions order updated successfully',
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   updateOrder(@Body() dto: UpdatePositionOrderDto) {
@@ -64,7 +89,9 @@ export class PositionsController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('canManageSettings')
-  @ApiOperation({ summary: 'Update a position (restricted to settings managers)' })
+  @ApiOperation({
+    summary: 'Update a position (restricted to settings managers)',
+  })
   @ApiParam({ name: 'id', type: 'number', description: 'Position ID' })
   @ApiBody({ type: UpdatePositionDto })
   @ApiResponse({ status: 200, description: 'Position updated successfully' })
@@ -72,19 +99,21 @@ export class PositionsController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Position not found' })
   update(@Param('id') id: string, @Body() dto: UpdatePositionDto) {
-    return this.positionsService.update(+id, dto);
+    return this.positionsService.update(requirePositiveId(id), dto);
   }
 
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('canManageSettings')
-  @ApiOperation({ summary: 'Delete a position (restricted to settings managers)' })
+  @ApiOperation({
+    summary: 'Delete a position (restricted to settings managers)',
+  })
   @ApiParam({ name: 'id', type: 'number', description: 'Position ID' })
   @ApiResponse({ status: 200, description: 'Position deleted successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Position not found' })
   remove(@Param('id') id: string) {
-    return this.positionsService.remove(+id);
+    return this.positionsService.remove(requirePositiveId(id));
   }
 }

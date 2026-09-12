@@ -6,9 +6,12 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Position } from '../../app/logs/types';
+import { authErrorMessage, SESSION_REJECTED_EVENT } from '@/lib/api-fetch';
 
 interface User {
   id: number;
@@ -43,9 +46,8 @@ export interface PositionHistory {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (token: string) => void;
-  logout: () => void;
+  isAuthenticated: boolean | null;
+  logout: () => Promise<boolean>;
   refreshUser: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
@@ -66,90 +68,107 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestGeneration = useRef(0);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // Check for token in localStorage
-    const storedToken = localStorage.getItem('jwt');
-    if (storedToken) {
-      setToken(storedToken);
-      fetchUser(storedToken);
-    } else {
+  const clearClientSession = useCallback(
+    (message: string | null = null) => {
+      requestGeneration.current += 1;
+      setUser(null);
+      setIsAuthenticated(false);
+      setError(message);
       setIsLoading(false);
-    }
-  }, []);
-
-  const fetchUser = useCallback(async (authToken: string) => {
-    if (!authToken) return;
-
-    console.log(
-      '🔍 Fetching user with token:',
-      authToken.substring(0, 20) + '...',
-    );
-    try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-
-      console.log('📡 Response status:', response.status);
-
-      if (response.ok) {
-        const userData = await response.json();
-        console.log('✅ User data loaded:', userData);
-        setUser(userData);
-        setError(null);
-      } else {
-        console.error('❌ Token invalid, status:', response.status);
-        // Token invalid, clear it
-        localStorage.removeItem('jwt');
-        setToken(null);
-        setError(
-          'A munkamenet lejárt vagy érvénytelen. Kérjük, jelentkezz be újra.',
-        );
-      }
-    } catch (error) {
-      console.error('❌ Error fetching user:', error);
-      localStorage.removeItem('jwt');
-      setToken(null);
-      setError('Hiba történt a felhasználói adatok lekérése közben.');
-    } finally {
-      setIsLoading(false);
-      console.log('✓ isLoading set to false');
-    }
-  }, []);
-
-  const login = useCallback(
-    (newToken: string) => {
-      localStorage.setItem('jwt', newToken);
-      setToken(newToken);
-      setError(null);
-      setIsLoading(true);
-      fetchUser(newToken);
+      queryClient.clear();
     },
-    [fetchUser],
+    [queryClient],
   );
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('jwt');
-    setToken(null);
-    setUser(null);
-    setError(null);
-  }, []);
+  const fetchUser = useCallback(async () => {
+    const generation = ++requestGeneration.current;
+    try {
+      const response = await fetch('/api/auth/me', { cache: 'no-store' });
+      if (!response.ok) {
+        let code = '';
+        try {
+          const body: unknown = await response.json();
+          if (
+            typeof body === 'object' &&
+            body !== null &&
+            'code' in body &&
+            typeof body.code === 'string'
+          ) {
+            code = body.code;
+          }
+        } catch {
+          /* An empty 401 means there is no active application session. */
+        }
+        if (
+          generation === requestGeneration.current &&
+          (response.status === 401 || response.status === 403)
+        ) {
+          clearClientSession(code ? authErrorMessage(code) : null);
+        } else if (generation === requestGeneration.current) {
+          setError('A munkamenet ellenőrzése átmenetileg nem sikerült.');
+        }
+        return;
+      }
+      const userData: User = await response.json();
+      if (generation === requestGeneration.current) {
+        setUser(userData);
+        setIsAuthenticated(true);
+        setError(null);
+      }
+    } catch (cause) {
+      if (generation === requestGeneration.current) {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'A munkamenet ellenőrzése átmenetileg nem sikerült.',
+        );
+      }
+    } finally {
+      if (generation === requestGeneration.current) setIsLoading(false);
+    }
+  }, [clearClientSession]);
+
+  useEffect(() => {
+    const onRejected = (event: Event) => {
+      const { code } = (event as CustomEvent<{ code: string }>).detail;
+      clearClientSession(authErrorMessage(code));
+      void fetch('/api/auth/logout', { method: 'POST' });
+    };
+    window.addEventListener(SESSION_REJECTED_EVENT, onRejected);
+    return () => window.removeEventListener(SESSION_REJECTED_EVENT, onRejected);
+  }, [clearClientSession]);
+
+  useEffect(() => {
+    void fetchUser();
+  }, [fetchUser]);
+
+  const logout = useCallback(async () => {
+    requestGeneration.current += 1;
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('Logout request failed');
+      clearClientSession();
+      return true;
+    } catch {
+      setError('A kijelentkezés nem sikerült. Próbáld újra.');
+      return false;
+    }
+  }, [clearClientSession]);
 
   const refreshUser = useCallback(async () => {
-    if (token) {
-      await fetchUser(token);
-    }
-  }, [token, fetchUser]);
+    await fetchUser();
+  }, [fetchUser]);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, refreshUser, isLoading, error }}
+      value={{ user, isAuthenticated, logout, refreshUser, isLoading, error }}
     >
       {children}
     </AuthContext.Provider>

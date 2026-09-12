@@ -1,3 +1,9 @@
+import {
+  isLoopbackHostname,
+  parseBrowserOrigin,
+  parseHttpsProvider,
+} from './public-url';
+
 const DEFAULT_PORT = 3001;
 const MIN_SECRET_LENGTH = 32;
 
@@ -24,6 +30,7 @@ function isPlaceholder(value: string): boolean {
   return (
     PLACEHOLDER_VALUES.has(normalized) ||
     normalized.includes('replace-me') ||
+    normalized.includes('replace-with') ||
     normalized.includes('your-') ||
     normalized.includes('<') ||
     normalized.includes('>')
@@ -54,35 +61,35 @@ function validateSecret(
   }
 }
 
-function validateHttpsOrigin(
+function validatePublicOrigin(
   errors: string[],
   name: string,
   value: string,
+  required: boolean,
+  rejectLoopback: boolean,
 ): void {
   if (!value) {
-    errors.push(`${name} is required`);
+    if (required) errors.push(`${name} is required`);
     return;
   }
 
   try {
-    const url = new URL(value);
-    const isLocalhost =
-      url.hostname === 'localhost' ||
-      url.hostname === '127.0.0.1' ||
-      url.hostname === '[::1]';
-    const isOriginOnly =
-      url.pathname === '/' && !url.search && !url.hash && !url.username;
-
-    if (
-      url.protocol !== 'https:' ||
-      isLocalhost ||
-      !isOriginOnly ||
-      url.password.length > 0
-    ) {
-      errors.push(`${name} must be a credential-free HTTPS origin`);
+    const url = parseBrowserOrigin(value, name);
+    if (rejectLoopback && isLoopbackHostname(url.hostname)) {
+      errors.push(`${name} must not use a loopback host in production`);
     }
-  } catch {
-    errors.push(`${name} must be a valid HTTPS origin`);
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : `${name} is invalid`);
+  }
+}
+
+function validateAuthSchProvider(errors: string[], value: string): void {
+  try {
+    parseHttpsProvider(value || 'https://auth.sch.bme.hu', 'AUTHSCH_PROVIDER');
+  } catch (error) {
+    errors.push(
+      error instanceof Error ? error.message : 'AUTHSCH_PROVIDER is invalid',
+    );
   }
 }
 
@@ -139,23 +146,37 @@ export function validateEnvironment(environment: Environment): Environment {
     errors.push('NODE_ENV must be development, test, or production');
   }
 
-  if (nodeEnv === 'production') {
+  const isProduction = nodeEnv === 'production';
+  const frontendUrl = stringValue(environment.FRONTEND_URL);
+  const backendPublicUrl = stringValue(environment.BACKEND_PUBLIC_URL);
+  validatePublicOrigin(
+    errors,
+    'FRONTEND_URL',
+    frontendUrl,
+    isProduction,
+    isProduction,
+  );
+  validatePublicOrigin(
+    errors,
+    'BACKEND_PUBLIC_URL',
+    backendPublicUrl,
+    isProduction,
+    isProduction,
+  );
+  validateAuthSchProvider(errors, stringValue(environment.AUTHSCH_PROVIDER));
+
+  if (isProduction) {
     const databaseUrl = stringValue(environment.DATABASE_URL);
     const authSchClientId = stringValue(environment.AUTHSCH_CLIENT_ID);
     const authSchClientSecret = stringValue(environment.AUTHSCH_CLIENT_SECRET);
     const jwtSecret = stringValue(environment.JWT_SECRET);
     const sessionSecret = stringValue(environment.SESSION_SECRET);
-    const frontendUrl = stringValue(environment.FRONTEND_URL);
-    const backendPublicUrl = stringValue(environment.BACKEND_PUBLIC_URL);
 
     validateSecret(errors, 'DATABASE_URL', databaseUrl, false);
     validateSecret(errors, 'AUTHSCH_CLIENT_ID', authSchClientId, false);
     validateSecret(errors, 'AUTHSCH_CLIENT_SECRET', authSchClientSecret, false);
     validateSecret(errors, 'JWT_SECRET', jwtSecret, true);
     validateSecret(errors, 'SESSION_SECRET', sessionSecret, true);
-    validateHttpsOrigin(errors, 'FRONTEND_URL', frontendUrl);
-    validateHttpsOrigin(errors, 'BACKEND_PUBLIC_URL', backendPublicUrl);
-
     if (jwtSecret && sessionSecret && jwtSecret === sessionSecret) {
       errors.push('JWT_SECRET and SESSION_SECRET must be different');
     }

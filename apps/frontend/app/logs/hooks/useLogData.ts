@@ -1,39 +1,40 @@
+import { apiFetch } from '@/lib/api-fetch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { Log, Project, WorkPeriod } from '../types';
 
-export function useLogData(token: string | null, userId: number | undefined) {
+export function useLogData(
+  isAuthenticated: boolean | null,
+  userId: number | undefined,
+) {
   const queryClient = useQueryClient();
-  const headers = { Authorization: `Bearer ${token}` };
 
   const logsQuery = useQuery<Log[]>({
     queryKey: ['logs', userId],
     queryFn: () =>
-      fetch(`/api/logs${userId ? `?userId=${userId}` : ''}`, { headers }).then(
-        (res) => res.json(),
+      apiFetch(`/api/logs${userId ? `?userId=${userId}` : ''}`).then((res) =>
+        res.json(),
       ),
-    enabled: !!token,
+    enabled: !!isAuthenticated,
   });
 
   const projectsQuery = useQuery<Project[]>({
     queryKey: ['projects'],
-    queryFn: () =>
-      fetch('/api/projects', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    queryFn: () => apiFetch('/api/projects').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const workPeriodsQuery = useQuery<WorkPeriod[]>({
     queryKey: ['work-periods'],
-    queryFn: () =>
-      fetch('/api/work-periods', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    queryFn: () => apiFetch('/api/work-periods').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const currentWorkPeriodQuery = useQuery<WorkPeriod | null>({
     queryKey: ['work-periods', 'current'],
     queryFn: () =>
-      fetch('/api/work-periods/current', { headers }).then((res) => res.json()),
-    enabled: !!token,
+      apiFetch('/api/work-periods/current').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const [localError, setLocalError] = useState<string | null>(null);

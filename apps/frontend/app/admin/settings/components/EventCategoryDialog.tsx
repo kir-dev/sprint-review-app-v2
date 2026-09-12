@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api-fetch';
+
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -14,7 +16,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useAuth } from '@/context/AuthContext';
 import { ColorPicker } from '@/components/ui/color-picker';
 
 export interface EventCategoryData {
@@ -37,8 +38,6 @@ export function EventCategoryDialog({
   editingCategory,
   onSuccess,
 }: EventCategoryDialogProps) {
-  const { token } = useAuth();
-
   // Form states
   const [catName, setCatName] = useState('');
   const [catLabel, setCatLabel] = useState('');
@@ -76,20 +75,19 @@ export function EventCategoryDialog({
     try {
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       };
 
       let res;
       if (editingCategory) {
         // Update
-        res = await fetch(`/api/event-categories/${editingCategory.id}`, {
+        res = await apiFetch(`/api/event-categories/${editingCategory.id}`, {
           method: 'PATCH',
           headers,
           body: JSON.stringify(payload),
         });
       } else {
         // Create
-        res = await fetch('/api/event-categories', {
+        res = await apiFetch('/api/event-categories', {
           method: 'POST',
           headers,
           body: JSON.stringify(payload),
@@ -100,7 +98,7 @@ export function EventCategoryDialog({
         toast.success(
           editingCategory
             ? 'Kategória sikeresen frissítve!'
-            : 'Kategória sikeresen létrehozva!'
+            : 'Kategória sikeresen létrehozva!',
         );
         onOpenChange(false);
         onSuccess();
@@ -121,7 +119,9 @@ export function EventCategoryDialog({
       <DialogContent className="max-w-md w-full border bg-card/95 backdrop-blur-lg">
         <DialogHeader>
           <DialogTitle>
-            {editingCategory ? 'Kategória szerkesztése' : 'Új kategória létrehozása'}
+            {editingCategory
+              ? 'Kategória szerkesztése'
+              : 'Új kategória létrehozása'}
           </DialogTitle>
           <DialogDescription>
             Add meg az esemény kategória nevét és egyedi arculati színét.
@@ -159,7 +159,11 @@ export function EventCategoryDialog({
           <div className="space-y-2">
             <Label>Kategória színe</Label>
             <div className="flex items-center gap-4 mb-2">
-              <ColorPicker value={catColor} onChange={setCatColor} className="flex-1" />
+              <ColorPicker
+                value={catColor}
+                onChange={setCatColor}
+                className="flex-1"
+              />
               <div className="flex flex-col gap-1 shrink-0">
                 <span className="text-[10px] text-muted-foreground uppercase font-semibold">
                   Előnézet
