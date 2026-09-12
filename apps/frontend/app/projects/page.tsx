@@ -16,7 +16,7 @@ import { useProjectData } from './hooks/useProjectData';
 import { useProjectForm } from './hooks/useProjectForm';
 
 export default function ProjectsPage() {
-  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
   // Custom hooks
@@ -28,7 +28,7 @@ export default function ProjectsPage() {
     error,
     setError,
     loadData,
-  } = useProjectData(token);
+  } = useProjectData(isAuthenticated);
   const {
     isDialogOpen,
     editingProject,
@@ -45,10 +45,10 @@ export default function ProjectsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthLoading && !token) {
+    if (!isAuthLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [token, isAuthLoading, router]);
+  }, [isAuthenticated, isAuthLoading, router]);
 
   // Handlers
   async function handleSubmit(e: React.FormEvent) {
@@ -75,7 +75,6 @@ export default function ProjectsPage() {
       const response = await apiFetch(url, {
         method,
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -107,7 +106,6 @@ export default function ProjectsPage() {
     try {
       const response = await apiFetch(`/api/projects/${projectToDelete}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {

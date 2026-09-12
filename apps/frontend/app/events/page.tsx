@@ -17,17 +17,15 @@ import { useEventForm } from './hooks/useEventForm';
 import { EventCategory } from './types';
 
 export default function EventsPage() {
-  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
   const [categories, setCategories] = useState<EventCategory[]>([]);
 
   // Fetch event categories
   useEffect(() => {
-    if (token) {
-      apiFetch('/api/event-categories', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    if (isAuthenticated) {
+      apiFetch('/api/event-categories', {})
         .then((res) => {
           if (!res.ok) throw new Error('Failed to fetch categories');
           return res.json();
@@ -37,7 +35,7 @@ export default function EventsPage() {
         })
         .catch((err) => console.error('Error fetching categories:', err));
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   // Custom hooks
   const {
@@ -47,7 +45,7 @@ export default function EventsPage() {
     error,
     setError,
     loadData,
-  } = useEventData(token);
+  } = useEventData(isAuthenticated);
   const {
     isDialogOpen,
     editingEvent,
@@ -66,10 +64,10 @@ export default function EventsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthLoading && !token) {
+    if (!isAuthLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [token, isAuthLoading, router]);
+  }, [isAuthenticated, isAuthLoading, router]);
 
   // Handlers
   async function handleSubmit(e: React.FormEvent) {
@@ -98,7 +96,6 @@ export default function EventsPage() {
       const response = await apiFetch(url, {
         method,
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -130,7 +127,6 @@ export default function EventsPage() {
     try {
       const response = await apiFetch(`/api/events/${eventToDelete}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {

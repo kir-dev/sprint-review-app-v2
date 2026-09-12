@@ -15,10 +15,9 @@ interface UseFeatureDataReturn {
 
 export function useFeatureData(
   projectId: string,
-  token: string | null,
+  isAuthenticated: boolean | null,
 ): UseFeatureDataReturn {
   const queryClient = useQueryClient();
-  const headers = { Authorization: `Bearer ${token}` };
 
   const {
     data: features = [],
@@ -27,10 +26,8 @@ export function useFeatureData(
   } = useQuery<Feature[]>({
     queryKey: ['projects', projectId, 'features'],
     queryFn: () =>
-      apiFetch(`/api/projects/${projectId}/features`, { headers }).then((res) =>
-        res.json(),
-      ),
-    enabled: !!token && !!projectId,
+      apiFetch(`/api/projects/${projectId}/features`).then((res) => res.json()),
+    enabled: !!isAuthenticated && !!projectId,
   });
 
   const createMutation = useMutation({
@@ -39,7 +36,6 @@ export function useFeatureData(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...headers,
         },
         body: JSON.stringify(data),
       }).then(async (res) => {
@@ -62,7 +58,6 @@ export function useFeatureData(
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...headers,
         },
         body: JSON.stringify(data),
       }).then((res) => {
@@ -108,7 +103,6 @@ export function useFeatureData(
     mutationFn: (id: number) =>
       apiFetch(`/api/features/${id}`, {
         method: 'DELETE',
-        headers,
       }).then((res) => {
         if (!res.ok) throw new Error('Failed to delete feature');
         return res.json();

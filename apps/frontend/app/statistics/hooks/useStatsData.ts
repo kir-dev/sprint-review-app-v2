@@ -1,43 +1,33 @@
 import { apiFetch } from '@/lib/api-fetch';
 import { useQuery } from '@tanstack/react-query';
 
-export function useStatsData(userId: number, token: string | null) {
-  const headers = { Authorization: `Bearer ${token}` };
-
+export function useStatsData(userId: number, isAuthenticated: boolean | null) {
   const breakdownQuery = useQuery({
     queryKey: ['stats', userId, 'breakdown'],
     queryFn: () =>
-      apiFetch(`/api/stats/${userId}/breakdown`, { headers }).then((res) =>
-        res.json(),
-      ),
-    enabled: !!token && !!userId,
+      apiFetch(`/api/stats/${userId}/breakdown`).then((res) => res.json()),
+    enabled: !!isAuthenticated && !!userId,
   });
 
   const historyQuery = useQuery({
     queryKey: ['stats', userId, 'history'],
     queryFn: () =>
-      apiFetch(`/api/stats/${userId}/history`, { headers }).then((res) =>
-        res.json(),
-      ),
-    enabled: !!token && !!userId,
+      apiFetch(`/api/stats/${userId}/history`).then((res) => res.json()),
+    enabled: !!isAuthenticated && !!userId,
   });
 
   const gamificationQuery = useQuery({
     queryKey: ['stats', userId, 'gamification'],
     queryFn: () =>
-      apiFetch(`/api/stats/${userId}/gamification`, { headers }).then((res) =>
-        res.json(),
-      ),
-    enabled: !!token && !!userId,
+      apiFetch(`/api/stats/${userId}/gamification`).then((res) => res.json()),
+    enabled: !!isAuthenticated && !!userId,
   });
 
   const positionsQuery = useQuery({
     queryKey: ['stats', userId, 'positions'],
     queryFn: () =>
-      apiFetch(`/api/stats/${userId}/positions`, { headers }).then((res) =>
-        res.json(),
-      ),
-    enabled: !!token && !!userId,
+      apiFetch(`/api/stats/${userId}/positions`).then((res) => res.json()),
+    enabled: !!isAuthenticated && !!userId,
   });
 
   return {

@@ -6,8 +6,11 @@ import { AppModule } from './../src/app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
+  let previousGroupId: string | undefined;
 
   beforeEach(async () => {
+    previousGroupId = process.env.AUTHSCH_GROUP_ID;
+    process.env.AUTHSCH_GROUP_ID = '42';
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -16,10 +19,16 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  afterEach(async () => {
+    await app?.close();
+    if (previousGroupId === undefined) delete process.env.AUTHSCH_GROUP_ID;
+    else process.env.AUTHSCH_GROUP_ID = previousGroupId;
+  });
+
+  it('/health/live (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/health/live')
       .expect(200)
-      .expect('Hello World!');
+      .expect({ status: 'ok' });
   });
 });

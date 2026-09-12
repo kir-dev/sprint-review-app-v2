@@ -9,28 +9,25 @@ import {
   HeatmapData,
 } from '@/types/dashboard';
 
-export function useDashboardData(token: string | null) {
-  const headers = { Authorization: `Bearer ${token}` };
-
+export function useDashboardData(isAuthenticated: boolean | null) {
   const summaryQuery = useQuery<DashboardSummary>({
     queryKey: ['dashboard', 'summary'],
-    queryFn: () =>
-      apiFetch('/api/dashboard/summary', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    queryFn: () => apiFetch('/api/dashboard/summary').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const projectsQuery = useQuery<DashboardProjectStats>({
     queryKey: ['dashboard', 'projects'],
     queryFn: () =>
-      apiFetch('/api/dashboard/projects', { headers }).then((res) => res.json()),
-    enabled: !!token,
+      apiFetch('/api/dashboard/projects').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const topUsersQuery = useQuery<DashboardTopUser[]>({
     queryKey: ['dashboard', 'top-users'],
     queryFn: () =>
-      apiFetch('/api/dashboard/top-users', { headers }).then((res) => res.json()),
-    enabled: !!token,
+      apiFetch('/api/dashboard/top-users').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const statsQuery = useQuery<{
@@ -39,16 +36,14 @@ export function useDashboardData(token: string | null) {
     difficultyBreakdown: { name: string; value: number }[];
   }>({
     queryKey: ['dashboard', 'stats'],
-    queryFn: () =>
-      apiFetch('/api/dashboard/stats', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    queryFn: () => apiFetch('/api/dashboard/stats').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const eventsQuery = useQuery<DashboardEventStats>({
     queryKey: ['dashboard', 'events'],
-    queryFn: () =>
-      apiFetch('/api/dashboard/events', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    queryFn: () => apiFetch('/api/dashboard/events').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   return {

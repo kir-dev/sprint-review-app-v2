@@ -1,4 +1,5 @@
 import { backendUrl } from '@/lib/backend';
+import { APP_SESSION_COOKIE } from '@/lib/auth-cookies';
 import type { NextRequest } from 'next/server';
 
 // Proxies /api/* to the backend, resolving the target at RUNTIME so one image
@@ -90,7 +91,10 @@ async function proxy(
   const target = `${internalBaseUrl}/${path.join('/')}${req.nextUrl.search}`;
 
   const headers = new Headers(req.headers);
+  const sessionToken = req.cookies.get(APP_SESSION_COOKIE)?.value;
   sanitizeRequestHeaders(headers);
+  headers.delete('authorization');
+  if (sessionToken) headers.set('authorization', `Bearer ${sessionToken}`);
 
   // Stream the request body straight through rather than buffering it. Profile
   // pictures are sent as base64 data URLs (~6.7MB after encoding a 5MB file),
@@ -146,6 +150,7 @@ async function proxy(
   responseHeaders.delete('set-cookie');
   responseHeaders.delete('server');
   responseHeaders.delete('x-powered-by');
+  if (sessionToken) responseHeaders.set('cache-control', 'private, no-store');
   rewriteInternalLocation(responseHeaders, internalBaseUrl, target);
 
   return new Response(upstream.body, {

@@ -19,7 +19,7 @@ import { ProjectKanban } from '../components/ProjectKanban';
 import { useProjectDetails } from '../hooks/useProjectDetails';
 
 export default function ProjectDetailsPage() {
-  const { token, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
@@ -31,13 +31,13 @@ export default function ProjectDetailsPage() {
     isLoading: dataLoading,
     error,
     refetchStats,
-  } = useProjectDetails(projectId, token);
+  } = useProjectDetails(projectId, isAuthenticated);
 
   useEffect(() => {
-    if (!isAuthLoading && !token) {
+    if (!isAuthLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [token, isAuthLoading, router]);
+  }, [isAuthenticated, isAuthLoading, router]);
 
   if (isAuthLoading) return null;
 
@@ -219,7 +219,7 @@ export default function ProjectDetailsPage() {
       <div className="mt-4">
         <ProjectKanban
           projectId={projectId}
-          token={token}
+          isAuthenticated={isAuthenticated}
           users={users}
           onFeatureChange={refetchStats}
         />

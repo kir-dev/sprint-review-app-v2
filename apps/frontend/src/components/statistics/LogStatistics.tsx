@@ -12,12 +12,6 @@ interface LogStatisticsProps {
 }
 
 export function LogStatistics({ data }: LogStatisticsProps) {
-  const difficultyMap = {
-    SMALL: 'Kicsi',
-    MEDIUM: 'Közepes',
-    LARGE: 'Nagy',
-  };
-
   const getDifficultyCount = (diff: string) => {
     const item = data.difficultyBreakdown.find((d) => d.name === diff);
     return item ? item.value : 0;

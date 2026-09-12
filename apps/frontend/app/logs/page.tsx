@@ -24,7 +24,7 @@ import { LogFilters as LogFiltersType, LogFormData } from './types';
 import { filterLogs } from './utils/log-helpers';
 
 export default function LogsPage() {
-  const { user, token, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
 
   // Custom hooks
@@ -37,14 +37,13 @@ export default function LogsPage() {
     isLoading,
     error,
     setError,
-    loadData,
-  } = useLogData(token, user?.id);
+  } = useLogData(isAuthenticated, user?.id);
   const { isDialogOpen, editingLog, formData, openDialog, closeDialog } =
     useLogForm(workPeriods, currentWorkPeriod);
-  const { events } = useEventData(token);
+  const { events } = useEventData(isAuthenticated);
 
   const { handleSubmit: submitLog } = useLogSubmit({
-    token,
+    isAuthenticated,
     user,
     workPeriods,
     onSuccess: async () => {
@@ -73,10 +72,10 @@ export default function LogsPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthLoading && !token) {
+    if (!isAuthLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [token, isAuthLoading, router]);
+  }, [isAuthenticated, isAuthLoading, router]);
 
   // Handle filter animation and mounting
   useEffect(() => {
@@ -107,7 +106,6 @@ export default function LogsPage() {
     try {
       const response = await apiFetch(`/api/logs/${logToDelete}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -203,7 +201,7 @@ export default function LogsPage() {
       {canExport && (
         <ExportDialog
           isOpen={isExportOpen}
-          token={token}
+          isAuthenticated={isAuthenticated}
           workPeriods={workPeriods}
           onClose={() => setIsExportOpen(false)}
         />

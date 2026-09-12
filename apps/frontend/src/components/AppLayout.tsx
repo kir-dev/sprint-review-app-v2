@@ -17,11 +17,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const showSidebar = !pagesWithoutSidebar.includes(pathname);
   const { theme } = useTheme();
-  const { user, token, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (showSidebar && !isLoading && (!user || !token)) router.replace('/login');
-  }, [showSidebar, isLoading, user, token, router]);
+    if (showSidebar && !isLoading && isAuthenticated === false)
+      router.replace('/login');
+  }, [showSidebar, isLoading, user, isAuthenticated, router]);
   const { settings } = useBranding();
   const logoSrc =
     theme === 'light' ? settings.logoLightUrl : settings.logoDarkUrl;
@@ -30,7 +31,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  if (isLoading || !user || !token) return <div role="status" className="p-8">Betöltés...</div>;
+  if (isLoading || !user || isAuthenticated !== true)
+    return (
+      <div role="status" className="p-8">
+        Betöltés...
+      </div>
+    );
 
   return (
     <div className="flex h-screen overflow-hidden">

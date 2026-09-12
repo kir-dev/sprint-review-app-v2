@@ -4,17 +4,28 @@ import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api-fetch';
 import { AccessConfirmDialog } from './access-confirm-dialog';
-import { accessSchema, accessUpdateSchema, AccessPolicy, AccessUpdate } from './access-schema';
+import {
+  accessSchema,
+  accessUpdateSchema,
+  AccessPolicy,
+  AccessUpdate,
+} from './access-schema';
 
 export function AccessTab() {
-  const { token, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const [pending, setPending] = useState<AccessUpdate | null>(null);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
@@ -30,14 +41,13 @@ export function AccessTab() {
   } = useForm<AccessUpdate>({ resolver: zodResolver(accessUpdateSchema) });
 
   useEffect(() => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     const controller = new AbortController();
     setLoaded(null);
     setLoadError(false);
     async function load() {
       try {
         const response = await apiFetch('/api/settings/access', {
-          headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         });
         if (!response.ok) throw new Error();
@@ -55,7 +65,7 @@ export function AccessTab() {
     }
     void load();
     return () => controller.abort();
-  }, [token, reset, reload]);
+  }, [isAuthenticated, reset, reload]);
 
   const save = async (policy: AccessUpdate) => {
     if (savingRef.current) return;
@@ -64,11 +74,13 @@ export function AccessTab() {
     try {
       const response = await apiFetch('/api/settings/access', {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(policy),
       });
       if (response.status === 409) {
-        toast.error('Más módosította a beállítást. Az aktuális értékeket újratöltjük.');
+        toast.error(
+          'Más módosította a beállítást. Az aktuális értékeket újratöltjük.',
+        );
         setPending(null);
         setReload((value) => value + 1);
         return;
@@ -77,7 +89,9 @@ export function AccessTab() {
       const updated = accessSchema.parse(await response.json());
       setPending(null);
       if (updated.revision !== loaded?.revision) {
-        toast.success('Elmentve. A hozzáférési szabály megváltozott, jelentkezz be újra.');
+        toast.success(
+          'Elmentve. A hozzáférési szabály megváltozott, jelentkezz be újra.',
+        );
         logout();
       } else {
         setLoaded(updated);
@@ -97,16 +111,23 @@ export function AccessTab() {
       <CardHeader>
         <CardTitle>Hozzáférés körtagság alapján</CardTitle>
         <CardDescription>
-          Az oldalra a beállított kör aktív tagjai és körvezetője léphetnek be. A körtagságot minden
-          AuthSCH-belépéskor ellenőrizzük. A munkamenet 7 napig érvényes.
+          Az oldalra a beállított kör aktív tagjai és körvezetője léphetnek be.
+          A körtagságot minden AuthSCH-belépéskor ellenőrizzük. A munkamenet 7
+          napig érvényes.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!loaded ? (
           <div role="status" className="space-y-3">
-            <p>{loadError ? 'Nem sikerült betölteni a beállításokat.' : 'Betöltés...'}</p>
+            <p>
+              {loadError
+                ? 'Nem sikerült betölteni a beállításokat.'
+                : 'Betöltés...'}
+            </p>
             {loadError && (
-              <Button onClick={() => setReload((value) => value + 1)}>Újrapróbálás</Button>
+              <Button onClick={() => setReload((value) => value + 1)}>
+                Újrapróbálás
+              </Button>
             )}
           </div>
         ) : (
@@ -116,10 +137,12 @@ export function AccessTab() {
           >
             <div className="space-y-2">
               <p className="text-sm font-medium">PÉK-körazonosító</p>
-              <p className="rounded-md border bg-muted px-3 py-2 font-mono">{loaded.groupId}</p>
+              <p className="rounded-md border bg-muted px-3 py-2 font-mono">
+                {loaded.groupId}
+              </p>
               <p className="text-sm text-muted-foreground">
-                Ehhez a telepítéshez rögzített kör. Az azonosítót az üzemeltető állítja be, ezen a
-                felületen nem módosítható.
+                Ehhez a telepítéshez rögzített kör. Az azonosítót az üzemeltető
+                állítja be, ezen a felületen nem módosítható.
               </p>
             </div>
             <div className="space-y-2">
@@ -132,22 +155,31 @@ export function AccessTab() {
                 {...register('groupName')}
               />
               <p className="text-sm text-muted-foreground">
-                Megjelenítésre szolgál; a tagságot az azonosító alapján ellenőrizzük.
+                Megjelenítésre szolgál; a tagságot az azonosító alapján
+                ellenőrizzük.
               </p>
               <p id="group-name-error" role="alert">
                 {errors.groupName?.message}
               </p>
             </div>
             <label className="flex items-center gap-3">
-              <input type="checkbox" {...register('allowAlumni')} className="h-4 w-4" />
+              <input
+                type="checkbox"
+                {...register('allowAlumni')}
+                className="h-4 w-4"
+              />
               Öregtagok is beléphetnek
             </label>
             <p className="rounded-lg border p-4 text-sm">
-              Az öregtagok engedélyének módosítása mindenkinél új belépést kér. Az engedély
-              visszavonásával az öregtagok nem tudnak visszalépni. A körnév átírása nem léptet ki
-              senkit.
+              Az öregtagok engedélyének módosítása mindenkinél új belépést kér.
+              Az engedély visszavonásával az öregtagok nem tudnak visszalépni. A
+              körnév átírása nem léptet ki senkit.
             </p>
-            <Button ref={saveButton} type="submit" disabled={!isDirty || isSubmitting || saving}>
+            <Button
+              ref={saveButton}
+              type="submit"
+              disabled={!isDirty || isSubmitting || saving}
+            >
               {isSubmitting ? 'Mentés...' : 'Hozzáférés mentése'}
             </Button>
           </form>

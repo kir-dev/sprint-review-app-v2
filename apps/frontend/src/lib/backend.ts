@@ -33,6 +33,24 @@ function normalizeBaseUrl(value: string, variableName: string): string {
   return url.toString().replace(/\/+$/, '');
 }
 
+function normalizePublicBaseUrl(value: string, variableName: string): string {
+  const normalized = normalizeBaseUrl(value, variableName);
+  const url = new URL(normalized);
+  if (url.pathname !== '/') {
+    throw new Error(`${variableName} must be an origin without a path`);
+  }
+  const isLoopback =
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    url.hostname === '[::1]';
+  if (url.protocol !== 'https:' && !(url.protocol === 'http:' && isLoopback)) {
+    throw new Error(
+      `${variableName} must use HTTPS unless it is an HTTP loopback URL`,
+    );
+  }
+  return url.origin;
+}
+
 function configuredUrl(
   candidates: Array<[name: string, value: string | undefined]>,
 ): string {
@@ -66,9 +84,15 @@ export function backendUrl(): string {
  * that the AuthSCH callback needs.
  */
 export function publicBackendUrl(): string {
-  return configuredUrl([
+  const candidates: Array<[string, string | undefined]> = [
     ['BACKEND_PUBLIC_URL', process.env.BACKEND_PUBLIC_URL],
-    // Legacy: the existing Vercel deployment only has this one configured.
     ['NEXT_PUBLIC_BACKEND_URL', process.env.NEXT_PUBLIC_BACKEND_URL],
-  ]);
+  ];
+  for (const [name, value] of candidates) {
+    if (value) return normalizePublicBaseUrl(value, name);
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('A public backend URL must be configured in production');
+  }
+  return normalizePublicBaseUrl(FALLBACK, 'BACKEND_PUBLIC_URL');
 }

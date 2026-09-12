@@ -12,15 +12,15 @@ import { ProfileForm } from './components/ProfileForm';
  * Main page component. Handles auth state, loading, and page layout.
  */
 export default function ProfilePage() {
-  const { user, token, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!isLoading && !token) {
+    if (!isLoading && isAuthenticated === false) {
       router.push('/login');
     }
-  }, [isLoading, token, router]);
+  }, [isLoading, isAuthenticated, router]);
 
   // Loading state
   if (isLoading) {
@@ -32,13 +32,12 @@ export default function ProfilePage() {
   }
 
   // Render nothing until redirect is complete
-  if (!user || !token) {
+  if (!user || !isAuthenticated) {
     return null;
   }
 
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
+  const handleLogout = async () => {
+    if (await logout()) router.push('/login');
   };
 
   return (

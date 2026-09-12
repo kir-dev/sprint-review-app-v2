@@ -28,26 +28,25 @@ interface UserStats {
   logsByProject: Record<string, number>;
 }
 
-export function useUserDetails(userId: string, token: string | null) {
-  const headers = { Authorization: `Bearer ${token}` };
-
+export function useUserDetails(
+  userId: string,
+  isAuthenticated: boolean | null,
+) {
   const userQuery = useQuery<UserDetails>({
     queryKey: ['users', userId],
     queryFn: () =>
-      apiFetch(`/api/users/${userId}`, { headers }).then((res) => {
+      apiFetch(`/api/users/${userId}`).then((res) => {
         if (!res.ok) throw new Error('Felhasználó nem található');
         return res.json();
       }),
-    enabled: !!token && !!userId,
+    enabled: !!isAuthenticated && !!userId,
   });
 
   const statsQuery = useQuery<UserStats>({
     queryKey: ['users', userId, 'stats'],
     queryFn: () =>
-      apiFetch(`/api/logs/stats/user/${userId}`, { headers }).then((res) =>
-        res.json(),
-      ),
-    enabled: !!token && !!userId,
+      apiFetch(`/api/logs/stats/user/${userId}`).then((res) => res.json()),
+    enabled: !!isAuthenticated && !!userId,
   });
 
   return {

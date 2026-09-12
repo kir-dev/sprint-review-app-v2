@@ -1,14 +1,17 @@
 'use client';
 
-import { browserBackendUrl } from '@/lib/clientEnv';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
-import { AUTHSCH_CALLBACK_PENDING_KEY, useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { authErrorMessage } from '@/lib/api-fetch';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 
 function LoginContent() {
   const router = useRouter();
-  const { logout, user, token, isLoading, error } = useAuth();
+  const searchParams = useSearchParams();
+  const { user, isAuthenticated, isLoading, error } = useAuth();
+  const callbackError = searchParams.get('error');
+  const visibleError = callbackError ? authErrorMessage(callbackError) : error;
   const [settings, setSettings] = useState<{
     appName: string;
     logoDarkUrl: string;
@@ -21,28 +24,22 @@ function LoginContent() {
         throw new Error();
       })
       .then((data) => setSettings(data))
-      .catch((err) =>
-        console.error('Failed to fetch public settings on login page', err),
+      .catch((cause) =>
+        console.error('Failed to fetch public settings on login page', cause),
       );
   }, []);
 
   useEffect(() => {
-    if (!isLoading && user && token) router.replace('/dashboard');
-  }, [user, token, isLoading, router]);
+    if (!isLoading && user && isAuthenticated) router.replace('/dashboard');
+  }, [user, isAuthenticated, isLoading, router]);
 
-  if (!error && (isLoading || (token && user))) {
+  if (!visibleError && (isLoading || isAuthenticated === true)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark px-4">
         <LoadingLogo size={60} />
       </div>
     );
   }
-
-  const handleLogin = () => {
-    logout();
-    sessionStorage.setItem(AUTHSCH_CALLBACK_PENDING_KEY, 'true');
-    window.location.href = `${browserBackendUrl()}/auth/login`;
-  };
 
   const appName = settings?.appName || 'Sprint Review App';
   const logoSrc = settings?.logoDarkUrl || '/Kir-Dev-White.png';
@@ -58,14 +55,14 @@ function LoginContent() {
           Jelentkezz be az AuthSCH-val a folytatáshoz
         </p>
 
-        {error && (
+        {visibleError && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-xl mb-6">
-            <p className="text-sm font-medium">{error}</p>
+            <p className="text-sm font-medium">{visibleError}</p>
           </div>
         )}
 
         <button
-          onClick={handleLogin}
+          onClick={() => window.location.assign('/api/auth/login')}
           className="w-full bg-primary hover:bg-primary-600 text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 transform hover:scale-[1.02]"
         >
           Bejelentkezés AuthSCH-val
@@ -76,5 +73,9 @@ function LoginContent() {
 }
 
 export default function LoginPage() {
-  return <LoginContent />;
+  return (
+    <Suspense fallback={<LoadingLogo size={60} />}>
+      <LoginContent />
+    </Suspense>
+  );
 }

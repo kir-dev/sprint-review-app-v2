@@ -8,6 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import session from 'express-session';
+import { randomBytes } from 'node:crypto';
 import request from 'supertest';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthModule } from '../src/auth/auth.module';
@@ -18,6 +20,7 @@ import {
 } from '../src/group-access/group-access.types';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
 import { SettingsModule } from '../src/settings/settings.module';
+import { createSessionOptions } from '../src/config/http.config';
 
 const initialPolicy: GroupAccessPolicy = {
   groupId: 42,
@@ -36,6 +39,12 @@ const memberProfile = {
     alumniMemberAt: [],
   },
 };
+
+const createState = () =>
+  `${Date.now().toString(36)}.${randomBytes(32).toString('base64url')}`;
+
+const jwtFromHandoff = (html: string): string | null =>
+  html.match(/name="jwt" value="([A-Za-z0-9_.-]+)"/)?.[1] || null;
 
 describe('Group access HTTP integration', () => {
   let app: INestApplication;
@@ -76,13 +85,24 @@ describe('Group access HTTP integration', () => {
           if (useProviderCallback)
             return new AuthSchDedupGuard().canActivate(context);
           if (callbackFails) throw new UnauthorizedException();
-          context.switchToHttp().getRequest<{ user: unknown }>().user =
-            callbackProfile;
+          const callbackRequest = context
+            .switchToHttp()
+            .getRequest<{ user: unknown; authSchState?: string }>();
+          callbackRequest.user = callbackProfile;
+          callbackRequest.authSchState = 'integration-test-state';
           return true;
         },
       })
       .compile();
     app = module.createNestApplication();
+    app.use(
+      session(
+        createSessionOptions({
+          nodeEnv: 'test',
+          sessionSecret: 'integration-test-session-secret',
+        }),
+      ),
+    );
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -161,8 +181,9 @@ describe('Group access HTTP integration', () => {
   });
 
   it('requests the PÉK scope in the real login redirect', async () => {
+    const state = createState();
     const response = await request(app.getHttpServer())
-      .get('/auth/login')
+      .get(`/auth/login?state=${state}`)
       .expect(302);
     const scope = new URL(response.headers.location).searchParams.get('scope');
     expect(scope).toContain('pek.sch.bme.hu:profile');
@@ -196,13 +217,23 @@ describe('Group access HTTP integration', () => {
           ),
         );
 
-      const response = await request(app.getHttpServer())
-        .get('/auth/callback?code=provider-callback-test')
+      const state = createState();
+      const agent = request.agent(app.getHttpServer());
+      const loginResponse = await agent
+        .get(`/auth/login?state=${state}`)
         .expect(302);
-      const destination = new URL(response.headers.location);
+      const providerState = new URL(
+        loginResponse.headers.location,
+      ).searchParams.get('state');
+      expect(providerState).toBeTruthy();
+      const response = await agent.get(
+        `/auth/callback?code=provider-callback-test&state=${providerState}`,
+      );
       expect(fetchMock).toHaveBeenCalledTimes(2);
       if (providerGroupId === initialPolicy.groupId) {
-        const token = destination.searchParams.get('jwt');
+        expect(response.status).toBe(200);
+        expect(response.text).toContain(`name="state" value="${state}"`);
+        const token = jwtFromHandoff(response.text);
         expect(token).toBeTruthy();
         const claims = jwt.verify<{ exp: number; iat: number }>(token!);
         expect(claims.exp - claims.iat).toBe(SESSION_MAX_AGE_SECONDS);
@@ -211,6 +242,8 @@ describe('Group access HTTP integration', () => {
           .set('Authorization', `Bearer ${token}`)
           .expect(200);
       } else {
+        expect(response.status).toBe(302);
+        const destination = new URL(response.headers.location);
         expect(destination.searchParams.get('error')).toBe(
           'GROUP_MEMBERSHIP_REQUIRED',
         );
@@ -224,8 +257,8 @@ describe('Group access HTTP integration', () => {
   it('issues a seven-day JWT after an authorized callback', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/callback')
-      .expect(302);
-    const token = new URL(response.headers.location).searchParams.get('jwt');
+      .expect(200);
+    const token = jwtFromHandoff(response.text);
     expect(token).toBeTruthy();
     const claims = jwt.verify<{ exp: number; iat: number }>(token!);
     expect(claims.exp - claims.iat).toBe(SESSION_MAX_AGE_SECONDS);
@@ -245,7 +278,7 @@ describe('Group access HTTP integration', () => {
       .get('/auth/callback')
       .expect(302);
     expect(response.headers.location).toBe(
-      'https://frontend.example.test/login?error=GROUP_MEMBERSHIP_REQUIRED',
+      'https://frontend.example.test/api/auth/session?error=GROUP_MEMBERSHIP_REQUIRED&state=integration-test-state',
     );
     expect(db.user.findUnique).not.toHaveBeenCalled();
     expect(db.user.create).not.toHaveBeenCalled();
@@ -259,6 +292,7 @@ describe('Group access HTTP integration', () => {
     expect(response.headers.location).toContain(
       'error=GROUP_MEMBERSHIP_UNVERIFIABLE',
     );
+    expect(response.headers.location).toContain('state=integration-test-state');
   });
 
   it('redirects provider errors to a fixed login destination', async () => {

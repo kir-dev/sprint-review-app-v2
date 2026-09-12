@@ -2,32 +2,31 @@ import { apiFetch } from '@/lib/api-fetch';
 import { useQuery } from '@tanstack/react-query';
 import { Project, ProjectStats, User } from '../types';
 
-export function useProjectDetails(projectId: string, token: string | null) {
-  const headers = { Authorization: `Bearer ${token}` };
-
+export function useProjectDetails(
+  projectId: string,
+  isAuthenticated: boolean | null,
+) {
   const projectQuery = useQuery<Project>({
     queryKey: ['projects', projectId],
     queryFn: () =>
-      apiFetch(`/api/projects/${projectId}`, { headers }).then((res) => {
+      apiFetch(`/api/projects/${projectId}`).then((res) => {
         if (!res.ok) throw new Error('Projekt nem található');
         return res.json();
       }),
-    enabled: !!token && !!projectId,
+    enabled: !!isAuthenticated && !!projectId,
   });
 
   const statsQuery = useQuery<ProjectStats>({
     queryKey: ['projects', projectId, 'stats'],
     queryFn: () =>
-      apiFetch(`/api/projects/${projectId}/stats`, { headers }).then((res) =>
-        res.json(),
-      ),
-    enabled: !!token && !!projectId,
+      apiFetch(`/api/projects/${projectId}/stats`).then((res) => res.json()),
+    enabled: !!isAuthenticated && !!projectId,
   });
 
   const usersQuery = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: () => apiFetch('/api/users', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    queryFn: () => apiFetch('/api/users').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   return {

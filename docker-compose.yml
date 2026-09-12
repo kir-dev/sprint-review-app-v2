@@ -6,9 +6,9 @@ services:
   #   container_name: sprint_review_db
   #   restart: always
   #   environment:
-  #     POSTGRES_USER: admin
-  #     POSTGRES_PASSWORD: password
-  #     POSTGRES_DB: sprint-review-app
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: ${POSTGRES_DB}
   #   ports:
   #     - '127.0.0.1:5432:5432'
   #   volumes:
@@ -26,7 +26,7 @@ services:
     ports:
       - '127.0.0.1:3001:3001'
     environment:
-      # DATABASE_URL: postgres://admin:password@db:5432/sprint-review-app
+      # DATABASE_URL is supplied through the deployment environment.
       # Add other necessary env vars here or use an env_file
       AUTHSCH_CLIENT_ID: ${AUTHSCH_CLIENT_ID}
       AUTHSCH_CLIENT_SECRET: ${AUTHSCH_CLIENT_SECRET}
@@ -59,7 +59,7 @@ services:
       - '127.0.0.1:3000:3000'
     environment:
       # Server-side requests use the Compose service name. The public URL is
-      # injected into the browser for the AuthSCH redirect.
+      # used by the server-side AuthSCH login endpoint.
       BACKEND_INTERNAL_URL: http://backend:3001
       BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3001}
       PORT: 3000

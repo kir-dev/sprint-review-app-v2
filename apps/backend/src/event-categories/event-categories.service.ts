@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateEventCategoryDto } from './dto/create-event-category.dto';
 import { UpdateEventCategoryDto } from './dto/update-event-category.dto';
@@ -49,15 +54,21 @@ export class EventCategoriesService {
     // Check if name is unique
     const existing = await this.findByName(normalizedName);
     if (existing) {
-      throw new BadRequestException(`Event category with name ${normalizedName} already exists`);
+      throw new BadRequestException(
+        `Event category with name ${normalizedName} already exists`,
+      );
     }
 
-    return this.prisma.eventCategory.create({
-      data: {
-        ...dto,
-        name: normalizedName,
-      },
-    });
+    try {
+      return await this.prisma.eventCategory.create({
+        data: {
+          ...dto,
+          name: normalizedName,
+        },
+      });
+    } catch (error) {
+      this.rethrowUniqueNameConflict(error, normalizedName);
+    }
   }
 
   /**
@@ -74,15 +85,21 @@ export class EventCategoriesService {
       if (data.name !== category.name) {
         const existing = await this.findByName(data.name);
         if (existing) {
-          throw new BadRequestException(`Event category with name ${data.name} already exists`);
+          throw new BadRequestException(
+            `Event category with name ${data.name} already exists`,
+          );
         }
       }
     }
 
-    return this.prisma.eventCategory.update({
-      where: { id },
-      data,
-    });
+    try {
+      return await this.prisma.eventCategory.update({
+        where: { id },
+        data,
+      });
+    } catch (error) {
+      this.rethrowUniqueNameConflict(error, data.name || category.name);
+    }
   }
 
   /**
@@ -105,5 +122,18 @@ export class EventCategoriesService {
     return this.prisma.eventCategory.delete({
       where: { id },
     });
+  }
+
+  /** Converts only database-enforced name races into the public duplicate error. */
+  private rethrowUniqueNameConflict(error: unknown, name: string): never {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      throw new BadRequestException(
+        `Event category with name ${name} already exists`,
+      );
+    }
+    throw error;
   }
 }

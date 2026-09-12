@@ -69,7 +69,7 @@ export function PositionTimeline({
           </div>
         ) : (
           <div className="relative border-l border-muted ml-3 space-y-8 py-2">
-            {sortedHistory.map((item, index) => {
+            {sortedHistory.map((item) => {
               const isCurrent = !item.endDate;
               return (
                 <div key={item.id} className="relative pl-8">

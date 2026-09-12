@@ -17,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useAuth } from '@/context/AuthContext';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { cn } from '@/lib/utils';
 
@@ -58,9 +57,12 @@ interface PositionDialogProps {
   onSuccess: () => void;
 }
 
-export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSuccess }: PositionDialogProps) {
-  const { token } = useAuth();
-
+export function PositionDialog({
+  isOpen,
+  onOpenChange,
+  editingPosition,
+  onSuccess,
+}: PositionDialogProps) {
   // Form states
   const [posName, setPosName] = useState('');
   const [posLabel, setPosLabel] = useState('');
@@ -108,7 +110,6 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
     try {
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       };
 
       let res;
@@ -129,7 +130,11 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
       }
 
       if (res.ok) {
-        toast.success(editingPosition ? 'Szerepkör sikeresen frissítve!' : 'Szerepkör sikeresen létrehozva!');
+        toast.success(
+          editingPosition
+            ? 'Szerepkör sikeresen frissítve!'
+            : 'Szerepkör sikeresen létrehozva!',
+        );
         onOpenChange(false);
         onSuccess();
       } else {
@@ -146,7 +151,11 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md w-full border bg-card/95 backdrop-blur-lg">
         <DialogHeader>
-          <DialogTitle>{editingPosition ? 'Szerepkör szerkesztése' : 'Új szerepkör létrehozása'}</DialogTitle>
+          <DialogTitle>
+            {editingPosition
+              ? 'Szerepkör szerkesztése'
+              : 'Új szerepkör létrehozása'}
+          </DialogTitle>
           <DialogDescription>
             Add meg a szerepkör alapvető adatait és engedélyeit.
           </DialogDescription>
@@ -183,18 +192,30 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
           <div className="space-y-2">
             <Label>Szerepkör színe</Label>
             <div className="flex items-center gap-4 mb-2">
-              <ColorPicker value={posColor} onChange={setPosColor} className="flex-1" />
+              <ColorPicker
+                value={posColor}
+                onChange={setPosColor}
+                className="flex-1"
+              />
               <div className="flex flex-col gap-1 shrink-0">
-                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Előnézet</span>
+                <span className="text-[10px] text-muted-foreground uppercase font-semibold">
+                  Előnézet
+                </span>
                 <Badge
                   style={{
-                    backgroundColor: isHexColor(posColor) ? `${posColor}1a` : undefined,
+                    backgroundColor: isHexColor(posColor)
+                      ? `${posColor}1a`
+                      : undefined,
                     color: isHexColor(posColor) ? posColor : undefined,
-                    borderColor: isHexColor(posColor) ? `${posColor}33` : undefined,
+                    borderColor: isHexColor(posColor)
+                      ? `${posColor}33`
+                      : undefined,
                   }}
                   className={cn(
-                    "border",
-                    !isHexColor(posColor) && (posColor || 'bg-slate-500/10 text-foreground border-slate-500/20')
+                    'border',
+                    !isHexColor(posColor) &&
+                      (posColor ||
+                        'bg-slate-500/10 text-foreground border-slate-500/20'),
                   )}
                 >
                   {posLabel || 'Szerepkör'}
@@ -213,7 +234,10 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
                 onCheckedChange={(checked) => setPosIsLeader(!!checked)}
                 disabled={editingPosition?.isLeader}
               />
-              <Label htmlFor="posIsLeader" className="text-sm font-medium cursor-pointer">
+              <Label
+                htmlFor="posIsLeader"
+                className="text-sm font-medium cursor-pointer"
+              >
                 Körvezető (Teljes hozzáférés)
               </Label>
             </div>
@@ -224,9 +248,14 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
                   <Checkbox
                     id="posCanManageSettings"
                     checked={posCanManageSettings}
-                    onCheckedChange={(checked) => setPosCanManageSettings(!!checked)}
+                    onCheckedChange={(checked) =>
+                      setPosCanManageSettings(!!checked)
+                    }
                   />
-                  <Label htmlFor="posCanManageSettings" className="text-sm font-normal cursor-pointer">
+                  <Label
+                    htmlFor="posCanManageSettings"
+                    className="text-sm font-normal cursor-pointer"
+                  >
                     Rendszer arculatának és beállításainak szerkesztése
                   </Label>
                 </div>
@@ -235,9 +264,14 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
                   <Checkbox
                     id="posCanExportLogs"
                     checked={posCanExportLogs}
-                    onCheckedChange={(checked) => setPosCanExportLogs(!!checked)}
+                    onCheckedChange={(checked) =>
+                      setPosCanExportLogs(!!checked)
+                    }
                   />
-                  <Label htmlFor="posCanExportLogs" className="text-sm font-normal cursor-pointer">
+                  <Label
+                    htmlFor="posCanExportLogs"
+                    className="text-sm font-normal cursor-pointer"
+                  >
                     Munkanaplók CSV exportálása
                   </Label>
                 </div>
@@ -247,7 +281,9 @@ export function PositionDialog({ isOpen, onOpenChange, editingPosition, onSucces
         </div>
 
         <DialogFooter className="border-t pt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Mégse</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Mégse
+          </Button>
           <Button onClick={handleSavePosition}>Szerepkör mentése</Button>
         </DialogFooter>
       </DialogContent>

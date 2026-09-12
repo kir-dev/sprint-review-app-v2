@@ -19,7 +19,7 @@ import { WorkPeriod } from '../types';
 
 interface ExportDialogProps {
   isOpen: boolean;
-  token: string | null;
+  isAuthenticated: boolean | null;
   workPeriods: WorkPeriod[];
   onClose: () => void;
 }
@@ -28,12 +28,15 @@ type PeriodMode = 'workPeriod' | 'dateRange';
 
 export function ExportDialog({
   isOpen,
-  token,
+  isAuthenticated,
   workPeriods,
   onClose,
 }: ExportDialogProps) {
   const [allUsers, setAllUsers] = useState(true);
-  const { users, isLoading: isLoadingUsers } = useUserData(token, !allUsers);
+  const { users, isLoading: isLoadingUsers } = useUserData(
+    isAuthenticated,
+    !allUsers,
+  );
 
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(
     new Set(),
@@ -68,7 +71,7 @@ export function ExportDialog({
   }
 
   async function handleExport() {
-    if (!token) {
+    if (!isAuthenticated) {
       setError('Nincs érvényes munkamenet.');
       return;
     }
@@ -94,9 +97,10 @@ export function ExportDialog({
     setError(null);
 
     try {
-      const response = await apiFetch(`/api/logs/export?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch(
+        `/api/logs/export?${params.toString()}`,
+        {},
+      );
 
       if (response.status === 403) {
         setError('Nincs jogosultságod a naplók exportálásához.');

@@ -3,21 +3,19 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Project, User } from '../types';
 
-export function useProjectData(token: string | null) {
+export function useProjectData(isAuthenticated: boolean | null) {
   const queryClient = useQueryClient();
-  const headers = { Authorization: `Bearer ${token}` };
 
   const projectsQuery = useQuery<Project[]>({
     queryKey: ['projects'],
-    queryFn: () =>
-      apiFetch('/api/projects', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    queryFn: () => apiFetch('/api/projects').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const usersQuery = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: () => apiFetch('/api/users', { headers }).then((res) => res.json()),
-    enabled: !!token,
+    queryFn: () => apiFetch('/api/users').then((res) => res.json()),
+    enabled: !!isAuthenticated,
   });
 
   const [localError, setLocalError] = useState<string | null>(null);

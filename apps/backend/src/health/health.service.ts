@@ -32,7 +32,7 @@ export class HealthService implements BeforeApplicationShutdown {
           timeout: READINESS_DEADLINE_MS,
         },
       );
-      return true;
+      return this.acceptingTraffic;
     } catch {
       return false;
     }

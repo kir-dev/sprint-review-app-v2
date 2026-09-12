@@ -11,11 +11,7 @@ import React, {
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Position } from '../../app/logs/types';
-import {
-  apiFetch,
-  authErrorMessage,
-  SESSION_REJECTED_EVENT,
-} from '@/lib/api-fetch';
+import { authErrorMessage, SESSION_REJECTED_EVENT } from '@/lib/api-fetch';
 
 interface User {
   id: number;
@@ -50,17 +46,14 @@ export interface PositionHistory {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (token: string) => void;
-  logout: () => void;
+  isAuthenticated: boolean | null;
+  logout: () => Promise<boolean>;
   refreshUser: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AUTHSCH_CALLBACK_PENDING_KEY = 'authsch-callback-pending';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -75,20 +68,18 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const currentToken = useRef<string | null>(null);
-  const hasInitialized = useRef(false);
+  const requestGeneration = useRef(0);
   const queryClient = useQueryClient();
 
-  const clearSession = useCallback(
+  const clearClientSession = useCallback(
     (message: string | null = null) => {
-      currentToken.current = null;
-      localStorage.removeItem('jwt');
-      setToken(null);
+      requestGeneration.current += 1;
       setUser(null);
+      setIsAuthenticated(false);
       setError(message);
       setIsLoading(false);
       queryClient.clear();
@@ -96,108 +87,88 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     [queryClient],
   );
 
-  const fetchUser = useCallback(
-    async (authToken: string) => {
-      try {
-        const response = await apiFetch('/api/auth/me', {
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-        if (!response.ok) {
-          throw new Error(
-            response.status === 503
-              ? authErrorMessage('GROUP_ACCESS_UNAVAILABLE')
-              : 'A felhasználói adatok nem érhetők el. Jelentkezz be újra.',
-          );
+  const fetchUser = useCallback(async () => {
+    const generation = ++requestGeneration.current;
+    try {
+      const response = await fetch('/api/auth/me', { cache: 'no-store' });
+      if (!response.ok) {
+        let code = '';
+        try {
+          const body: unknown = await response.json();
+          if (
+            typeof body === 'object' &&
+            body !== null &&
+            'code' in body &&
+            typeof body.code === 'string'
+          ) {
+            code = body.code;
+          }
+        } catch {
+          /* An empty 401 means there is no active application session. */
         }
-        const userData: User = await response.json();
-        if (currentToken.current === authToken) {
-          setUser(userData);
-          setError(null);
+        if (
+          generation === requestGeneration.current &&
+          (response.status === 401 || response.status === 403)
+        ) {
+          clearClientSession(code ? authErrorMessage(code) : null);
+        } else if (generation === requestGeneration.current) {
+          setError('A munkamenet ellenőrzése átmenetileg nem sikerült.');
         }
-      } catch (cause) {
-        if (currentToken.current === authToken) {
-          clearSession(
-            cause instanceof Error
-              ? cause.message
-              : 'Hiba történt a belépés során.',
-          );
-        }
-      } finally {
-        if (currentToken.current === authToken) setIsLoading(false);
+        return;
       }
-    },
-    [clearSession],
-  );
-
-  const login = useCallback(
-    (newToken: string) => {
-      queryClient.clear();
-      currentToken.current = newToken;
-      localStorage.setItem('jwt', newToken);
-      setToken(newToken);
-      setUser(null);
-      setError(null);
-      setIsLoading(true);
-      void fetchUser(newToken);
-    },
-    [fetchUser, queryClient],
-  );
+      const userData: User = await response.json();
+      if (generation === requestGeneration.current) {
+        setUser(userData);
+        setIsAuthenticated(true);
+        setError(null);
+      }
+    } catch (cause) {
+      if (generation === requestGeneration.current) {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'A munkamenet ellenőrzése átmenetileg nem sikerült.',
+        );
+      }
+    } finally {
+      if (generation === requestGeneration.current) setIsLoading(false);
+    }
+  }, [clearClientSession]);
 
   useEffect(() => {
     const onRejected = (event: Event) => {
-      const { token: rejectedToken, code } = (
-        event as CustomEvent<{ token: string; code: string }>
-      ).detail;
-      if (rejectedToken === currentToken.current)
-        clearSession(authErrorMessage(code));
+      const { code } = (event as CustomEvent<{ code: string }>).detail;
+      clearClientSession(authErrorMessage(code));
+      void fetch('/api/auth/logout', { method: 'POST' });
     };
     window.addEventListener(SESSION_REJECTED_EVENT, onRejected);
     return () => window.removeEventListener(SESSION_REJECTED_EVENT, onRejected);
-  }, [clearSession]);
+  }, [clearClientSession]);
 
   useEffect(() => {
-    if (hasInitialized.current) return;
-    hasInitialized.current = true;
+    void fetchUser();
+  }, [fetchUser]);
 
-    const params = new URLSearchParams(window.location.search);
-    const isLoginCallback =
-      window.location.pathname === '/login' &&
-      (params.has('error') || params.has('jwt'));
-    if (isLoginCallback) {
-      const isExpectedCallback =
-        sessionStorage.getItem(AUTHSCH_CALLBACK_PENDING_KEY) === 'true';
-      window.history.replaceState(null, '', '/login');
-      if (isExpectedCallback) {
-        sessionStorage.removeItem(AUTHSCH_CALLBACK_PENDING_KEY);
-        const callbackError = params.get('error');
-        const jwt = params.get('jwt');
-        if (callbackError) {
-          clearSession(authErrorMessage(callbackError));
-          return;
-        }
-        if (jwt) {
-          login(jwt);
-          return;
-        }
-      }
+  const logout = useCallback(async () => {
+    requestGeneration.current += 1;
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('Logout request failed');
+      clearClientSession();
+      return true;
+    } catch {
+      setError('A kijelentkezés nem sikerült. Próbáld újra.');
+      return false;
     }
+  }, [clearClientSession]);
 
-    const storedToken = localStorage.getItem('jwt');
-    currentToken.current = storedToken;
-    if (storedToken) {
-      setToken(storedToken);
-      void fetchUser(storedToken);
-    } else setIsLoading(false);
-  }, [clearSession, fetchUser, login]);
-
-  const logout = useCallback(() => clearSession(), [clearSession]);
   const refreshUser = useCallback(async () => {
-    if (currentToken.current) await fetchUser(currentToken.current);
+    await fetchUser();
   }, [fetchUser]);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, refreshUser, isLoading, error }}
+      value={{ user, isAuthenticated, logout, refreshUser, isLoading, error }}
     >
       {children}
     </AuthContext.Provider>

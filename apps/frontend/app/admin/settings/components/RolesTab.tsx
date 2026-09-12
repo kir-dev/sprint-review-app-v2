@@ -3,7 +3,13 @@
 import { apiFetch } from '@/lib/api-fetch';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
@@ -16,7 +22,7 @@ import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 const isHexColor = (val: string) => /^#[0-9A-F]{6}$/i.test(val);
 
 export function RolesTab() {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // Positions states
   const [positions, setPositions] = useState<PositionData[]>([]);
@@ -24,7 +30,9 @@ export function RolesTab() {
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPosition, setEditingPosition] = useState<PositionData | null>(null);
+  const [editingPosition, setEditingPosition] = useState<PositionData | null>(
+    null,
+  );
 
   // Delete confirmation states
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -37,7 +45,6 @@ export function RolesTab() {
       const res = await apiFetch('/api/positions', {
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
       });
       if (res.ok) {
@@ -52,13 +59,13 @@ export function RolesTab() {
     } finally {
       setIsLoadingPositions(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
-    if (token) {
+    if (isAuthenticated) {
       fetchPositions();
     }
-  }, [token, fetchPositions]);
+  }, [isAuthenticated, fetchPositions]);
 
   // Open modal for Create
   const handleOpenCreate = () => {
@@ -87,7 +94,6 @@ export function RolesTab() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -134,7 +140,6 @@ export function RolesTab() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ ids: newPositions.map((p) => p.id) }),
       });
@@ -159,7 +164,8 @@ export function RolesTab() {
         <div>
           <CardTitle>Szerepkörök és Jogosultságok</CardTitle>
           <CardDescription>
-            Kezelheted a kör szerepköreit és hogy azok milyen funkciókhoz férhetnek hozzá.
+            Kezelheted a kör szerepköreit és hogy azok milyen funkciókhoz
+            férhetnek hozzá.
           </CardDescription>
         </div>
         <Button onClick={handleOpenCreate} className="flex items-center gap-2">
@@ -168,20 +174,32 @@ export function RolesTab() {
       </CardHeader>
       <CardContent>
         {isLoadingPositions ? (
-          <div className="py-8 text-center text-muted-foreground">Szerepkörök betöltése...</div>
+          <div className="py-8 text-center text-muted-foreground">
+            Szerepkörök betöltése...
+          </div>
         ) : (
           <div className="flex flex-col gap-3">
             {positions.map((pos, index) => (
-              <Card key={pos.id} className="bg-background/50 border hover:shadow-md transition-shadow">
+              <Card
+                key={pos.id}
+                className="bg-background/50 border hover:shadow-md transition-shadow"
+              >
                 <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
                   <div className="flex items-center gap-2">
                     <Badge
                       style={{
-                        backgroundColor: isHexColor(pos.color) ? `${pos.color}1a` : undefined,
+                        backgroundColor: isHexColor(pos.color)
+                          ? `${pos.color}1a`
+                          : undefined,
                         color: isHexColor(pos.color) ? pos.color : undefined,
-                        borderColor: isHexColor(pos.color) ? `${pos.color}33` : undefined,
+                        borderColor: isHexColor(pos.color)
+                          ? `${pos.color}33`
+                          : undefined,
                       }}
-                      className={cn("border", !isHexColor(pos.color) && pos.color)}
+                      className={cn(
+                        'border',
+                        !isHexColor(pos.color) && pos.color,
+                      )}
                     >
                       {pos.label}
                     </Badge>
@@ -228,13 +246,19 @@ export function RolesTab() {
                 <CardContent className="text-xs space-y-2 text-muted-foreground">
                   <div className="flex justify-between items-center">
                     <span>Admin beállítások:</span>
-                    <Badge variant={pos.canManageSettings ? 'default' : 'secondary'} className="text-[10px] px-1 py-0">
+                    <Badge
+                      variant={pos.canManageSettings ? 'default' : 'secondary'}
+                      className="text-[10px] px-1 py-0"
+                    >
                       {pos.canManageSettings ? 'Igen' : 'Nem'}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Naplók exportálása:</span>
-                    <Badge variant={pos.canExportLogs ? 'default' : 'secondary'} className="text-[10px] px-1 py-0">
+                    <Badge
+                      variant={pos.canExportLogs ? 'default' : 'secondary'}
+                      className="text-[10px] px-1 py-0"
+                    >
                       {pos.canExportLogs ? 'Igen' : 'Nem'}
                     </Badge>
                   </div>

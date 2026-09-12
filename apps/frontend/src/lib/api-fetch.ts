@@ -39,10 +39,7 @@ export async function apiFetch(
   init?: RequestInit,
 ): Promise<Response> {
   const response = await fetch(input, init);
-  const authorization = new Headers(
-    init?.headers ?? (input instanceof Request ? input.headers : undefined),
-  ).get('Authorization');
-  if (typeof window === 'undefined' || !authorization) return response;
+  if (typeof window === 'undefined') return response;
   const url = new URL(
     input instanceof Request ? input.url : String(input),
     window.location.origin,
@@ -70,7 +67,7 @@ export async function apiFetch(
   if (response.status === 401 || code.startsWith('GROUP_MEMBERSHIP_')) {
     window.dispatchEvent(
       new CustomEvent(SESSION_REJECTED_EVENT, {
-        detail: { token: authorization.replace(/^Bearer /, ''), code },
+        detail: { code },
       }),
     );
     throw new ApiAuthenticationError(authErrorMessage(code));

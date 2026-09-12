@@ -27,7 +27,7 @@ async function simulateImageUpload(imageFile: File): Promise<string | null> {
 }
 
 export function useProfileMutations() {
-  const { token, refreshUser, user } = useAuth();
+  const { isAuthenticated, refreshUser, user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isValidatingGithub, setIsValidatingGithub] = useState(false);
 
@@ -61,7 +61,7 @@ export function useProfileMutations() {
   };
 
   const updateUserProfile = async (data: ProfileFormData) => {
-    if (!token || !user?.id) return;
+    if (!isAuthenticated || !user?.id) return;
 
     // Pre-validation before attempting to save
     if (data.githubUsername?.trim()) {
@@ -91,7 +91,6 @@ export function useProfileMutations() {
       const response = await apiFetch(`/api/users/${user.id}`, {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
