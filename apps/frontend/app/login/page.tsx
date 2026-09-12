@@ -1,19 +1,18 @@
 'use client';
 
 import { browserBackendUrl } from '@/lib/clientEnv';
-import { authErrorMessage } from '@/lib/api-fetch';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { AUTHSCH_CALLBACK_PENDING_KEY, useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 function LoginContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { login, logout, user, token, isLoading, error } = useAuth();
-  const callbackError = searchParams.get('error');
-  const visibleError = callbackError ? authErrorMessage(callbackError) : error;
-  const [settings, setSettings] = useState<{ appName: string; logoDarkUrl: string } | null>(null);
+  const { logout, user, token, isLoading, error } = useAuth();
+  const [settings, setSettings] = useState<{
+    appName: string;
+    logoDarkUrl: string;
+  } | null>(null);
 
   useEffect(() => {
     fetch('/api/settings/public', { cache: 'no-store' })
@@ -22,23 +21,16 @@ function LoginContent() {
         throw new Error();
       })
       .then((data) => setSettings(data))
-      .catch((err) => console.error('Failed to fetch public settings on login page', err));
+      .catch((err) =>
+        console.error('Failed to fetch public settings on login page', err),
+      );
   }, []);
 
   useEffect(() => {
-    const jwtFromUrl = searchParams.get('jwt');
-    if (jwtFromUrl && !callbackError && !isLoading && !token && !error) {
-      // Consume the callback token once, including when validation fails.
-      window.history.replaceState(null, '', '/login');
-      login(jwtFromUrl);
-    }
-  }, [searchParams, callbackError, isLoading, token, error, login]);
+    if (!isLoading && user && token) router.replace('/dashboard');
+  }, [user, token, isLoading, router]);
 
-  useEffect(() => {
-    if (!callbackError && !isLoading && user && token) router.replace('/dashboard');
-  }, [callbackError, user, token, isLoading, router]);
-
-  if (!visibleError && (isLoading || (token && user))) {
+  if (!error && (isLoading || (token && user))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark px-4">
         <LoadingLogo size={60} />
@@ -48,7 +40,7 @@ function LoginContent() {
 
   const handleLogin = () => {
     logout();
-    // Redirect to backend AuthSCH login
+    sessionStorage.setItem(AUTHSCH_CALLBACK_PENDING_KEY, 'true');
     window.location.href = `${browserBackendUrl()}/auth/login`;
   };
 
@@ -62,11 +54,13 @@ function LoginContent() {
           <img src={logoSrc} alt={appName} className="max-w-48 h-auto" />
         </div>
         <h1 className="text-4xl font-bold text-white mb-3">{appName}</h1>
-        <p className="text-gray-400 mb-10">Jelentkezz be az AuthSCH-val a folytatáshoz</p>
+        <p className="text-gray-400 mb-10">
+          Jelentkezz be az AuthSCH-val a folytatáshoz
+        </p>
 
-        {visibleError && (
+        {error && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-xl mb-6">
-            <p className="text-sm font-medium">{visibleError}</p>
+            <p className="text-sm font-medium">{error}</p>
           </div>
         )}
 
@@ -82,15 +76,5 @@ function LoginContent() {
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-dark px-4">
-          <LoadingLogo size={60} />
-        </div>
-      }
-    >
-      <LoginContent />
-    </Suspense>
-  );
+  return <LoginContent />;
 }

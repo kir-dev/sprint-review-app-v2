@@ -1,6 +1,13 @@
 import { CurrentUser } from '@kir-dev/passport-authsch';
 import type { AuthSchProfile } from '@kir-dev/passport-authsch';
-import { Controller, Get, Res, UseFilters, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  InternalServerErrorException,
+  Res,
+  UseFilters,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -9,6 +16,33 @@ import { Public } from '../common/decorators/public.decorator';
 import { AuthCallbackFilter } from './auth-callback.filter';
 import { AuthService } from './auth.service';
 import { AuthSchDedupGuard } from './authsch-dedup.guard';
+
+const LOOPBACK_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+function frontendLoginUrl(config: ConfigService): URL {
+  const configuredUrl = config.get<string>('FRONTEND_URL');
+  if (!configuredUrl) {
+    throw new InternalServerErrorException('FRONTEND_URL must be configured');
+  }
+
+  let url: URL;
+  try {
+    url = new URL('/login', configuredUrl);
+  } catch {
+    throw new InternalServerErrorException('FRONTEND_URL must be a valid URL');
+  }
+
+  const isSecure = url.protocol === 'https:';
+  const isLoopbackDevelopmentUrl =
+    url.protocol === 'http:' && LOOPBACK_HOSTNAMES.has(url.hostname);
+  if (!isSecure && !isLoopbackDevelopmentUrl) {
+    throw new InternalServerErrorException(
+      'FRONTEND_URL must use HTTPS unless it is an explicit loopback URL',
+    );
+  }
+
+  return url;
+}
 
 /** Handles AuthSCH redirects and current-user reads. */
 @ApiTags('auth')
@@ -31,14 +65,19 @@ export class AuthController {
   @Get('callback')
   @UseFilters(AuthCallbackFilter)
   @UseGuards(AuthSchDedupGuard)
-  @ApiOperation({ summary: 'Validate group membership and issue an application session' })
-  @ApiResponse({ status: 302, description: 'Redirects to login with a session or an error code' })
-  async oauthRedirect(@CurrentUser() profile: AuthSchProfile, @Res() res: Response) {
+  @ApiOperation({
+    summary: 'Validate group membership and issue an application session',
+  })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to login with a session or an error code',
+  })
+  async oauthRedirect(
+    @CurrentUser() profile: AuthSchProfile,
+    @Res() res: Response,
+  ) {
+    const url = frontendLoginUrl(this.config);
     const jwt = await this.auth.login(profile);
-    const url = new URL(
-      '/login',
-      this.config.get<string>('FRONTEND_URL') || 'http://localhost:3000',
-    );
     url.searchParams.set('jwt', jwt);
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Referrer-Policy', 'no-referrer');
@@ -48,7 +87,10 @@ export class AuthController {
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Return current user' })
-  @ApiResponse({ status: 401, description: 'Invalid or expired membership session' })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired membership session',
+  })
   getProfile(@CurrentUser() user: { id: number }) {
     return this.auth.getUserById(user.id);
   }

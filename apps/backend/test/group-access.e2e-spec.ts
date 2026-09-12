@@ -12,7 +12,10 @@ import request from 'supertest';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthModule } from '../src/auth/auth.module';
 import { AuthSchDedupGuard } from '../src/auth/authsch-dedup.guard';
-import { GroupAccessPolicy, SESSION_MAX_AGE_SECONDS } from '../src/group-access/group-access.types';
+import {
+  GroupAccessPolicy,
+  SESSION_MAX_AGE_SECONDS,
+} from '../src/group-access/group-access.types';
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
 import { SettingsModule } from '../src/settings/settings.module';
 
@@ -62,7 +65,7 @@ describe('Group access HTTP integration', () => {
           ({
             JWT_SECRET: 'test-secret-never-used-outside-tests',
             AUTHSCH_GROUP_ID: '42',
-            FRONTEND_URL: 'http://frontend.example.test',
+            FRONTEND_URL: 'https://frontend.example.test',
             AUTHSCH_CLIENT_ID: 'test-client',
             AUTHSCH_CLIENT_SECRET: 'test-secret',
           })[key],
@@ -70,16 +73,22 @@ describe('Group access HTTP integration', () => {
       .overrideGuard(AuthSchDedupGuard)
       .useValue({
         canActivate: (context: ExecutionContext) => {
-          if (useProviderCallback) return new AuthSchDedupGuard().canActivate(context);
+          if (useProviderCallback)
+            return new AuthSchDedupGuard().canActivate(context);
           if (callbackFails) throw new UnauthorizedException();
-          context.switchToHttp().getRequest<{ user: unknown }>().user = callbackProfile;
+          context.switchToHttp().getRequest<{ user: unknown }>().user =
+            callbackProfile;
           return true;
         },
       })
       .compile();
     app = module.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, transform: true, forbidUnknownValues: false }),
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidUnknownValues: false,
+      }),
     );
     await app.init();
     jwt = module.get(JwtService);
@@ -93,13 +102,20 @@ describe('Group access HTTP integration', () => {
     useProviderCallback = false;
     manager = true;
     leader = false;
-    db.systemSetting.findUnique.mockImplementation(async ({ where }: { where: { key: string } }) =>
-      where.key === 'groupAccess' && policyValue !== null
-        ? { key: where.key, value: policyValue }
-        : null,
+    db.systemSetting.findUnique.mockImplementation(
+      async ({ where }: { where: { key: string } }) =>
+        where.key === 'groupAccess' && policyValue !== null
+          ? { key: where.key, value: policyValue }
+          : null,
     );
     db.systemSetting.updateMany.mockImplementation(
-      async ({ where, data }: { where: { value: string }; data: { value: string } }) => {
+      async ({
+        where,
+        data,
+      }: {
+        where: { value: string };
+        data: { value: string };
+      }) => {
         if (where.value !== policyValue) return { count: 0 };
         policyValue = data.value;
         return { count: 1 };
@@ -145,59 +161,70 @@ describe('Group access HTTP integration', () => {
   });
 
   it('requests the PÉK scope in the real login redirect', async () => {
-    const response = await request(app.getHttpServer()).get('/auth/login').expect(302);
+    const response = await request(app.getHttpServer())
+      .get('/auth/login')
+      .expect(302);
     const scope = new URL(response.headers.location).searchParams.get('scope');
     expect(scope).toContain('pek.sch.bme.hu:profile');
   });
 
-  it.each([42, 43])('checks group %i after the safe provider callback', async (providerGroupId) => {
-    useProviderCallback = true;
-    const fetchMock = jest
-      .spyOn(global, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: 'test-provider-token' })))
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            sub: 'test-member',
-            email: memberProfile.email,
-            name: memberProfile.fullName,
-            'pek.sch.bme.hu:executiveAt/v1': [],
-            'pek.sch.bme.hu:activeMemberships/v1': [
-              {
-                id: providerGroupId,
-                name: 'Test group',
-                title: [],
-              },
-            ],
-            'pek.sch.bme.hu:alumniMemberships/v1': [],
-          }),
-        ),
-      );
+  it.each([42, 43])(
+    'checks group %i after the safe provider callback',
+    async (providerGroupId) => {
+      useProviderCallback = true;
+      const fetchMock = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ access_token: 'test-provider-token' })),
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              sub: 'test-member',
+              email: memberProfile.email,
+              name: memberProfile.fullName,
+              'pek.sch.bme.hu:executiveAt/v1': [],
+              'pek.sch.bme.hu:activeMemberships/v1': [
+                {
+                  id: providerGroupId,
+                  name: 'Test group',
+                  title: [],
+                },
+              ],
+              'pek.sch.bme.hu:alumniMemberships/v1': [],
+            }),
+          ),
+        );
 
-    const response = await request(app.getHttpServer())
-      .get('/auth/callback?code=provider-callback-test')
-      .expect(302);
-    const destination = new URL(response.headers.location);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    if (providerGroupId === initialPolicy.groupId) {
-      const token = destination.searchParams.get('jwt');
-      expect(token).toBeTruthy();
-      const claims = jwt.verify<{ exp: number; iat: number }>(token!);
-      expect(claims.exp - claims.iat).toBe(SESSION_MAX_AGE_SECONDS);
-      await request(app.getHttpServer())
-        .get('/auth/me')
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
-    } else {
-      expect(destination.searchParams.get('error')).toBe('GROUP_MEMBERSHIP_REQUIRED');
-      expect(destination.searchParams.has('jwt')).toBe(false);
-      expect(db.user.findUnique).not.toHaveBeenCalled();
-      expect(db.user.create).not.toHaveBeenCalled();
-    }
-  });
+      const response = await request(app.getHttpServer())
+        .get('/auth/callback?code=provider-callback-test')
+        .expect(302);
+      const destination = new URL(response.headers.location);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      if (providerGroupId === initialPolicy.groupId) {
+        const token = destination.searchParams.get('jwt');
+        expect(token).toBeTruthy();
+        const claims = jwt.verify<{ exp: number; iat: number }>(token!);
+        expect(claims.exp - claims.iat).toBe(SESSION_MAX_AGE_SECONDS);
+        await request(app.getHttpServer())
+          .get('/auth/me')
+          .set('Authorization', `Bearer ${token}`)
+          .expect(200);
+      } else {
+        expect(destination.searchParams.get('error')).toBe(
+          'GROUP_MEMBERSHIP_REQUIRED',
+        );
+        expect(destination.searchParams.has('jwt')).toBe(false);
+        expect(db.user.findUnique).not.toHaveBeenCalled();
+        expect(db.user.create).not.toHaveBeenCalled();
+      }
+    },
+  );
 
   it('issues a seven-day JWT after an authorized callback', async () => {
-    const response = await request(app.getHttpServer()).get('/auth/callback').expect(302);
+    const response = await request(app.getHttpServer())
+      .get('/auth/callback')
+      .expect(302);
     const token = new URL(response.headers.location).searchParams.get('jwt');
     expect(token).toBeTruthy();
     const claims = jwt.verify<{ exp: number; iat: number }>(token!);
@@ -214,9 +241,11 @@ describe('Group access HTTP integration', () => {
       ...memberProfile,
       pek: { activeMemberAt: [], executiveAt: [], alumniMemberAt: [] },
     };
-    const response = await request(app.getHttpServer()).get('/auth/callback').expect(302);
+    const response = await request(app.getHttpServer())
+      .get('/auth/callback')
+      .expect(302);
     expect(response.headers.location).toBe(
-      'http://frontend.example.test/login?error=GROUP_MEMBERSHIP_REQUIRED',
+      'https://frontend.example.test/login?error=GROUP_MEMBERSHIP_REQUIRED',
     );
     expect(db.user.findUnique).not.toHaveBeenCalled();
     expect(db.user.create).not.toHaveBeenCalled();
@@ -224,8 +253,12 @@ describe('Group access HTTP integration', () => {
 
   it('distinguishes missing memberships from non-membership', async () => {
     callbackProfile = { ...memberProfile, pek: {} };
-    const response = await request(app.getHttpServer()).get('/auth/callback').expect(302);
-    expect(response.headers.location).toContain('error=GROUP_MEMBERSHIP_UNVERIFIABLE');
+    const response = await request(app.getHttpServer())
+      .get('/auth/callback')
+      .expect(302);
+    expect(response.headers.location).toContain(
+      'error=GROUP_MEMBERSHIP_UNVERIFIABLE',
+    );
   });
 
   it('redirects provider errors to a fixed login destination', async () => {
@@ -234,7 +267,7 @@ describe('Group access HTTP integration', () => {
       .get('/auth/callback?next=https://untrusted.test')
       .expect(302);
     expect(response.headers.location).toBe(
-      'http://frontend.example.test/login?error=AUTHSCH_FAILED',
+      'https://frontend.example.test/login?error=AUTHSCH_FAILED',
     );
   });
 
@@ -331,23 +364,28 @@ describe('Group access HTTP integration', () => {
       .expect(200);
   });
 
-  it.each([{ groupId: '42' }, { groupId: 0 }, { groupName: ' ' }, { allowAlumni: 'false' }])(
-    'validates policy writes (%#)',
-    async (override) => {
-      await request(app.getHttpServer())
-        .put('/settings/access')
-        .set('Authorization', `Bearer ${sign()}`)
-        .send({ ...initialSettings, ...override })
-        .expect(400);
-      expect(db.systemSetting.updateMany).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    { groupId: '42' },
+    { groupId: 0 },
+    { groupName: ' ' },
+    { allowAlumni: 'false' },
+  ])('validates policy writes (%#)', async (override) => {
+    await request(app.getHttpServer())
+      .put('/settings/access')
+      .set('Authorization', `Bearer ${sign()}`)
+      .send({ ...initialSettings, ...override })
+      .expect(400);
+    expect(db.systemSetting.updateMany).not.toHaveBeenCalled();
+  });
 
   it('rejects stale editor revisions', async () => {
     await request(app.getHttpServer())
       .put('/settings/access')
       .set('Authorization', `Bearer ${sign()}`)
-      .send({ ...initialSettings, revision: '1cb173f2-6c25-49ad-81cb-b8882ebc85e2' })
+      .send({
+        ...initialSettings,
+        revision: '1cb173f2-6c25-49ad-81cb-b8882ebc85e2',
+      })
       .expect(409);
   });
 });
