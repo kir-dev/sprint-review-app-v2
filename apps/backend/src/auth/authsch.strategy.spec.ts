@@ -115,6 +115,24 @@ describe('AuthSchStrategy', () => {
 
     expect(fail).toHaveBeenCalledTimes(2);
     expect(fetchSpy).not.toHaveBeenCalled();
+
+    const freshSession = {
+      authSchLogin: {
+        providerState: `${Date.now().toString(36)}.${'a'.repeat(43)}`,
+        clientNonce: createState(),
+        createdAt: Date.now(),
+      },
+    };
+    await strategy.authenticate({
+      path: '/auth/callback',
+      query: {
+        code: 'oauth-code',
+        state: `${Date.now().toString(36)}.${'b'.repeat(43)}`,
+      },
+      session: freshSession,
+    } as unknown as Parameters<AuthSchStrategy['authenticate']>[0]);
+    expect(fail).toHaveBeenCalledTimes(3);
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it.each([

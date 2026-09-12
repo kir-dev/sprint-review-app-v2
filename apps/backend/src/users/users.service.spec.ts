@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
@@ -97,6 +98,41 @@ describe('UsersService', () => {
           positionDetails: null,
         },
       ]);
+    });
+  });
+
+  it('retries the complete serializable update transaction after P2034', async () => {
+    const storedUser = {
+      id: 1,
+      email: 'updated@example.com',
+      fullName: 'Test User',
+      position: { id: 1, name: 'TAG' },
+    };
+    const transaction = {
+      user: { update: jest.fn().mockResolvedValue(storedUser) },
+    };
+    const transactionRunner = jest
+      .fn()
+      .mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('write conflict', {
+          code: 'P2034',
+          clientVersion: 'test',
+        }),
+      )
+      .mockImplementationOnce(
+        (operation: (client: typeof transaction) => Promise<unknown>) =>
+          operation(transaction),
+      );
+    const retryingService = new UsersService({
+      $transaction: transactionRunner,
+    } as unknown as PrismaService);
+
+    await expect(
+      retryingService.update(1, { email: storedUser.email }),
+    ).resolves.toMatchObject({ email: storedUser.email, position: 'TAG' });
+    expect(transactionRunner).toHaveBeenCalledTimes(2);
+    expect(transactionRunner.mock.calls[1][1]).toEqual({
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     });
   });
 });

@@ -27,6 +27,9 @@ describe('PositionsService', () => {
     await expect(service.updateOrder([1, 1])).rejects.toBeInstanceOf(
       BadRequestException,
     );
+    await expect(service.updateOrder([1])).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
     expect(position.update).not.toHaveBeenCalled();
   });
 

@@ -55,19 +55,19 @@ function configuredUrl(
   candidates: Array<[name: string, value: string | undefined]>,
 ): string {
   for (const [name, value] of candidates) {
-    if (value) return normalizeBaseUrl(value, name);
+    if (value) return normalizePublicBaseUrl(value, name);
   }
 
   if (process.env.NODE_ENV === 'production') {
     throw new Error('A backend URL must be configured in production');
   }
 
-  return FALLBACK;
+  return normalizePublicBaseUrl(FALLBACK, 'BACKEND_PUBLIC_URL');
 }
 
 /**
  * The backend origin used by server-side proxy and SSR requests. Deployments
- * may use an internal service URL to avoid public ingress hairpin traffic.
+ * may use an HTTPS internal service URL to avoid public ingress hairpin traffic.
  */
 export function backendUrl(): string {
   return configuredUrl([

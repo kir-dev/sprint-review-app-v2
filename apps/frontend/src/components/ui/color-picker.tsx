@@ -1,7 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -47,6 +51,18 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
     onChange(newColor);
   };
 
+  const handleTextChange = (newColor: string) => {
+    if (!/^#[0-9a-fA-F]{0,6}$/.test(newColor)) return;
+    setBackground(newColor);
+    if (/^#[0-9a-fA-F]{6}$/.test(newColor)) onChange(newColor);
+  };
+
+  const restoreValidColor = () => {
+    if (!/^#[0-9a-fA-F]{6}$/.test(background)) {
+      setBackground(value || '#f15a29');
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -55,7 +71,7 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
           className={cn(
             'w-full justify-start text-left font-normal h-10 bg-background/50',
             !background && 'text-muted-foreground',
-            className
+            className,
           )}
         >
           <div className="w-full flex items-center gap-2">
@@ -67,13 +83,17 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
             ) : (
               <Paintbrush className="h-4 w-4 shrink-0 text-muted-foreground" />
             )}
-            <span className="truncate font-mono text-xs">{background || 'Válassz színt'}</span>
+            <span className="truncate font-mono text-xs">
+              {background || 'Válassz színt'}
+            </span>
           </div>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 z-[101] bg-card/95 backdrop-blur-md border shadow-xl p-3">
         <div className="flex flex-col gap-3">
-          <div className="text-xs font-semibold text-muted-foreground">Preset színek</div>
+          <div className="text-xs font-semibold text-muted-foreground">
+            Preset színek
+          </div>
           <div className="grid grid-cols-4 gap-1.5">
             {solids.map((s) => (
               <button
@@ -81,7 +101,9 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                 style={{ backgroundColor: s }}
                 className={cn(
                   'h-8 w-full rounded-md border border-border/20 cursor-pointer transition-all hover:scale-105 active:scale-95',
-                  background === s ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''
+                  background === s
+                    ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
+                    : '',
                 )}
                 onClick={() => handleColorChange(s)}
                 type="button"
@@ -90,7 +112,9 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
           </div>
 
           <div className="border-t pt-3 flex flex-col gap-2">
-            <div className="text-xs font-semibold text-muted-foreground">Egyedi szín</div>
+            <div className="text-xs font-semibold text-muted-foreground">
+              Egyedi szín
+            </div>
             <div className="flex flex-col gap-2">
               <div className="w-full flex justify-center py-1">
                 <HexColorPicker
@@ -106,8 +130,12 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                 />
                 <Input
                   value={background}
-                  onChange={(e) => handleColorChange(e.target.value)}
+                  onChange={(e) => handleTextChange(e.target.value)}
+                  onBlur={restoreValidColor}
                   placeholder="#ffffff"
+                  inputMode="text"
+                  maxLength={7}
+                  pattern="#[0-9a-fA-F]{6}"
                   className="h-8 font-mono text-xs bg-background"
                 />
               </div>

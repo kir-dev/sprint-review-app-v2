@@ -58,10 +58,9 @@ services:
     ports:
       - '127.0.0.1:3000:3000'
     environment:
-      # Server-side requests use the Compose service name. The public URL is
-      # used by the server-side AuthSCH login endpoint.
-      BACKEND_INTERNAL_URL: http://backend:3001
-      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3001}
+      # Session-bearing server requests use the deployed TLS endpoint. Requiring
+      # this value avoids falling back to the frontend container's localhost.
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:?Set an HTTPS backend origin}
       PORT: 3000
     networks:
       - app-network
