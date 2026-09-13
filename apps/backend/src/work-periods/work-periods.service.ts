@@ -1,4 +1,10 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { logServiceError } from '../common/logging/safe-logger';
 import { WorkPeriod } from './entities/work-period.entity';
@@ -12,6 +18,15 @@ export class WorkPeriodsService {
   async create(data: { name: string; startDate: string; endDate: string }) {
     this.logger.log('Creating work period');
     try {
+      const existing = await this.prisma.workPeriod.findUnique({
+        where: { name: data.name },
+      });
+      if (existing) {
+        throw new BadRequestException(
+          `Work period with name "${data.name}" already exists`,
+        );
+      }
+
       const workPeriod = await this.prisma.workPeriod.create({
         data: {
           name: data.name,
@@ -22,6 +37,9 @@ export class WorkPeriodsService {
       this.logger.log(`Work period created successfully: ID ${workPeriod.id}`);
       return workPeriod;
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       logServiceError(this.logger, 'create_work_period');
       throw error;
     }
@@ -43,7 +61,22 @@ export class WorkPeriodsService {
         },
       });
       this.logger.log(`Found ${workPeriods.length} work periods`);
-      return workPeriods;
+
+      // Deduplicate by name if database contains legacy duplicates
+      const seenNames = new Map<string, (typeof workPeriods)[0]>();
+      for (const wp of workPeriods) {
+        const existing = seenNames.get(wp.name);
+        if (!existing) {
+          seenNames.set(wp.name, wp);
+        } else {
+          // Keep the period that actually has logs or more logs
+          if ((wp._count?.logs ?? 0) > (existing._count?.logs ?? 0)) {
+            seenNames.set(wp.name, wp);
+          }
+        }
+      }
+
+      return Array.from(seenNames.values());
     } catch (error) {
       logServiceError(this.logger, 'list_work_periods');
       throw error;
@@ -125,23 +158,19 @@ export class WorkPeriodsService {
           // E.g., in Jan 2026, it is 2025/2026 II. félév
           const semesterYear = year - 1;
           name = `${semesterYear}/${year} II. félév`;
-          startDate = new Date(year, 0, 1); // January 1
-          endDate = new Date(year, 4, 31); // May 31
+          startDate = new Date(year, 0, 1, 0, 0, 0, 0); // January 1
+          endDate = new Date(year, 4, 31, 23, 59, 59, 999); // May 31
         } else {
           // June - December: Fall semester (I. félév)
           // E.g., in June 2026, it is 2026/2027 I. félév
           name = `${year} nyár + ${year}/${year + 1} I. félév`;
-          startDate = new Date(year, 5, 1); // June 1
-          endDate = new Date(year, 11, 31); // December 31
+          startDate = new Date(year, 5, 1, 0, 0, 0, 0); // June 1
+          endDate = new Date(year, 11, 31, 23, 59, 59, 999); // December 31
         }
 
-        this.logger.log('Creating current work period automatically');
-        workPeriod = await this.prisma.workPeriod.create({
-          data: {
-            name,
-            startDate,
-            endDate,
-          },
+        // Check if work period with this name already exists
+        const existingByName = await this.prisma.workPeriod.findFirst({
+          where: { name },
           include: {
             _count: {
               select: {
@@ -151,7 +180,73 @@ export class WorkPeriodsService {
           },
         });
 
-        this.logger.log('Current work period created automatically');
+        if (existingByName) {
+          this.logger.log(
+            `Found existing work period by name: ${name}, extending/updating date range`,
+          );
+          workPeriod = await this.prisma.workPeriod.update({
+            where: { id: existingByName.id },
+            data: {
+              startDate:
+                existingByName.startDate > startDate
+                  ? startDate
+                  : existingByName.startDate,
+              endDate:
+                existingByName.endDate < endDate
+                  ? endDate
+                  : existingByName.endDate,
+            },
+            include: {
+              _count: {
+                select: {
+                  logs: true,
+                },
+              },
+            },
+          });
+        } else {
+          this.logger.log(`Creating current work period automatically: ${name}`);
+          try {
+            workPeriod = await this.prisma.workPeriod.create({
+              data: {
+                name,
+                startDate,
+                endDate,
+              },
+              include: {
+                _count: {
+                  select: {
+                    logs: true,
+                  },
+                },
+              },
+            });
+            this.logger.log('Current work period created automatically');
+          } catch (err) {
+            // Handle race condition if another concurrent request already created it
+            if (
+              err instanceof Prisma.PrismaClientKnownRequestError &&
+              err.code === 'P2002'
+            ) {
+              this.logger.log(
+                `Work period ${name} was created concurrently, fetching existing`,
+              );
+              workPeriod = await this.prisma.workPeriod.findFirst({
+                where: { name },
+                include: {
+                  _count: {
+                    select: {
+                      logs: true,
+                    },
+                  },
+                },
+              });
+              if (!workPeriod) throw err;
+            } else {
+              throw err;
+            }
+          }
+        }
       } else {
         this.logger.log('Current work period found');
       }
@@ -173,6 +268,17 @@ export class WorkPeriodsService {
   ) {
     this.logger.log(`Updating work period with ID: ${id}`);
     try {
+      if (data.name) {
+        const existing = await this.prisma.workPeriod.findUnique({
+          where: { name: data.name },
+        });
+        if (existing && existing.id !== id) {
+          throw new BadRequestException(
+            `Work period with name "${data.name}" already exists`,
+          );
+        }
+      }
+
       const updateData: Partial<WorkPeriod> = {
         name: data.name,
       };
@@ -191,6 +297,9 @@ export class WorkPeriodsService {
       this.logger.log(`Work period updated successfully: ID ${workPeriod.id}`);
       return workPeriod;
     } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
       logServiceError(this.logger, 'update_work_period');
       throw error;
     }

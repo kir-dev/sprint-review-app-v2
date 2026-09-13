@@ -39,7 +39,7 @@ model PositionHistory {
 
 model WorkPeriod {
   id        Int      @id @default(autoincrement())
-  name      String
+  name      String   @unique
   startDate DateTime
   endDate   DateTime
   logs      Log[]
