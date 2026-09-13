@@ -40,6 +40,14 @@ export class WorkPeriodsService {
       if (error instanceof BadRequestException) {
         throw error;
       }
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BadRequestException(
+          `Work period with name "${data.name}" already exists`,
+        );
+      }
       logServiceError(this.logger, 'create_work_period');
       throw error;
     }
@@ -299,6 +307,14 @@ export class WorkPeriodsService {
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
+      }
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BadRequestException(
+          `Work period with name "${data.name}" already exists`,
+        );
       }
       logServiceError(this.logger, 'update_work_period');
       throw error;

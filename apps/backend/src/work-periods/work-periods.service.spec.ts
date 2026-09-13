@@ -17,7 +17,9 @@ describe('WorkPeriodsService', () => {
           useValue: {
             workPeriod: {
               create: jest.fn(),
+              findAll: jest.fn(),
               findMany: jest.fn(),
+              findOne: jest.fn(),
               findUnique: jest.fn(),
               findFirst: jest.fn(),
               update: jest.fn(),
@@ -46,7 +48,7 @@ describe('WorkPeriodsService', () => {
 
       const expectedWorkPeriod = {
         id: 1,
-        name: workPeriodData.name,
+        ...workPeriodData,
         startDate: new Date(workPeriodData.startDate),
         endDate: new Date(workPeriodData.endDate),
       };
@@ -62,7 +64,7 @@ describe('WorkPeriodsService', () => {
       expect(result).toEqual(expectedWorkPeriod);
     });
 
-    it('should throw BadRequestException if name already exists', async () => {
+    it('should throw BadRequestException if name already exists in pre-check', async () => {
       const workPeriodData = {
         name: '2024 Spring',
         startDate: '2024-03-01',
@@ -76,6 +78,71 @@ describe('WorkPeriodsService', () => {
       await expect(service.create(workPeriodData)).rejects.toThrow(
         BadRequestException,
       );
+    });
+
+    it('should throw BadRequestException on concurrent unique constraint violation (P2002)', async () => {
+      const workPeriodData = {
+        name: '2024 Spring',
+        startDate: '2024-03-01',
+        endDate: '2024-06-30',
+      };
+
+      jest.spyOn(prisma.workPeriod, 'findUnique').mockResolvedValue(null);
+      const p2002Error = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint violation',
+        { code: 'P2002', clientVersion: '5.x' },
+      );
+      jest.spyOn(prisma.workPeriod, 'create').mockRejectedValue(p2002Error);
+
+      await expect(service.create(workPeriodData)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('should update a work period', async () => {
+      const updateData = {
+        name: '2024 Spring Updated',
+      };
+      const expected = {
+        id: 1,
+        name: '2024 Spring Updated',
+        startDate: new Date('2024-03-01'),
+        endDate: new Date('2024-06-30'),
+      };
+
+      jest.spyOn(prisma.workPeriod, 'findUnique').mockResolvedValue(null);
+      jest
+        .spyOn(prisma.workPeriod, 'update')
+        .mockResolvedValue(expected as any);
+
+      const result = await service.update(1, updateData);
+      expect(result).toEqual(expected);
+    });
+
+    it('should throw BadRequestException if new name belongs to another work period', async () => {
+      jest.spyOn(prisma.workPeriod, 'findUnique').mockResolvedValue({
+        id: 2,
+        name: 'Existing Name',
+      } as any);
+
+      await expect(
+        service.update(1, { name: 'Existing Name' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException on concurrent unique constraint violation (P2002)', async () => {
+      jest.spyOn(prisma.workPeriod, 'findUnique').mockResolvedValue(null);
+      const p2002Error = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint violation',
+        { code: 'P2002', clientVersion: '5.x' },
+      );
+      jest.spyOn(prisma.workPeriod, 'update').mockRejectedValue(p2002Error);
+
+      await expect(
+        service.update(1, { name: 'Concurrent Name' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
