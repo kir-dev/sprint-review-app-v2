@@ -64,8 +64,8 @@ export class CreateLogDto {
   difficulty?: Difficulty;
 
   @ApiProperty({
-    description: 'Time spent in minutes',
-    example: 120,
+    description: 'Time spent in hours',
+    example: 2.5,
     required: false,
   })
   @IsNumber()

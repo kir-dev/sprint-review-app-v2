@@ -230,7 +230,12 @@ export function ExportDialog({
                   <SelectContent className="max-h-64">
                     {workPeriods.map((wp) => (
                       <SelectItem key={wp.id} value={wp.id.toString()}>
-                        {wp.name}
+                        <span>{wp.name}</span>
+                        {wp._count?.logs !== undefined && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ({wp._count.logs} napló)
+                          </span>
+                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -56,6 +56,9 @@ export interface WorkPeriod {
   name: string;
   startDate: string;
   endDate: string;
+  _count?: {
+    logs: number;
+  };
 }
 
 export interface LogFormData {

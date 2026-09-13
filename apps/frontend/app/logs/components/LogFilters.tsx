@@ -106,6 +106,9 @@ export function LogFilters({
               {workPeriods.map((period) => (
                 <option key={period.id} value={period.id}>
                   {period.name}
+                  {period._count?.logs !== undefined
+                    ? ` (${period._count.logs} napló)`
+                    : ''}
                 </option>
               ))}
             </select>
