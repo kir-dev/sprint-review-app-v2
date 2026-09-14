@@ -31,8 +31,8 @@ export const logFormSchema = z.object({
   timeSpent: z.string().refine((value) => {
     if (value === '') return true;
     const hours = Number(value.replace(',', '.'));
-    return Number.isFinite(hours) && hours > 0 && hours <= 24;
-  }, 'Az óraszámnak 0-nál nagyobbnak és legfeljebb 24-nek kell lennie'),
+    return Number.isFinite(hours) && hours >= 0.1 && hours <= 24;
+  }, 'Az óraszámnak 0,1 és 24 között kell lennie'),
   workPeriodId: z.string(),
   projectId: z.string(),
   eventId: z.string(),
