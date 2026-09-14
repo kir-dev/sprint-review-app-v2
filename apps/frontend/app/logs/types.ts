@@ -72,6 +72,18 @@ export interface LogFormData {
   workPeriodId: string;
 }
 
+export interface LogPayload {
+  date: string;
+  category: LogCategory;
+  description: string;
+  difficulty?: Difficulty;
+  timeSpent?: number;
+  userId: number;
+  projectId: number | null;
+  eventId: number | null;
+  workPeriodId: number;
+}
+
 export interface LogFilters {
   category: string;
   projectId: string;

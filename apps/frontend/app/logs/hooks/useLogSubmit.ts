@@ -1,7 +1,7 @@
 import { apiFetch } from '@/lib/api-fetch';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { Log, LogFormData, WorkPeriod } from '../types';
+import { Log, LogFormData, LogPayload, WorkPeriod } from '../types';
 import { findWorkPeriodForDate } from '../utils/log-helpers';
 
 interface UseLogSubmitProps {
@@ -33,12 +33,14 @@ export function useLogSubmit({
       return;
     }
 
-    const payload = {
+    const payload: LogPayload = {
       date: data.date,
       category: data.category,
       description: data.description,
       difficulty: data.difficulty || undefined,
-      timeSpent: data.timeSpent ? data.timeSpent : undefined,
+      timeSpent: data.timeSpent
+        ? Number(data.timeSpent.replace(',', '.'))
+        : undefined,
       userId: user.id,
       projectId: data.projectId ? parseInt(data.projectId) : null,
       eventId: data.eventId ? parseInt(data.eventId) : null,
@@ -74,8 +76,11 @@ export function useLogSubmit({
         }
       } else {
         const error = await response.json();
+        const description = Array.isArray(error.message)
+          ? error.message.join(', ')
+          : error.message || 'Nem sikerült menteni a bejegyzést';
         toast.error('Hiba', {
-          description: error.message || 'Nem sikerült menteni a bejegyzést',
+          description,
         });
       }
     } catch (err) {
