@@ -143,7 +143,7 @@ export function LogDialog({
                   <input
                     id="timeSpent"
                     type="number"
-                    min="0"
+                    min="0.1"
                     max="24"
                     step="0.1"
                     {...field}
