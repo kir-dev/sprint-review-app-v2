@@ -11,8 +11,9 @@ export class LogsService {
 
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateLogDto) {
-    this.logger.log(`Creating log for user ID: ${dto.userId}`);
+  /** Creates a log owned by `userId`; the owner never comes from the request body. */
+  async create(userId: number, dto: CreateLogDto) {
+    this.logger.log(`Creating log for user ID: ${userId}`);
     try {
       const log = await this.prisma.log.create({
         data: {
@@ -21,7 +22,7 @@ export class LogsService {
           description: dto.description,
           difficulty: dto.difficulty,
           timeSpent: dto.timeSpent,
-          user: { connect: { id: dto.userId } },
+          user: { connect: { id: userId } },
           workPeriod: { connect: { id: dto.workPeriodId } },
           ...(dto.projectId && {
             project: {
@@ -157,15 +158,17 @@ export class LogsService {
     }
   }
 
-  async update(id: number, dto: UpdateLogDto) {
+  /** Updates a log only if `userId` owns it; otherwise it is reported as missing. */
+  async update(id: number, userId: number, dto: UpdateLogDto) {
     this.logger.log(`Updating log with ID: ${id}`);
     try {
-      const { userId, workPeriodId, projectId, eventId, ...rest } = dto;
+      const { workPeriodId, projectId, eventId, ...rest } = dto;
+      // The owner is fixed at creation. Ignore an owner field even if one slips past validation.
+      delete (rest as { userId?: unknown }).userId;
 
       const updateData: Prisma.LogUpdateInput = {
         ...rest,
         ...(dto.date && { date: new Date(dto.date) }),
-        ...(userId && { user: { connect: { id: userId } } }),
         ...(workPeriodId && {
           workPeriod: { connect: { id: workPeriodId } },
         }),
@@ -184,7 +187,7 @@ export class LogsService {
       }
 
       const log = await this.prisma.log.update({
-        where: { id },
+        where: { id, userId },
         data: updateData,
         include: {
           user: true,
@@ -196,20 +199,23 @@ export class LogsService {
       this.logger.log(`Log updated successfully: ID ${log.id}`);
       return log;
     } catch (error) {
+      if (isRecordNotFound(error)) throw logNotFound(id);
       logServiceError(this.logger, 'update_log');
       throw error;
     }
   }
 
-  async remove(id: number) {
+  /** Deletes a log only if `userId` owns it; otherwise it is reported as missing. */
+  async remove(id: number, userId: number) {
     this.logger.log(`Deleting log with ID: ${id}`);
     try {
       const log = await this.prisma.log.delete({
-        where: { id },
+        where: { id, userId },
       });
       this.logger.log(`Log deleted successfully: ID ${log.id}`);
       return log;
     } catch (error) {
+      if (isRecordNotFound(error)) throw logNotFound(id);
       logServiceError(this.logger, 'delete_log');
       throw error;
     }
@@ -545,6 +551,19 @@ export class LogsService {
       throw error;
     }
   }
+}
+
+/** Prisma reports a write whose `where` matched nothing as P2025. */
+function isRecordNotFound(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === 'P2025'
+  );
+}
+
+/** Someone else's log gets the same answer as a missing one, so its existence is not revealed. */
+function logNotFound(id: number): NotFoundException {
+  return new NotFoundException(`Log with ID ${id} not found`);
 }
 
 function escapeCsvCell(value: string): string {

@@ -78,7 +78,6 @@ export interface LogPayload {
   description: string;
   difficulty?: Difficulty;
   timeSpent?: number;
-  userId: number;
   projectId: number | null;
   eventId: number | null;
   workPeriodId: number;

@@ -41,7 +41,6 @@ export function useLogSubmit({
       timeSpent: data.timeSpent
         ? Number(data.timeSpent.replace(',', '.'))
         : undefined,
-      userId: user.id,
       projectId: data.projectId ? parseInt(data.projectId) : null,
       eventId: data.eventId ? parseInt(data.eventId) : null,
       workPeriodId: resolvedWorkPeriodId,
