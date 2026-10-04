@@ -74,15 +74,6 @@ export class CreateLogDto {
   timeSpent?: number;
 
   @ApiProperty({
-    description: 'User ID who created the log',
-    example: 1,
-  })
-  @IsInt()
-  @IsPositive()
-  @IsNotEmpty()
-  userId: number;
-
-  @ApiProperty({
     description: 'Project ID associated with the log',
     example: 1,
     required: false,

@@ -1,3 +1,4 @@
+import { CurrentUser } from '@kir-dev/passport-authsch';
 import {
   Body,
   Controller,
@@ -33,10 +34,13 @@ export class LogsController {
   @Post()
   @ApiOperation({ summary: 'Create a new log entry' })
   @ApiBody({ type: CreateLogDto })
-  @ApiResponse({ status: 201, description: 'Log created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Log created for the signed-in user',
+  })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  create(@Body() dto: CreateLogDto) {
-    return this.logsService.create(dto);
+  create(@CurrentUser() user: { id: number }, @Body() dto: CreateLogDto) {
+    return this.logsService.create(user.id, dto);
   }
 
   @Get()
@@ -199,17 +203,27 @@ export class LogsController {
   @ApiParam({ name: 'id', type: 'number', description: 'Log ID' })
   @ApiBody({ type: UpdateLogDto })
   @ApiResponse({ status: 200, description: 'Log updated successfully' })
-  @ApiResponse({ status: 404, description: 'Log not found' })
-  update(@Param('id') id: string, @Body() dto: UpdateLogDto) {
-    return this.logsService.update(+id, dto);
+  @ApiResponse({
+    status: 404,
+    description: 'Log not found or owned by another user',
+  })
+  update(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: number },
+    @Body() dto: UpdateLogDto,
+  ) {
+    return this.logsService.update(+id, user.id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a log' })
   @ApiParam({ name: 'id', type: 'number', description: 'Log ID' })
   @ApiResponse({ status: 200, description: 'Log deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Log not found' })
-  remove(@Param('id') id: string) {
-    return this.logsService.remove(+id);
+  @ApiResponse({
+    status: 404,
+    description: 'Log not found or owned by another user',
+  })
+  remove(@Param('id') id: string, @CurrentUser() user: { id: number }) {
+    return this.logsService.remove(+id, user.id);
   }
 }
