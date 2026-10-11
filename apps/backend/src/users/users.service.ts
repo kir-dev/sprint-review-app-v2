@@ -55,6 +55,7 @@ export class UsersService {
   }
 
   async create(data: {
+    authSchId?: string;
     email: string;
     simonyiEmail?: string;
     githubUsername?: string;
@@ -75,6 +76,7 @@ export class UsersService {
 
       const user = await this.prisma.user.create({
         data: {
+          authSchId: data.authSchId,
           email: data.email,
           simonyiEmail: data.simonyiEmail,
           githubUsername: data.githubUsername,
