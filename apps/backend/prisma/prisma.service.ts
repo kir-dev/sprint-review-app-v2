@@ -19,6 +19,8 @@ export class PrismaService
   constructor() {
     super({
       log: getPrismaLogLevels(process.env.NODE_ENV),
+      // Login-only identity key; keep it out of user payloads unless selected.
+      omit: { user: { authSchId: true } },
     });
   }
 
