@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -14,6 +15,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateWorkPeriodDto } from './dto/create-work-period.dto';
 import { UpdateWorkPeriodDto } from './dto/update-work-period.dto';
 import { WorkPeriodsService } from './work-periods.service';
@@ -24,6 +27,8 @@ export class WorkPeriodsController {
   constructor(private readonly workPeriodsService: WorkPeriodsService) {}
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('canManageProjects')
   @ApiOperation({ summary: 'Create a new work period' })
   @ApiBody({ type: CreateWorkPeriodDto })
   @ApiResponse({
@@ -78,6 +83,8 @@ export class WorkPeriodsController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('canManageProjects')
   @ApiOperation({ summary: 'Update a work period' })
   @ApiParam({ name: 'id', type: 'number', description: 'Work period ID' })
   @ApiBody({ type: UpdateWorkPeriodDto })
@@ -91,6 +98,8 @@ export class WorkPeriodsController {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('canManageProjects')
   @ApiOperation({ summary: 'Delete a work period' })
   @ApiParam({ name: 'id', type: 'number', description: 'Work period ID' })
   @ApiResponse({

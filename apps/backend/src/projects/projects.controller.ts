@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -14,6 +15,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateFeatureDto } from '../features/dto/create-feature.dto';
 import { FeaturesService } from '../features/features.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -29,6 +32,8 @@ export class ProjectController {
   ) {}
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('canManageProjects')
   @ApiOperation({ summary: 'Create a new project' })
   @ApiBody({ type: CreateProjectDto })
   @ApiResponse({ status: 201, description: 'Project created successfully' })
@@ -76,6 +81,8 @@ export class ProjectController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('canManageProjects')
   @ApiOperation({ summary: 'Update a project' })
   @ApiParam({ name: 'id', type: 'number', description: 'Project ID' })
   @ApiBody({ type: UpdateProjectDto })
@@ -86,6 +93,8 @@ export class ProjectController {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('canManageProjects')
   @ApiOperation({ summary: 'Delete a project' })
   @ApiParam({ name: 'id', type: 'number', description: 'Project ID' })
   @ApiResponse({ status: 200, description: 'Project deleted successfully' })

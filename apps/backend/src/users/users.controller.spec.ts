@@ -1,4 +1,6 @@
+import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -17,13 +19,17 @@ describe('UsersController', () => {
             findAll: jest.fn(),
             findOne: jest.fn(),
             update: jest.fn(),
+            assertCanUpdate: jest.fn(),
             remove: jest.fn(),
             getUserProjects: jest.fn(),
             getUserLogs: jest.fn(),
           },
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<UsersController>(UsersController);
     service = module.get<UsersService>(UsersService);
@@ -65,6 +71,31 @@ describe('UsersController', () => {
       jest.spyOn(service, 'findAll').mockResolvedValue(expectedResult);
 
       expect(await controller.findAll()).toBe(expectedResult);
+    });
+  });
+  describe('update', () => {
+    it('authorizes the signed-in user before updating', async () => {
+      const dto = { position: 'TAG' };
+      jest
+        .spyOn(service, 'assertCanUpdate')
+        .mockRejectedValue(new ForbiddenException());
+
+      await expect(controller.update('2', { id: 1 }, dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(service.assertCanUpdate).toHaveBeenCalledWith(1, 2, dto);
+      expect(service.update).not.toHaveBeenCalled();
+    });
+
+    it('updates the user once authorized', async () => {
+      const dto = { githubUsername: 'uj' };
+      jest.spyOn(service, 'assertCanUpdate').mockResolvedValue(undefined);
+      jest.spyOn(service, 'update').mockResolvedValue({ id: 1 } as any);
+
+      await expect(controller.update('1', { id: 1 }, dto)).resolves.toEqual({
+        id: 1,
+      });
+      expect(service.update).toHaveBeenCalledWith(1, dto);
     });
   });
 });

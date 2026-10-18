@@ -1,11 +1,20 @@
-import { Position } from '../../app/logs/types';
+export type PermissionFlag =
+  | 'canManageSettings'
+  | 'canExportLogs'
+  | 'canManageEvents'
+  | 'canManageProjects';
 
-export const EXPORT_LOGS_ROLES: readonly Position[] = [
-  Position.KORVEZETO,
-  Position.KORVEZETO_HELYETTES,
-  Position.GAZDASAGIS,
-];
+interface PermissionHolder {
+  positionDetails?:
+    | ({ isLeader: boolean } & Record<PermissionFlag, boolean>)
+    | null;
+}
 
-export function canExportLogs(position: Position | undefined | null): boolean {
-  return !!position && EXPORT_LOGS_ROLES.includes(position);
+/** Mirrors the backend: the group leader always has every permission. */
+export function hasPermission(
+  user: PermissionHolder | null | undefined,
+  flag: PermissionFlag,
+): boolean {
+  const details = user?.positionDetails;
+  return !!details && (details.isLeader || details[flag] === true);
 }

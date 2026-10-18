@@ -69,6 +69,8 @@ export function PositionDialog({
   const [posColor, setPosColor] = useState('');
   const [posCanManageSettings, setPosCanManageSettings] = useState(false);
   const [posCanExportLogs, setPosCanExportLogs] = useState(false);
+  const [posCanManageEvents, setPosCanManageEvents] = useState(false);
+  const [posCanManageProjects, setPosCanManageProjects] = useState(false);
   const [posIsLeader, setPosIsLeader] = useState(false);
 
   // Sync form states when editingPosition changes
@@ -79,6 +81,8 @@ export function PositionDialog({
       setPosColor(mapTailwindClassToHex(editingPosition.color));
       setPosCanManageSettings(editingPosition.canManageSettings);
       setPosCanExportLogs(editingPosition.canExportLogs);
+      setPosCanManageEvents(editingPosition.canManageEvents);
+      setPosCanManageProjects(editingPosition.canManageProjects);
       setPosIsLeader(editingPosition.isLeader);
     } else {
       setPosName('');
@@ -86,6 +90,8 @@ export function PositionDialog({
       setPosColor('#64748b');
       setPosCanManageSettings(false);
       setPosCanExportLogs(false);
+      setPosCanManageEvents(false);
+      setPosCanManageProjects(false);
       setPosIsLeader(false);
     }
   }, [editingPosition, isOpen]);
@@ -102,8 +108,8 @@ export function PositionDialog({
       color: posColor,
       canManageSettings: posIsLeader ? true : posCanManageSettings,
       canExportLogs: posIsLeader ? true : posCanExportLogs,
-      canManageEvents: posIsLeader,
-      canManageProjects: posIsLeader,
+      canManageEvents: posIsLeader ? true : posCanManageEvents,
+      canManageProjects: posIsLeader ? true : posCanManageProjects,
       isLeader: posIsLeader,
     };
 
@@ -273,6 +279,38 @@ export function PositionDialog({
                     className="text-sm font-normal cursor-pointer"
                   >
                     Munkanaplók CSV exportálása
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="posCanManageEvents"
+                    checked={posCanManageEvents}
+                    onCheckedChange={(checked) =>
+                      setPosCanManageEvents(!!checked)
+                    }
+                  />
+                  <Label
+                    htmlFor="posCanManageEvents"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Események létrehozása, szerkesztése és törlése
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="posCanManageProjects"
+                    checked={posCanManageProjects}
+                    onCheckedChange={(checked) =>
+                      setPosCanManageProjects(!!checked)
+                    }
+                  />
+                  <Label
+                    htmlFor="posCanManageProjects"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Projektek és munkaperiódusok kezelése
                   </Label>
                 </div>
               </div>

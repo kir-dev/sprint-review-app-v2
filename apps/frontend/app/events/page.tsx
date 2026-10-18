@@ -7,6 +7,7 @@ import { ErrorAlert } from '@/components/ErrorAlert';
 import { MobileFloatingActionButton } from '@/components/MobileFloatingActionButton';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
+import { hasPermission } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import { EventDialog } from './components/EventDialog';
@@ -148,6 +149,7 @@ export default function EventsPage() {
   }
 
   const isLoading = dataLoading && events.length === 0;
+  const canManage = hasPermission(user, 'canManageEvents');
 
   // Loading state
   if (isAuthLoading || !user) {
@@ -160,13 +162,14 @@ export default function EventsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-7xl mx-auto">
-      <EventsHeader onCreateEvent={() => openDialog()} />
+      <EventsHeader canManage={canManage} onCreateEvent={() => openDialog()} />
 
       <ErrorAlert error={error} onClose={() => setError(null)} />
 
       <EventsList
         events={events}
         isLoading={isLoading}
+        canManage={canManage}
         onCreateEvent={() => openDialog()}
         onEditEvent={openDialog}
         onDeleteEvent={handleDeleteClick}
@@ -193,7 +196,7 @@ export default function EventsPage() {
         description="Biztosan törölni szeretnéd ezt az eseményt? Ez a művelet nem visszavonható."
       />
 
-      {!isDialogOpen && !deleteConfirmOpen && (
+      {canManage && !isDialogOpen && !deleteConfirmOpen && (
         <MobileFloatingActionButton onClick={() => openDialog()} />
       )}
     </div>

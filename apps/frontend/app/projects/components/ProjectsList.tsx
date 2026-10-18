@@ -8,6 +8,7 @@ import { Project } from '../types';
 interface ProjectsListProps {
   projects: Project[];
   isLoading: boolean;
+  canManage: boolean;
   onCreateProject: () => void;
   onEditProject: (project: Project) => void;
   onDeleteProject: (id: number) => void;
@@ -16,6 +17,7 @@ interface ProjectsListProps {
 export function ProjectsList({
   projects,
   isLoading,
+  canManage,
   onCreateProject,
   onEditProject,
   onDeleteProject,
@@ -37,14 +39,18 @@ export function ProjectsList({
           </div>
           <h3 className="text-lg font-semibold mb-2">Nincs még projekt</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Hozz létre egy projektet a kezdéshez
+            {canManage
+              ? 'Hozz létre egy projektet a kezdéshez'
+              : 'Még nincs felvéve egy sem.'}
           </p>
-          <Button
-            onClick={onCreateProject}
-            className="transition-all hover:scale-105"
-          >
-            Projekt Létrehozása
-          </Button>
+          {canManage && (
+            <Button
+              onClick={onCreateProject}
+              className="transition-all hover:scale-105"
+            >
+              Projekt Létrehozása
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
@@ -68,24 +74,26 @@ export function ProjectsList({
                   {project.name}
                 </Link>
               </CardTitle>
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEditProject(project)}
-                  className="h-8 w-8 p-0 hover:bg-primary/10 transition-all hover:scale-110"
-                >
-                  <Edit2 className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDeleteProject(project.id)}
-                  className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-all hover:scale-110"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
+              {canManage && (
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEditProject(project)}
+                    className="h-8 w-8 p-0 hover:bg-primary/10 transition-all hover:scale-110"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDeleteProject(project.id)}
+                    className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-all hover:scale-110"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-3">

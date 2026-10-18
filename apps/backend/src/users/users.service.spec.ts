@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ForbiddenException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { UsersService } from './users.service';
 
@@ -133,6 +134,61 @@ describe('UsersService', () => {
     expect(transactionRunner).toHaveBeenCalledTimes(2);
     expect(transactionRunner.mock.calls[1][1]).toEqual({
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    });
+  });
+  describe('assertCanUpdate', () => {
+    const memberPosition = {
+      isLeader: false,
+      canManageSettings: false,
+      canExportLogs: false,
+      canManageEvents: false,
+      canManageProjects: false,
+    };
+
+    function actorWith(position: object | null) {
+      jest
+        .spyOn(prisma.user, 'findUnique')
+        .mockResolvedValue({ id: 1, position } as any);
+    }
+
+    it('lets users edit their own profile fields', async () => {
+      await expect(
+        service.assertCanUpdate(1, 1, {
+          fullName: 'Új Név',
+          githubUsername: 'uj',
+          simonyiEmail: undefined,
+          profileImage: 'data:image/png;base64,AAA',
+        }),
+      ).resolves.toBeUndefined();
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['their own position', 1, { position: 'KORVEZETO' }],
+      ['their own email', 1, { email: 'other@example.com' }],
+      ["someone else's profile", 2, { fullName: 'Más Valaki' }],
+    ])('rejects members changing %s', async (_case, targetId, dto) => {
+      actorWith(memberPosition);
+
+      await expect(service.assertCanUpdate(1, targetId, dto)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('lets settings managers change positions of other users', async () => {
+      actorWith({ ...memberPosition, canManageSettings: true });
+
+      await expect(
+        service.assertCanUpdate(1, 2, { position: 'TAG' }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('rejects actors without a position', async () => {
+      actorWith(null);
+
+      await expect(
+        service.assertCanUpdate(1, 2, { position: 'TAG' }),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

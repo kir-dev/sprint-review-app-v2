@@ -5,22 +5,9 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { Position } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-
-const PERMISSION_FLAGS = [
-  'canManageSettings',
-  'canExportLogs',
-  'canManageEvents',
-  'canManageProjects',
-] as const satisfies readonly (keyof Position)[];
-
-type PermissionFlag = (typeof PERMISSION_FLAGS)[number];
-
-function isPermissionFlag(value: string): value is PermissionFlag {
-  return PERMISSION_FLAGS.some((flag) => flag === value);
-}
+import { hasPermission, isPermissionFlag } from '../permissions';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -63,13 +50,8 @@ export class RolesGuard implements CanActivate {
       throw new Error('Unknown permission metadata');
     }
 
-    // The group leader (isLeader: true) always has access to known permissions.
-    if (user.position.isLeader) {
-      return true;
-    }
-
-    const hasRequiredRole = requiredRoles.some(
-      (role) => user.position?.[role] === true,
+    const hasRequiredRole = requiredRoles.some((role) =>
+      hasPermission(user.position, role),
     );
 
     if (!hasRequiredRole) {

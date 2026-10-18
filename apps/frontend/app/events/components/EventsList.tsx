@@ -8,6 +8,7 @@ import { Event } from '../types';
 interface EventsListProps {
   events: Event[];
   isLoading: boolean;
+  canManage: boolean;
   onCreateEvent: () => void;
   onEditEvent: (event: Event) => void;
   onDeleteEvent: (id: number) => void;
@@ -16,6 +17,7 @@ interface EventsListProps {
 export function EventsList({
   events,
   isLoading,
+  canManage,
   onCreateEvent,
   onEditEvent,
   onDeleteEvent,
@@ -37,14 +39,18 @@ export function EventsList({
           </div>
           <h3 className="text-lg font-semibold mb-2">Nincs még esemény</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Hozz létre egy eseményt a kezdéshez
+            {canManage
+              ? 'Hozz létre egy eseményt a kezdéshez'
+              : 'Még nincs felvéve egy sem.'}
           </p>
-          <Button
-            onClick={onCreateEvent}
-            className="transition-all hover:scale-105"
-          >
-            Esemény Létrehozása
-          </Button>
+          {canManage && (
+            <Button
+              onClick={onCreateEvent}
+              className="transition-all hover:scale-105"
+            >
+              Esemény Létrehozása
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
@@ -84,24 +90,26 @@ export function EventsList({
                 <CardTitle className="text-lg group-hover:text-primary transition-colors">
                   {event.name}
                 </CardTitle>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEditEvent(event)}
-                    className="h-8 w-8 p-0 hover:bg-primary/10 transition-all hover:scale-110"
-                  >
-                    <Edit2 className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDeleteEvent(event.id)}
-                    className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-all hover:scale-110"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
+                {canManage && (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEditEvent(event)}
+                      className="h-8 w-8 p-0 hover:bg-primary/10 transition-all hover:scale-110"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDeleteEvent(event.id)}
+                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-all hover:scale-110"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -113,13 +121,18 @@ export function EventsList({
               <div className="flex items-center gap-2">
                 <span
                   style={{
-                    backgroundColor: event.category ? `${event.category.color}1a` : undefined,
+                    backgroundColor: event.category
+                      ? `${event.category.color}1a`
+                      : undefined,
                     color: event.category ? event.category.color : undefined,
-                    borderColor: event.category ? `${event.category.color}33` : undefined,
+                    borderColor: event.category
+                      ? `${event.category.color}33`
+                      : undefined,
                   }}
                   className={cn(
                     'px-2 py-1 rounded text-xs font-medium border',
-                    !event.category && 'bg-primary/10 text-primary border-primary/20',
+                    !event.category &&
+                      'bg-primary/10 text-primary border-primary/20',
                   )}
                 >
                   {event.category?.label || 'Ismeretlen'}

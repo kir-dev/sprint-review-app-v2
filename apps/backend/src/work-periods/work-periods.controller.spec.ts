@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { WorkPeriodsController } from './work-periods.controller';
 import { WorkPeriodsService } from './work-periods.service';
 
@@ -24,7 +25,10 @@ describe('WorkPeriodsController', () => {
           },
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<WorkPeriodsController>(WorkPeriodsController);
     service = module.get<WorkPeriodsService>(WorkPeriodsService);

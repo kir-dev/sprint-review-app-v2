@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -7,8 +8,18 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { logServiceError } from '../common/logging/safe-logger';
+import { hasPermission } from '../common/permissions';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 const SERIALIZABLE_TRANSACTION_ATTEMPTS = 3;
+
+/** Profile fields every user may change on their own account. */
+const SELF_EDITABLE_FIELDS: ReadonlySet<string> = new Set([
+  'fullName',
+  'githubUsername',
+  'simonyiEmail',
+  'profileImage',
+]);
 
 @Injectable()
 export class UsersService {
@@ -184,6 +195,36 @@ export class UsersService {
       }
       logServiceError(this.logger, 'get_user_by_email');
       throw error;
+    }
+  }
+
+  /**
+   * Users may edit their own profile fields; changing anyone else, or the
+   * email or position of any account, requires the settings permission.
+   */
+  async assertCanUpdate(
+    actorId: number,
+    targetId: number,
+    data: UpdateUserDto,
+  ) {
+    const changedFields = Object.entries(data)
+      .filter(([, value]) => value !== undefined)
+      .map(([field]) => field);
+    const isOwnProfileEdit =
+      actorId === targetId &&
+      changedFields.every((field) => SELF_EDITABLE_FIELDS.has(field));
+    if (isOwnProfileEdit) {
+      return;
+    }
+
+    const actor = await this.prisma.user.findUnique({
+      where: { id: actorId },
+      include: { position: true },
+    });
+    if (!hasPermission(actor?.position, 'canManageSettings')) {
+      throw new ForbiddenException(
+        'You do not have permission to update this user',
+      );
     }
   }
 

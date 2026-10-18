@@ -262,6 +262,24 @@ export function RolesTab() {
                       {pos.canExportLogs ? 'Igen' : 'Nem'}
                     </Badge>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span>Események kezelése:</span>
+                    <Badge
+                      variant={pos.canManageEvents ? 'default' : 'secondary'}
+                      className="text-[10px] px-1 py-0"
+                    >
+                      {pos.canManageEvents ? 'Igen' : 'Nem'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Projektek kezelése:</span>
+                    <Badge
+                      variant={pos.canManageProjects ? 'default' : 'secondary'}
+                      className="text-[10px] px-1 py-0"
+                    >
+                      {pos.canManageProjects ? 'Igen' : 'Nem'}
+                    </Badge>
+                  </div>
                 </CardContent>
               </Card>
             ))}

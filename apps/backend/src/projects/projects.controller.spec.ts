@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { FeaturesService } from '../features/features.service';
 import { ProjectController } from './projects.controller';
 import { ProjectService } from './projects.service';
@@ -13,7 +14,10 @@ describe('ProjectController', () => {
         { provide: ProjectService, useValue: {} },
         { provide: FeaturesService, useValue: {} },
       ],
-    }).compile();
+    })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<ProjectController>(ProjectController);
   });

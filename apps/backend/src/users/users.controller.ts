@@ -1,3 +1,4 @@
+import { CurrentUser } from '@kir-dev/passport-authsch';
 import {
   Body,
   Controller,
@@ -6,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -14,6 +16,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
@@ -24,10 +28,13 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('canManageSettings')
   @ApiOperation({ summary: 'Create a new user' })
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
   }
@@ -71,15 +78,28 @@ export class UsersController {
   @ApiParam({ name: 'id', type: 'number', description: 'User ID' })
   @ApiBody({ type: UpdateUserDto })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Only own profile fields may be changed without the settings permission',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+  async update(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: number },
+    @Body() dto: UpdateUserDto,
+  ) {
+    await this.usersService.assertCanUpdate(user.id, +id, dto);
     return this.usersService.update(+id, dto);
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('canManageSettings')
   @ApiOperation({ summary: 'Delete a user' })
   @ApiParam({ name: 'id', type: 'number', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'User not found' })
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
