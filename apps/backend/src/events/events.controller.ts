@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -14,6 +15,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { EventService } from './events.service';
@@ -24,6 +27,8 @@ export class EventController {
   constructor(private readonly eventService: EventService) {}
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('canManageEvents')
   @ApiOperation({ summary: 'Create a new event' })
   @ApiBody({ type: CreateEventDto })
   @ApiResponse({ status: 201, description: 'Event created successfully' })
@@ -49,6 +54,8 @@ export class EventController {
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('canManageEvents')
   @ApiOperation({ summary: 'Update an event' })
   @ApiParam({ name: 'id', type: 'number', description: 'Event ID' })
   @ApiBody({ type: UpdateEventDto })
@@ -59,6 +66,8 @@ export class EventController {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('canManageEvents')
   @ApiOperation({ summary: 'Delete an event' })
   @ApiParam({ name: 'id', type: 'number', description: 'Event ID' })
   @ApiResponse({ status: 200, description: 'Event deleted successfully' })

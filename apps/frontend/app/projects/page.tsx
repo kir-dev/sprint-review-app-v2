@@ -7,6 +7,7 @@ import { ErrorAlert } from '@/components/ErrorAlert';
 import { MobileFloatingActionButton } from '@/components/MobileFloatingActionButton';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { useAuth } from '@/context/AuthContext';
+import { hasPermission } from '@/lib/permissions';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ProjectDialog } from './components/ProjectDialog';
@@ -129,6 +130,7 @@ export default function ProjectsPage() {
   }
 
   const isLoading = dataLoading && projects.length === 0;
+  const canManage = hasPermission(user, 'canManageProjects');
 
   // Loading state
   if (isAuthLoading || !user) {
@@ -141,13 +143,17 @@ export default function ProjectsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-0 md:pt-4 max-w-7xl mx-auto">
-      <ProjectsHeader onCreateProject={() => openDialog()} />
+      <ProjectsHeader
+        canManage={canManage}
+        onCreateProject={() => openDialog()}
+      />
 
       <ErrorAlert error={error} onClose={() => setError(null)} />
 
       <ProjectsList
         projects={projects}
         isLoading={isLoading}
+        canManage={canManage}
         onCreateProject={() => openDialog()}
         onEditProject={openDialog}
         onDeleteProject={handleDeleteClick}
@@ -174,7 +180,7 @@ export default function ProjectsPage() {
         description="Biztosan törölni szeretnéd ezt a projektet? Ez a művelet nem visszavonható."
       />
 
-      {!isDialogOpen && !deleteConfirmOpen && (
+      {canManage && !isDialogOpen && !deleteConfirmOpen && (
         <MobileFloatingActionButton onClick={() => openDialog()} />
       )}
     </div>

@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { canExportLogs } from '@/lib/permissions';
+import { hasPermission } from '@/lib/permissions';
 import { useEventData } from '../events/hooks/useEventData';
 import { ExportDialog } from './components/ExportDialog';
 import { LogDialog } from './components/LogDialog';
@@ -68,7 +68,7 @@ export default function LogsPage() {
 
   // Export dialog state (privileged users only)
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const canExport = canExportLogs(user?.position);
+  const canExport = hasPermission(user, 'canExportLogs');
 
   // Redirect if not authenticated
   useEffect(() => {

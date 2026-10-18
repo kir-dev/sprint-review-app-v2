@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { EventController } from './events.controller';
 import { EventService } from './events.service';
 
@@ -9,7 +10,10 @@ describe('EventController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EventController],
       providers: [{ provide: EventService, useValue: {} }],
-    }).compile();
+    })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<EventController>(EventController);
   });

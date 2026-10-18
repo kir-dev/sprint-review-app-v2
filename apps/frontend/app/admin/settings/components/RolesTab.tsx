@@ -17,9 +17,14 @@ import { toast } from 'sonner';
 import { ChevronDown, ChevronUp, Edit2, Plus, Trash2 } from 'lucide-react';
 import { PositionData, PositionDialog } from './PositionDialog';
 import { cn } from '@/lib/utils';
+import type { PermissionFlag } from '@/lib/permissions';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 
 const isHexColor = (val: string) => /^#[0-9A-F]{6}$/i.test(val);
+
+// The leader role has every permission regardless of the stored flags.
+const hasFlag = (pos: PositionData, flag: PermissionFlag) =>
+  pos.isLeader || pos[flag];
 
 export function RolesTab() {
   const { isAuthenticated } = useAuth();
@@ -247,19 +252,51 @@ export function RolesTab() {
                   <div className="flex justify-between items-center">
                     <span>Admin beállítások:</span>
                     <Badge
-                      variant={pos.canManageSettings ? 'default' : 'secondary'}
+                      variant={
+                        hasFlag(pos, 'canManageSettings')
+                          ? 'default'
+                          : 'secondary'
+                      }
                       className="text-[10px] px-1 py-0"
                     >
-                      {pos.canManageSettings ? 'Igen' : 'Nem'}
+                      {hasFlag(pos, 'canManageSettings') ? 'Igen' : 'Nem'}
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span>Naplók exportálása:</span>
                     <Badge
-                      variant={pos.canExportLogs ? 'default' : 'secondary'}
+                      variant={
+                        hasFlag(pos, 'canExportLogs') ? 'default' : 'secondary'
+                      }
                       className="text-[10px] px-1 py-0"
                     >
-                      {pos.canExportLogs ? 'Igen' : 'Nem'}
+                      {hasFlag(pos, 'canExportLogs') ? 'Igen' : 'Nem'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Események kezelése:</span>
+                    <Badge
+                      variant={
+                        hasFlag(pos, 'canManageEvents')
+                          ? 'default'
+                          : 'secondary'
+                      }
+                      className="text-[10px] px-1 py-0"
+                    >
+                      {hasFlag(pos, 'canManageEvents') ? 'Igen' : 'Nem'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Projektek kezelése:</span>
+                    <Badge
+                      variant={
+                        hasFlag(pos, 'canManageProjects')
+                          ? 'default'
+                          : 'secondary'
+                      }
+                      className="text-[10px] px-1 py-0"
+                    >
+                      {hasFlag(pos, 'canManageProjects') ? 'Igen' : 'Nem'}
                     </Badge>
                   </div>
                 </CardContent>
