@@ -32,6 +32,9 @@ ENV NODE_ENV=production \
     NODE_PATH=/app/node_modules:/app/apps/backend/node_modules \
     PORT=3001
 
+# The entrypoint runs the Prisma CLI; stop it phoning home for update checks.
+ENV CHECKPOINT_DISABLE=1
+
 COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules
 COPY --from=production-dependencies --chown=node:node /app/apps/backend/node_modules ./apps/backend/node_modules
 COPY --from=build --chown=node:node /app/apps/backend/dist ./apps/backend/dist
@@ -39,9 +42,11 @@ COPY --chown=node:node package.json ./package.json
 COPY --chown=node:node apps/backend/package.json ./apps/backend/package.json
 COPY --chown=node:node apps/backend/prisma/schema.prisma ./apps/backend/prisma/schema.prisma
 COPY --chown=node:node apps/backend/prisma/migrations ./apps/backend/prisma/migrations
+COPY --chown=node:node --chmod=0755 apps/backend/docker-entrypoint.sh ./apps/backend/docker-entrypoint.sh
 
 USER node
 
 EXPOSE 3001
 
-CMD ["node", "--max-http-header-size=81920", "apps/backend/dist/src/main.js"]
+# Runs `prisma migrate deploy`, then execs the API (see the script).
+CMD ["apps/backend/docker-entrypoint.sh"]
