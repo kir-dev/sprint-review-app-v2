@@ -67,9 +67,9 @@ export interface LogFormData {
   description: string;
   difficulty?: Difficulty;
   timeSpent: string;
-  projectId: string;
-  eventId: string;
-  workPeriodId: string;
+  projectId?: string;
+  eventId?: string;
+  workPeriodId?: string;
 }
 
 export interface LogPayload {

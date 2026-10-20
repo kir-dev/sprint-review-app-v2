@@ -33,8 +33,10 @@ export const logFormSchema = z.object({
     const hours = Number(value.replace(',', '.'));
     return Number.isFinite(hours) && hours >= 0.1 && hours <= 24;
   }, 'Az óraszámnak 0,1 és 24 között kell lennie'),
-  workPeriodId: z.string(),
-  projectId: z.string(),
-  eventId: z.string(),
+  // Category-specific fields unmount when the category changes, which drops
+  // their values from the form; treat a missing value as "not selected".
+  workPeriodId: z.string().optional(),
+  projectId: z.string().optional(),
+  eventId: z.string().optional(),
   difficulty: z.nativeEnum(Difficulty).optional(),
 });
