@@ -76,6 +76,13 @@ yarn prisma migrate dev
 yarn prisma db seed
 ```
 
+A backend Docker image induláskor lefuttatja a `prisma migrate deploy`-t, így élesítéskor
+nincs külön migrációs lépés. Sikertelen migrációnál a konténer nem indul el, a régi pod
+kiszolgál tovább. Kockázatos migráció előtt (pl. `pg_dump` után kézi futtatással) a
+`RUN_MIGRATIONS=false` környezeti változó kikapcsolja. Leállításkor a futó migráció
+végigmegy, utána a konténer kilép, de ami a pod `terminationGracePeriodSeconds`-ánál tovább
+tart, azt a Kubernetes megszakítja: hosszú migrációt ezért kézzel futtass.
+
 ## Development
 
 Run backend and frontend separately:
