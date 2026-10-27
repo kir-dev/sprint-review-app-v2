@@ -1,6 +1,10 @@
-# Runs the production image locally: the API and the frontend in one process
-# on http://localhost:3000. Development does not need this (`yarn dev`).
-#   docker compose up --build
+# Runs the production image: the API and the frontend in one process on port
+# 3000. For local development use `yarn dev` instead.
+#
+# The image runs in production mode, which requires APP_URL to be an HTTPS,
+# non-loopback origin and sets Secure cookies. Put a TLS-terminating proxy in
+# front of port 3000 and set APP_URL to its public origin.
+#   APP_URL=https://sprint-review.example.test docker compose up --build
 services:
   app:
     build:
@@ -17,5 +21,5 @@ services:
       AUTHSCH_GROUP_ID: ${AUTHSCH_GROUP_ID}
       JWT_SECRET: ${JWT_SECRET}
       SESSION_SECRET: ${SESSION_SECRET}
-      APP_URL: ${APP_URL:-http://localhost:3000}
+      APP_URL: ${APP_URL:?Set APP_URL to the HTTPS origin of the proxy in front}
       ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
