@@ -102,8 +102,11 @@ container, one domain; there is no separate frontend deployment or proxy.
 
 ```bash
 docker build -t sprint-review .
-docker compose up --build   # local run, see docker-compose.yml
 ```
+
+The image runs in production mode: `APP_URL` must be an HTTPS, non-loopback
+origin, so it needs a TLS-terminating proxy in front (see `docker-compose.yml`).
+For local work use `yarn dev`.
 
 Runtime environment (production):
 
