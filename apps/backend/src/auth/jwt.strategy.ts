@@ -1,9 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
+import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { GroupAccessService } from '../group-access/group-access.service';
 import { isGroupId, isRecord } from '../group-access/group-access.types';
+import { APP_SESSION_COOKIE, readCookie } from './session-cookie';
 
 /** Validates signed membership evidence against the current installation policy. */
 @Injectable()
@@ -13,7 +15,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly access: GroupAccessService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // Browsers send the HttpOnly session cookie; scripts and Swagger may
+      // still pass the same JWT as a Bearer token.
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => readCookie(request, APP_SESSION_COOKIE),
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       ignoreExpiration: false,
       secretOrKey: config.get<string>('JWT_SECRET') || 'your-secret-key',
     });

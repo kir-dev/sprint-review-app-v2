@@ -12,7 +12,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import type { Session, SessionData } from 'express-session';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { parseBrowserOrigin, parseHttpsProvider } from '../config/public-url';
+import { appUrl } from '../config/app-url';
+import { parseHttpsProvider } from '../config/public-url';
 
 const AUTHSCH_REQUEST_TIMEOUT_MS = 5000;
 const AUTHSCH_STATE_TTL_MS = 10 * 60 * 1000;
@@ -25,12 +26,10 @@ const AUTHSCH_SCOPES = [
 ];
 
 type AuthSchRequest = Request & {
-  authSchState?: string;
   session: Session &
     Partial<SessionData> & {
       authSchLogin?: {
         providerState: string;
-        clientNonce: string;
         createdAt: number;
       };
     };
@@ -98,14 +97,13 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
     this.passAuthentication();
   }
 
-  /** Persists the frontend nonce in the backend session and forwards it to AuthSCH. */
+  /**
+   * Binds a fresh OAuth state to this browser's session and forwards it to
+   * AuthSCH. The session cookie lives on the app origin, so the callback can
+   * only complete in the browser that started the login.
+   */
   private startLogin(request: AuthSchRequest): void {
-    const clientNonce = request.query.state;
-    if (
-      !request.session ||
-      typeof clientNonce !== 'string' ||
-      !AUTHSCH_STATE_PATTERN.test(clientNonce)
-    ) {
+    if (!request.session) {
       this.failAuthentication();
       return;
     }
@@ -113,7 +111,6 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
     const providerState = `${Date.now().toString(36)}.${randomBytes(32).toString('base64url')}`;
     request.session.authSchLogin = {
       providerState,
-      clientNonce,
       createdAt: Date.now(),
     };
     const url = new URL('/site/login', this.authSchProvider);
@@ -157,8 +154,6 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
       this.failAuthentication();
       return;
     }
-
-    request.authSchState = pendingLogin.clientNonce;
 
     if (providerError || typeof authorizationCode !== 'string') {
       this.logger.warn('AuthSCH callback rejected by provider');
@@ -255,13 +250,7 @@ export class AuthSchStrategy extends PassportStrategy(Strategy, 'authsch') {
 
 export { AUTHSCH_REQUEST_TIMEOUT_MS, AUTHSCH_STATE_TTL_MS };
 
-/** Builds a validated public callback URL, allowing HTTP only on loopback. */
+/** Builds the validated public callback URL on the app origin. */
 export function buildAuthSchRedirectUri(configService: ConfigService): string {
-  const configuredUrl = configService.get<string>('BACKEND_PUBLIC_URL');
-  const value =
-    configuredUrl ||
-    `http://localhost:${configService.get<string>('PORT') || '3001'}`;
-  const backendPublicUrl = parseBrowserOrigin(value, 'BACKEND_PUBLIC_URL');
-
-  return new URL('/auth/callback', backendPublicUrl).toString();
+  return new URL('/api/auth/callback', appUrl(configService)).toString();
 }

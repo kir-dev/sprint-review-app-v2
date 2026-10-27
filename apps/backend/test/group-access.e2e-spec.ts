@@ -9,7 +9,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import session from 'express-session';
-import { randomBytes } from 'node:crypto';
 import request from 'supertest';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthModule } from '../src/auth/auth.module';
@@ -21,6 +20,7 @@ import {
 import { JwtAuthGuard } from '../src/common/guards/jwt-auth.guard';
 import { SettingsModule } from '../src/settings/settings.module';
 import { createSessionOptions } from '../src/config/http.config';
+import { APP_SESSION_COOKIE } from '../src/auth/session-cookie';
 
 const initialPolicy: GroupAccessPolicy = {
   groupId: 42,
@@ -31,6 +31,7 @@ const initialPolicy: GroupAccessPolicy = {
 };
 const { groupId: _groupId, ...initialSettings } = initialPolicy;
 const memberProfile = {
+  authSchId: 'test-member',
   email: 'member@example.test',
   fullName: 'Test Member',
   pek: {
@@ -40,11 +41,15 @@ const memberProfile = {
   },
 };
 
-const createState = () =>
-  `${Date.now().toString(36)}.${randomBytes(32).toString('base64url')}`;
-
-const jwtFromHandoff = (html: string): string | null =>
-  html.match(/name="jwt" value="([A-Za-z0-9_.-]+)"/)?.[1] || null;
+const sessionCookieFrom = (response: request.Response): string | null => {
+  const header = response.headers['set-cookie'] as unknown as
+    | string[]
+    | undefined;
+  const cookie = header?.find((value) =>
+    value.startsWith(`${APP_SESSION_COOKIE}=`),
+  );
+  return cookie?.split(';')[0].slice(APP_SESSION_COOKIE.length + 1) || null;
+};
 
 describe('Group access HTTP integration', () => {
   let app: INestApplication;
@@ -74,7 +79,7 @@ describe('Group access HTTP integration', () => {
           ({
             JWT_SECRET: 'test-secret-never-used-outside-tests',
             AUTHSCH_GROUP_ID: '42',
-            FRONTEND_URL: 'https://frontend.example.test',
+            APP_URL: 'https://review.example.test',
             AUTHSCH_CLIENT_ID: 'test-client',
             AUTHSCH_CLIENT_SECRET: 'test-secret',
           })[key],
@@ -87,9 +92,8 @@ describe('Group access HTTP integration', () => {
           if (callbackFails) throw new UnauthorizedException();
           const callbackRequest = context
             .switchToHttp()
-            .getRequest<{ user: unknown; authSchState?: string }>();
+            .getRequest<{ user: unknown }>();
           callbackRequest.user = callbackProfile;
-          callbackRequest.authSchState = 'integration-test-state';
           return true;
         },
       })
@@ -181,9 +185,8 @@ describe('Group access HTTP integration', () => {
   });
 
   it('requests the PÉK scope in the real login redirect', async () => {
-    const state = createState();
     const response = await request(app.getHttpServer())
-      .get(`/auth/login?state=${state}`)
+      .get('/auth/login')
       .expect(302);
     const scope = new URL(response.headers.location).searchParams.get('scope');
     expect(scope).toContain('pek.sch.bme.hu:profile');
@@ -217,11 +220,8 @@ describe('Group access HTTP integration', () => {
           ),
         );
 
-      const state = createState();
       const agent = request.agent(app.getHttpServer());
-      const loginResponse = await agent
-        .get(`/auth/login?state=${state}`)
-        .expect(302);
+      const loginResponse = await agent.get('/auth/login').expect(302);
       const providerState = new URL(
         loginResponse.headers.location,
       ).searchParams.get('state');
@@ -230,43 +230,62 @@ describe('Group access HTTP integration', () => {
         `/auth/callback?code=provider-callback-test&state=${providerState}`,
       );
       expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(response.status).toBe(302);
       if (providerGroupId === initialPolicy.groupId) {
-        expect(response.status).toBe(200);
-        expect(response.text).toContain(`name="state" value="${state}"`);
-        const token = jwtFromHandoff(response.text);
+        expect(response.headers.location).toBe(
+          'https://review.example.test/login',
+        );
+        const token = sessionCookieFrom(response);
         expect(token).toBeTruthy();
         const claims = jwt.verify<{ exp: number; iat: number }>(token!);
         expect(claims.exp - claims.iat).toBe(SESSION_MAX_AGE_SECONDS);
         await request(app.getHttpServer())
           .get('/auth/me')
-          .set('Authorization', `Bearer ${token}`)
+          .set('Cookie', `${APP_SESSION_COOKIE}=${token}`)
           .expect(200);
       } else {
-        expect(response.status).toBe(302);
         const destination = new URL(response.headers.location);
         expect(destination.searchParams.get('error')).toBe(
           'GROUP_MEMBERSHIP_REQUIRED',
         );
-        expect(destination.searchParams.has('jwt')).toBe(false);
+        expect(sessionCookieFrom(response)).toBeNull();
         expect(db.user.findUnique).not.toHaveBeenCalled();
         expect(db.user.create).not.toHaveBeenCalled();
       }
     },
   );
 
-  it('issues a seven-day JWT after an authorized callback', async () => {
+  it('issues a seven-day session cookie after an authorized callback', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/callback')
-      .expect(200);
-    const token = jwtFromHandoff(response.text);
+      .expect(302);
+    const token = sessionCookieFrom(response);
     expect(token).toBeTruthy();
     const claims = jwt.verify<{ exp: number; iat: number }>(token!);
     expect(claims.exp - claims.iat).toBe(SESSION_MAX_AGE_SECONDS);
+    const cookie = (response.headers['set-cookie'] as unknown as string[]).find(
+      (value) => value.startsWith(`${APP_SESSION_COOKIE}=`),
+    );
+    expect(cookie).toContain('Path=/api');
+    expect(cookie).toContain('HttpOnly');
+    expect(cookie).toContain('Secure');
+    expect(cookie).toContain('SameSite=Lax');
     await request(app.getHttpServer())
       .get('/auth/me')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', `${APP_SESSION_COOKIE}=${token}`)
       .expect(200);
     expect(response.headers['cache-control']).toBe('no-store');
+  });
+
+  it('expires the session cookie on logout', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/logout')
+      .expect(204);
+    const cookie = (response.headers['set-cookie'] as unknown as string[]).find(
+      (value) => value.startsWith(`${APP_SESSION_COOKIE}=`),
+    );
+    expect(cookie).toContain('Path=/api');
+    expect(cookie).toContain('Expires=Thu, 01 Jan 1970');
   });
 
   it('returns a safe membership error without local account access', async () => {
@@ -278,8 +297,9 @@ describe('Group access HTTP integration', () => {
       .get('/auth/callback')
       .expect(302);
     expect(response.headers.location).toBe(
-      'https://frontend.example.test/api/auth/session?error=GROUP_MEMBERSHIP_REQUIRED&state=integration-test-state',
+      'https://review.example.test/login?error=GROUP_MEMBERSHIP_REQUIRED',
     );
+    expect(sessionCookieFrom(response)).toBeNull();
     expect(db.user.findUnique).not.toHaveBeenCalled();
     expect(db.user.create).not.toHaveBeenCalled();
   });
@@ -292,7 +312,6 @@ describe('Group access HTTP integration', () => {
     expect(response.headers.location).toContain(
       'error=GROUP_MEMBERSHIP_UNVERIFIABLE',
     );
-    expect(response.headers.location).toContain('state=integration-test-state');
   });
 
   it('redirects provider errors to a fixed login destination', async () => {
@@ -301,7 +320,7 @@ describe('Group access HTTP integration', () => {
       .get('/auth/callback?next=https://untrusted.test')
       .expect(302);
     expect(response.headers.location).toBe(
-      'https://frontend.example.test/login?error=AUTHSCH_FAILED',
+      'https://review.example.test/login?error=AUTHSCH_FAILED',
     );
   });
 

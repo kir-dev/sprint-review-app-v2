@@ -20,7 +20,7 @@ yarn install
 yarn dev
 ```
 
-Frontend runs on `http://localhost:3001`
+Frontend runs on `http://localhost:3000` and forwards `/api/*` to the API server on `http://localhost:3001`. In production the API process serves this app (see the root README).
 
 ## Build
 

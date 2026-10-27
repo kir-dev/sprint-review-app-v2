@@ -2,30 +2,19 @@
 
 ## 🚀 Gyors Indítás
 
-### 1. Backend indítása (NestJS)
-
 ```bash
-# Terminal 1
-yarn start:dev
-```
-
-Backend elérhető: `http://localhost:3001`
-API Dokumentáció: `http://localhost:3001/api`
-
-### 2. Frontend indítása (React + Vite)
-
-```bash
-# Terminal 2
 yarn dev
 ```
 
-Frontend elérhető: `http://localhost:3000`
+Az alkalmazás: `http://localhost:3000`. Az API külön szerveren fut (`:3001`), de a
+`next dev` a `/api/*` kéréseket továbbítja neki, így a böngésző egyetlen címet lát.
+API-dokumentáció: `http://localhost:3000/api/docs` (`ENABLE_SWAGGER=true` mellett).
 
 ## 📋 Következő lépések
 
 1. **Konfiguráld az AuthSCH-t**:
    - Regisztráld az appot: https://auth.sch.bme.hu/console/create
-   - Callback URL: `http://localhost:3000/auth/callback`
+   - Callback URL: `http://localhost:3000/api/auth/callback`
    - Másold a credentials-eket a `.env` fájlba
 
 2. **Teszteld az alkalmazást**:
@@ -76,16 +65,12 @@ sprint-review-app-v2/
 
 ## 🔒 Authentikáció Flow
 
-1. User → `/login` (React oldal)
-2. Click "Bejelentkezés AuthSCH-val"
-3. → `http://localhost:3000/auth/login` (Backend)
-4. → AuthSCH login page
-5. User bejelentkezik
-6. → `http://localhost:3000/auth/callback` (Backend)
-7. Backend generál JWT tokent
-8. → `http://localhost:3001/login?jwt=<token>` (Frontend)
-9. Frontend elmenti JWT-t localStorage-ba
-10. → `/dashboard` (Protected route)
+1. User → `/login`
+2. Click "Bejelentkezés AuthSCH-val" → `/api/auth/login`
+3. → AuthSCH login page, a user bejelentkezik
+4. → `/api/auth/callback`: az API ellenőrzi a körtagságot, és HttpOnly sütiben
+   (`sprint-review-session`) beállítja a JWT-t
+5. → `/login`, ahonnan a frontend a `/dashboard`-ra lép
 
 ## 📝 Hasznos Parancsok
 
@@ -105,12 +90,13 @@ yarn preview            # Preview production build
 
 ## 🌐 API Endpoints
 
-Swagger dokumentáció: `http://localhost:3001/api`
+Swagger dokumentáció: `http://localhost:3000/api/docs`. Minden útvonal az `/api` alatt van.
 
 **Auth:**
-- GET `/auth/login` - AuthSCH login
-- GET `/auth/callback` - OAuth callback
-- GET `/auth/me` - Current user (protected)
+- GET `/api/auth/login` - AuthSCH login
+- GET `/api/auth/callback` - OAuth callback
+- POST `/api/auth/logout` - Kijelentkezés
+- GET `/api/auth/me` - Current user (protected)
 
 **Users:**
 - POST `/users` - Create user
