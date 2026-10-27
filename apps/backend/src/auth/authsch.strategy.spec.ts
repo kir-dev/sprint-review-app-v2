@@ -7,7 +7,7 @@ describe('AuthSchStrategy', () => {
   const values: Record<string, string> = {
     AUTHSCH_CLIENT_ID: 'client-id',
     AUTHSCH_CLIENT_SECRET: 'client-secret',
-    BACKEND_PUBLIC_URL: 'https://backend.example.test/',
+    APP_URL: 'https://review.example.test/',
     AUTHSCH_PROVIDER: 'https://auth.example.test',
     PORT: '3001',
   };
@@ -19,33 +19,45 @@ describe('AuthSchStrategy', () => {
     jest.restoreAllMocks();
   });
 
-  it('uses BACKEND_PUBLIC_URL and forwards a state-bound login', async () => {
+  it('returns to the app origin and binds the login to the session', async () => {
     expect(buildAuthSchRedirectUri(configService)).toBe(
-      'https://backend.example.test/auth/callback',
+      'https://review.example.test/api/auth/callback',
     );
 
     const strategy = new AuthSchStrategy(configService);
     const redirect = jest.fn();
     Object.assign(strategy, { redirect });
 
-    const state = createState();
     const session: Record<string, unknown> = {};
     await strategy.authenticate({
-      path: '/auth/login',
-      query: { state },
+      path: '/api/auth/login',
+      query: {},
       session,
     } as unknown as Parameters<AuthSchStrategy['authenticate']>[0]);
 
     expect(redirect).toHaveBeenCalledTimes(1);
     const redirectUrl = new URL(redirect.mock.calls[0][0]);
     expect(redirectUrl.searchParams.get('redirect_uri')).toBe(
-      'https://backend.example.test/auth/callback',
+      'https://review.example.test/api/auth/callback',
     );
-    expect(redirectUrl.searchParams.get('state')).toMatch(
-      /^[a-z0-9]{8,12}\.[A-Za-z0-9_-]{43}$/,
-    );
-    expect(redirectUrl.searchParams.get('state')).not.toBe(state);
-    expect(session).toMatchObject({ authSchLogin: { clientNonce: state } });
+    const providerState = redirectUrl.searchParams.get('state');
+    expect(providerState).toMatch(/^[a-z0-9]{8,12}\.[A-Za-z0-9_-]{43}$/);
+    expect(session).toMatchObject({ authSchLogin: { providerState } });
+  });
+
+  it('refuses to start a login without a session', async () => {
+    const strategy = new AuthSchStrategy(configService);
+    const fail = jest.fn();
+    const redirect = jest.fn();
+    Object.assign(strategy, { fail, redirect });
+
+    await strategy.authenticate({
+      path: '/api/auth/login',
+      query: {},
+    } as unknown as Parameters<AuthSchStrategy['authenticate']>[0]);
+
+    expect(fail).toHaveBeenCalledWith(401);
+    expect(redirect).not.toHaveBeenCalled();
   });
 
   it('does not log OAuth query values when callback processing fails', async () => {
@@ -66,12 +78,11 @@ describe('AuthSchStrategy', () => {
     const providerState = createState();
 
     await strategy.authenticate({
-      path: '/auth/callback',
+      path: '/api/auth/callback',
       query: { code: oauthCode, state: providerState },
       session: {
         authSchLogin: {
           providerState,
-          clientNonce: createState(),
           createdAt: Date.now(),
         },
       },
@@ -97,18 +108,17 @@ describe('AuthSchStrategy', () => {
     const session = {
       authSchLogin: {
         providerState: state,
-        clientNonce: createState(),
         createdAt: Date.now() - 10 * 60 * 1000 - 1,
       },
     };
 
     await strategy.authenticate({
-      path: '/auth/callback',
+      path: '/api/auth/callback',
       query: { code: 'oauth-code', state },
       session,
     } as unknown as Parameters<AuthSchStrategy['authenticate']>[0]);
     await strategy.authenticate({
-      path: '/auth/callback',
+      path: '/api/auth/callback',
       query: { code: 'oauth-code', state },
       session,
     } as unknown as Parameters<AuthSchStrategy['authenticate']>[0]);
@@ -119,12 +129,11 @@ describe('AuthSchStrategy', () => {
     const freshSession = {
       authSchLogin: {
         providerState: `${Date.now().toString(36)}.${'a'.repeat(43)}`,
-        clientNonce: createState(),
         createdAt: Date.now(),
       },
     };
     await strategy.authenticate({
-      path: '/auth/callback',
+      path: '/api/auth/callback',
       query: {
         code: 'oauth-code',
         state: `${Date.now().toString(36)}.${'b'.repeat(43)}`,

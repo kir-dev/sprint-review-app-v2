@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu -o pipefail
 
-# Applies pending Prisma migrations before the API starts, so a rollout needs no
+# Applies pending Prisma migrations before the app starts, so a rollout needs no
 # separate `prisma migrate deploy` step. A failed migration exits non-zero: the
 # new pod never becomes ready and the previous one keeps serving traffic.
 #
@@ -14,7 +14,7 @@ MIGRATE_RETRY_DELAY_SECONDS=5
 # A stop signal is deliberately NOT forwarded to Prisma: interrupting a
 # migration midway leaves a failed record that needs `prisma migrate resolve`.
 # The shell runs this trap only once the foreground migration has finished, and
-# then exits instead of starting the API. A migration that outlasts the pod's
+# then exits instead of starting the app. A migration that outlasts the pod's
 # terminationGracePeriodSeconds is still SIGKILLed, so run long ones by hand.
 stop_requested=false
 trap 'stop_requested=true' TERM INT
@@ -61,7 +61,7 @@ case "${RUN_MIGRATIONS:-true}" in
 esac
 
 if [ "$stop_requested" = true ]; then
-  echo "Stop requested during migrations; not starting the API"
+  echo "Stop requested during migrations; not starting the app"
   exit 143
 fi
 

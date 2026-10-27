@@ -7,8 +7,7 @@ const productionEnvironment = {
   AUTHSCH_CLIENT_SECRET: 'authsch-client-secret',
   JWT_SECRET: 'jwt-secret-with-at-least-32-random-characters-123',
   SESSION_SECRET: 'session-secret-with-at-least-32-random-chars-456',
-  FRONTEND_URL: 'https://review.example.com',
-  BACKEND_PUBLIC_URL: 'https://api.review.example.com',
+  APP_URL: 'https://review.example.com',
 };
 
 describe('validateEnvironment', () => {
@@ -27,10 +26,17 @@ describe('validateEnvironment', () => {
     ['https://review.example.com/path', 'path'],
     ['https://review.example.com?token=value', 'query'],
     ['https://review.example.com#fragment', 'fragment'],
-  ])('rejects a production frontend URL with %s (%s)', (url) => {
+  ])('rejects a production app URL with %s (%s)', (url) => {
     expect(() =>
-      validateEnvironment({ ...productionEnvironment, FRONTEND_URL: url }),
-    ).toThrow('FRONTEND_URL');
+      validateEnvironment({ ...productionEnvironment, APP_URL: url }),
+    ).toThrow('APP_URL');
+  });
+
+  it('requires the app URL in production', () => {
+    const { APP_URL: _appUrl, ...environment } = productionEnvironment;
+    expect(() => validateEnvironment(environment)).toThrow(
+      'APP_URL is required',
+    );
   });
 
   it('rejects missing and weak secrets without including their values', () => {
@@ -77,18 +83,18 @@ describe('validateEnvironment', () => {
     expect(
       validateEnvironment({
         NODE_ENV: 'development',
-        FRONTEND_URL: 'http://localhost:3000',
+        APP_URL: 'http://localhost:3000',
       }),
     ).toMatchObject({ NODE_ENV: 'development', PORT: 3001 });
   });
 
-  it.each([
-    ['FRONTEND_URL', 'http://review.example.com'],
-    ['BACKEND_PUBLIC_URL', 'http://api.review.example.com'],
-  ])('rejects insecure %s outside production too', (name, value) => {
+  it('rejects an insecure app URL outside production too', () => {
     expect(() =>
-      validateEnvironment({ NODE_ENV: 'development', [name]: value }),
-    ).toThrow(name);
+      validateEnvironment({
+        NODE_ENV: 'development',
+        APP_URL: 'http://review.example.com',
+      }),
+    ).toThrow('APP_URL');
   });
 
   it.each([
