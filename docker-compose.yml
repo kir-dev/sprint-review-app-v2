@@ -1,73 +1,25 @@
-version: '3.8'
-
+# Runs the production image: the API and the frontend in one process on port
+# 3000. For local development use `yarn dev` instead.
+#
+# The image runs in production mode, which requires APP_URL to be an HTTPS,
+# non-loopback origin and sets Secure cookies. Put a TLS-terminating proxy in
+# front of port 3000 and set APP_URL to its public origin.
+#   APP_URL=https://sprint-review.example.test docker compose up --build
 services:
-  # db:
-  #   image: postgres:13
-  #   container_name: sprint_review_db
-  #   restart: always
-  #   environment:
-  #     POSTGRES_USER: ${POSTGRES_USER}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  #     POSTGRES_DB: ${POSTGRES_DB}
-  #   ports:
-  #     - '127.0.0.1:5432:5432'
-  #   volumes:
-  #     - sprintreview_db_folder_v2:/var/lib/postgresql/data
-  #   networks:
-  #     - app-network
-
-  backend:
+  app:
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile
-    container_name: sprint_review_backend
-    # depends_on:
-    #   - db
-    ports:
-      - '127.0.0.1:3001:3001'
-    environment:
-      # DATABASE_URL is supplied through the deployment environment.
-      # Add other necessary env vars here or use an env_file
-      AUTHSCH_CLIENT_ID: ${AUTHSCH_CLIENT_ID}
-      AUTHSCH_CLIENT_SECRET: ${AUTHSCH_CLIENT_SECRET}
-      JWT_SECRET: ${JWT_SECRET}
-      AUTHSCH_GROUP_ID: ${AUTHSCH_GROUP_ID}
-      SESSION_SECRET: ${SESSION_SECRET}
-      DATABASE_URL: ${DATABASE_URL}
-      NODE_ENV: development
-      PORT: 3001
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
-      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:3001}
-      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-true}
-    networks:
-      - app-network
-    volumes:
-      - ./apps/backend:/app/apps/backend
-      - /app/apps/backend/node_modules
-
-  # Production frontend image (Next.js standalone server).
-  # Behind the "prod" profile so `docker-compose up` (used by `yarn dev`) does
-  # NOT start it and clash with the host `next dev` on port 3000.
-  # Run it explicitly with:  docker compose --profile prod up -d frontend
-  frontend:
-    profiles: ['prod']
-    build:
-      context: .
-      dockerfile: apps/frontend/Dockerfile
-    container_name: sprint_review_frontend
+    container_name: sprint_review_app
     ports:
       - '127.0.0.1:3000:3000'
     environment:
-      # Session-bearing server requests use the deployed TLS endpoint. Requiring
-      # this value avoids falling back to the frontend container's localhost.
-      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:?Set an HTTPS backend origin}
-      PORT: 3000
-    networks:
-      - app-network
-
-# volumes:
-#   sprintreview_db_folder_v2:
-
-networks:
-  app-network:
-    driver: bridge
+      # DATABASE_URL is supplied through the deployment environment. From the
+      # container, a database on the host is host.docker.internal.
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
+      AUTHSCH_CLIENT_ID: ${AUTHSCH_CLIENT_ID}
+      AUTHSCH_CLIENT_SECRET: ${AUTHSCH_CLIENT_SECRET}
+      AUTHSCH_GROUP_ID: ${AUTHSCH_GROUP_ID}
+      JWT_SECRET: ${JWT_SECRET}
+      SESSION_SECRET: ${SESSION_SECRET}
+      APP_URL: ${APP_URL:?Set APP_URL to the HTTPS origin of the proxy in front}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}

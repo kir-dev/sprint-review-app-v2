@@ -147,19 +147,10 @@ export function validateEnvironment(environment: Environment): Environment {
   }
 
   const isProduction = nodeEnv === 'production';
-  const frontendUrl = stringValue(environment.FRONTEND_URL);
-  const backendPublicUrl = stringValue(environment.BACKEND_PUBLIC_URL);
   validatePublicOrigin(
     errors,
-    'FRONTEND_URL',
-    frontendUrl,
-    isProduction,
-    isProduction,
-  );
-  validatePublicOrigin(
-    errors,
-    'BACKEND_PUBLIC_URL',
-    backendPublicUrl,
+    'APP_URL',
+    stringValue(environment.APP_URL),
     isProduction,
     isProduction,
   );

@@ -40,7 +40,7 @@ sprint-review-app-v2/
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - Yarn 1.22+
 - PostgreSQL database
 
@@ -62,7 +62,7 @@ cp .env.example .env
 # - AUTHSCH_CLIENT_ID and AUTHSCH_CLIENT_SECRET from auth.sch.bme.hu
 # - DATABASE_URL for PostgreSQL
 # - JWT_SECRET for token signing
-# - FRONTEND_URL (default: http://localhost:3000)
+# - APP_URL: the public origin (default: http://localhost:3000)
 ```
 
 ### Database Setup
@@ -76,7 +76,7 @@ yarn prisma migrate dev
 yarn prisma db seed
 ```
 
-A backend Docker image induláskor lefuttatja a `prisma migrate deploy`-t, így élesítéskor
+A Docker image induláskor lefuttatja a `prisma migrate deploy`-t, így élesítéskor
 nincs külön migrációs lépés. Sikertelen migrációnál a konténer nem indul el, a régi pod
 kiszolgál tovább. Kockázatos migráció előtt (pl. `pg_dump` után kézi futtatással) a
 `RUN_MIGRATIONS=false` környezeti változó kikapcsolja. Leállításkor a futó migráció
@@ -85,23 +85,47 @@ tart, azt a Kubernetes megszakítja: hosszú migrációt ezért kézzel futtass.
 
 ## Development
 
-Run backend and frontend separately:
+```bash
+# API on http://localhost:3001, frontend on http://localhost:3000
+yarn dev
+```
+
+Open the app at `http://localhost:3000`. `next dev` forwards `/api/*` to the API
+server, so the browser sees a single origin, as in production. The local AuthSCH
+client's callback URL is `http://localhost:3000/api/auth/callback`.
+
+## Production image
+
+One image runs the whole app in one Node.js process on port 3000: NestJS serves
+the API under `/api` and renders every other path with the Next.js frontend. One
+container, one domain; there is no separate frontend deployment or proxy.
 
 ```bash
-# Start backend (runs on http://localhost:3001)
-yarn start:backend
-
-# Start frontend (runs on http://localhost:3000)
-yarn start:frontend
+docker build -t sprint-review .
 ```
+
+The image runs in production mode: `APP_URL` must be an HTTPS, non-loopback
+origin, so it needs a TLS-terminating proxy in front (see `docker-compose.yml`).
+For local work use `yarn dev`.
+
+Runtime environment (production):
+
+| Variable | |
+|---|---|
+| `APP_URL` | Public origin, e.g. `https://sprint-review.kir-dev.hu`. The AuthSCH callback is `<APP_URL>/api/auth/callback`. |
+| `DATABASE_URL`, `AUTHSCH_CLIENT_ID`, `AUTHSCH_CLIENT_SECRET`, `AUTHSCH_GROUP_ID` | As in development. |
+| `JWT_SECRET`, `SESSION_SECRET` | Two different strong secrets. |
+| `ENABLE_SWAGGER` | Optional; Swagger UI at `/api/docs`. |
+| `RUN_MIGRATIONS` | Optional; `false` skips the migrations on start. |
+
+Probes: `GET /api/health/live` and `GET /api/health/ready`. The `Build Image`
+workflow builds and smoke-tests the image on every PR, and on `main` pushes
+`harbor.sch.bme.hu/org-kir-dev/sprint-review-app-v2:sha-<commit>`.
 
 ## Build
 
 ```bash
-# Build backend
 yarn build:backend
-
-# Build frontend
 yarn build:frontend
 ```
 
@@ -150,17 +174,21 @@ frontend/
 
 Once the servers are running, you can:
 
-- Visit `http://localhost:3000` - React Frontend (Login/Dashboard)
-- Visit `http://localhost:3001/api` - Swagger API documentation
-- Backend API runs on `http://localhost:3001`
+- Visit `http://localhost:3000` - the app
+- Visit `http://localhost:3000/api/docs` - Swagger API documentation (`ENABLE_SWAGGER=true`)
+- Every API route lives under `/api`
 
 ### Authentication Flow
 
-1. User clicks "Login with AuthSCH" → redirects to `/auth/login`
-2. AuthSCH authenticates → redirects to `/auth/callback`
-3. Backend generates JWT → redirects to `/dashboard.html?jwt=<token>`
-4. Frontend stores JWT in localStorage
-5. All API requests use `Authorization: Bearer <token>` header
+1. User clicks "Bejelentkezés AuthSCH-val" → `/api/auth/login` stores an OAuth
+   state in a short-lived session and redirects to AuthSCH
+2. AuthSCH authenticates → redirects to `/api/auth/callback`
+3. The API checks the state and the PÉK group membership, then sets the JWT in an
+   HttpOnly `sprint-review-session` cookie (path `/api`, 7 days) and redirects to `/login`
+4. The browser sends the cookie with every `/api` request; scripts may send the
+   same JWT as `Authorization: Bearer <token>`
+5. `POST /api/auth/logout` clears the cookie. State-changing requests from another
+   origin are rejected (403)
 ## Körtagsági hozzáférés (AuthSCH / PÉK)
 
 Egy telepítést egy kör használ. A hozzáférés alapja kizárólag a backend
@@ -173,8 +201,8 @@ AUTHSCH_GROUP_ID=106
 ```
 
 A változót az `apps/backend/.env` fájlban vagy a telepítési környezetben kell megadni.
-Docker Compose esetén a gyökér `.env` fájljából kerül a backend konténerbe.
-A változtatás backend-újraindítást igényel. A frontendhez nem kell `NEXT_PUBLIC_` változat.
+Docker Compose esetén a gyökér `.env` fájljából kerül a konténerbe.
+A változtatás újraindítást igényel. `NEXT_PUBLIC_` változat nem kell.
 Az AuthSCH-kliensnek át kell adnia a `pek.sch.bme.hu:profile` scope adatait.
 Az aktív tagok és körvezetők beléphetnek; az öregtagok hozzáférése külön engedélyezhető.
 

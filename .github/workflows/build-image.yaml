@@ -1,0 +1,84 @@
+# Builds the single app image (API + frontend in one process), checks that it
+# starts against a real Postgres, and on main publishes it to Harbor. It does
+# NOT deploy: roll out the sha tag in the cluster.
+name: Build Image
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+
+env:
+  REGISTRY: harbor.sch.bme.hu
+  IMAGE_NAME: org-kir-dev/sprint-review-app-v2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: smoke
+          POSTGRES_PASSWORD: smoke
+          POSTGRES_DB: sprint_review
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smoke"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Build Docker image
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
+        with:
+          context: .
+          load: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+
+      # The frontend is loaded through an undocumented Next.js setting, so a
+      # Next.js upgrade can break it without failing the build. Start the image
+      # (migrations included) and request API routes and a page.
+      - name: Smoke test the image
+        run: |
+          docker run -d --name app --network host \
+            -e DATABASE_URL=postgresql://smoke:smoke@localhost:5432/sprint_review \
+            -e APP_URL=https://smoke.example.test \
+            -e AUTHSCH_CLIENT_ID=smoke-client \
+            -e AUTHSCH_CLIENT_SECRET=smoke-client-secret \
+            -e AUTHSCH_GROUP_ID=106 \
+            -e JWT_SECRET=smoke-jwt-secret-0123456789abcdefghijklmnop \
+            -e SESSION_SECRET=smoke-session-secret-0123456789abcdefghijk \
+            "$REGISTRY/$IMAGE_NAME:sha-$GITHUB_SHA"
+          for attempt in $(seq 1 30); do
+            curl -fsS http://localhost:3000/api/health/ready && break
+            sleep 2
+          done
+          curl -fsS http://localhost:3000/api/health/ready
+          curl -fsS http://localhost:3000/api/settings/public
+          curl -fsS http://localhost:3000/login | grep -q '<html'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/auth/me)" = 401
+
+      - name: Show app logs
+        if: failure()
+        run: docker logs app
+
+      - name: Log in to the Container registry
+        if: github.event_name == 'push'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Push Docker image
+        if: github.event_name == 'push'
+        run: docker push "$REGISTRY/$IMAGE_NAME:sha-$GITHUB_SHA"
