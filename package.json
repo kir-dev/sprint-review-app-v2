@@ -9,7 +9,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "docker-compose up -d && concurrently \"yarn:start:*\"",
+    "dev": "concurrently \"yarn:start:*\"",
     "start:backend": "yarn workspace backend start:dev",
     "start:frontend": "yarn workspace frontend dev",
     "build:backend": "yarn workspace backend build",

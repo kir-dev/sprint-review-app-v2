@@ -5,8 +5,8 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Request, Response } from 'express';
-import { parseBrowserOrigin } from '../config/public-url';
+import type { Response } from 'express';
+import { appUrl } from '../config/app-url';
 import { isRecord } from '../group-access/group-access.types';
 
 const CALLBACK_CODES = new Set([
@@ -15,7 +15,7 @@ const CALLBACK_CODES = new Set([
   'GROUP_ACCESS_UNAVAILABLE',
 ]);
 
-/** Converts callback failures to a fixed frontend destination without exposing provider errors. */
+/** Converts login failures to a fixed login page error without exposing provider errors. */
 @Catch()
 export class AuthCallbackFilter implements ExceptionFilter {
   constructor(private readonly config: ConfigService) {}
@@ -29,21 +29,8 @@ export class AuthCallbackFilter implements ExceptionFilter {
       CALLBACK_CODES.has(body.code)
         ? body.code
         : 'AUTHSCH_FAILED';
-    const request = host
-      .switchToHttp()
-      .getRequest<Request & { authSchState?: string }>();
-    const frontendOrigin = parseBrowserOrigin(
-      this.config.get<string>('FRONTEND_URL') || 'http://localhost:3000',
-      'FRONTEND_URL',
-    );
-    const url = new URL(
-      request.authSchState ? '/api/auth/session' : '/login',
-      frontendOrigin,
-    );
+    const url = new URL('/login', appUrl(this.config));
     url.searchParams.set('error', code);
-    if (request.authSchState) {
-      url.searchParams.set('state', request.authSchState);
-    }
     const response = host.switchToHttp().getResponse<Response>();
     response.setHeader('Cache-Control', 'no-store');
     response.redirect(url.toString());
