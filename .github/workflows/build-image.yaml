@@ -1,22 +1,39 @@
-# Builds the single app image (API + frontend in one process), checks that it
-# starts against a real Postgres, and on main publishes it to Harbor. It does
-# NOT deploy: roll out the sha tag in the cluster.
+# Builds the single app image (API + frontend in one process) and checks that
+# it starts against a real Postgres. Follows the StartSCH/ehk CD pattern:
+#
+#   pull request  build + smoke test only
+#   main          publish ghcr.io/kir-dev/sprint-review-app-v2, Renovate PR
+#                 for kir-dev/k8s `sprint-review`
+#   staging       publish ghcr.io/kir-dev/sprint-review-app-v2-staging, Renovate
+#                 PR for kir-dev/k8s `sprint-review-staging`
+#
+# Images are tagged v0.0.<run number> (Renovate needs a sortable version) and a
+# matching Git tag is pushed (Renovate needs it for the diff link). ArgoCD rolls
+# the instance out once the Renovate PR on kir-dev/k8s is merged.
+#
+# Staging uses a separate image name so production Renovate never picks up a
+# staging build.
+#
+# Required repository secret:
+#   KIR_DEV_BOT_PAT  PAT of the `kir-dev-bot` account, passed to Renovate as
+#                    RENOVATE_TOKEN. ghcr.io uses the built-in GITHUB_TOKEN.
 name: Build Image
 
 on:
   push:
-    branches: ['main']
+    branches: ['main', 'staging']
   pull_request:
-
-env:
-  REGISTRY: harbor.sch.bme.hu
-  IMAGE_NAME: org-kir-dev/sprint-review-app-v2
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Build, smoke test and publish
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+      packages: write
+    outputs:
+      k8s-app: ${{ steps.target.outputs.k8s-app }}
 
     services:
       postgres:
@@ -34,15 +51,57 @@ jobs:
           --health-retries 10
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
 
-      - name: Build Docker image
-        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
+      - name: Select target
+        id: target
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            echo "image=sprint-review-app-v2" >> "$GITHUB_OUTPUT"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_REF_NAME" = main ]; then
+            echo "image=sprint-review-app-v2" >> "$GITHUB_OUTPUT"
+            echo "channel=latest" >> "$GITHUB_OUTPUT"
+            echo "k8s-app=sprint-review" >> "$GITHUB_OUTPUT"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_REF_NAME" = staging ]; then
+            echo "image=sprint-review-app-v2-staging" >> "$GITHUB_OUTPUT"
+            echo "channel=staging" >> "$GITHUB_OUTPUT"
+            echo "k8s-app=sprint-review-staging" >> "$GITHUB_OUTPUT"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=sprint-review-app-v2" >> "$GITHUB_OUTPUT"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ steps.target.outputs.image }}
+          tags: |
+            # Version from the run number so Renovate can find the latest release.
+            type=raw,value=v0.0.${{ github.run_number }}
+            type=raw,value=${{ steps.target.outputs.channel }},enable=${{ steps.target.outputs.publish }}
+            type=sha,format=long
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.10.0
+
+      - name: Build image
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5.4.0
         with:
           context: .
           load: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          tags: |
+            sprint-review-app:smoke
+            ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
 
       # The frontend is loaded through an undocumented Next.js setting, so a
       # Next.js upgrade can break it without failing the build. Start the image
@@ -57,7 +116,7 @@ jobs:
             -e AUTHSCH_GROUP_ID=106 \
             -e JWT_SECRET=smoke-jwt-secret-0123456789abcdefghijklmnop \
             -e SESSION_SECRET=smoke-session-secret-0123456789abcdefghijk \
-            "$REGISTRY/$IMAGE_NAME:sha-$GITHUB_SHA"
+            sprint-review-app:smoke
           for attempt in $(seq 1 30); do
             curl -fsS http://localhost:3000/api/health/ready && break
             sleep 2
@@ -72,13 +131,50 @@ jobs:
         run: docker logs app
 
       - name: Log in to the Container registry
-        if: github.event_name == 'push'
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        if: steps.target.outputs.publish == 'true'
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.HARBOR_USERNAME }}
-          password: ${{ secrets.HARBOR_PASSWORD }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push Docker image
-        if: github.event_name == 'push'
-        run: docker push "$REGISTRY/$IMAGE_NAME:sha-$GITHUB_SHA"
+      - name: Push image
+        if: steps.target.outputs.publish == 'true'
+        run: docker push --all-tags "ghcr.io/${{ github.repository_owner }}/${{ steps.target.outputs.image }}"
+
+      # Renovate needs a Git tag to show a GitHub diff link.
+      - name: Create Git tag
+        if: steps.target.outputs.publish == 'true'
+        run: |
+          TAG_NAME="v0.0.${{ github.run_number }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
+
+  update-k8s:
+    name: Update kir-dev/k8s
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.build.outputs.k8s-app != ''
+    permissions:
+      contents: read
+    steps:
+      # The TypeScript Renovate config lives in kir-dev/k8s (.dev/renovate.ts).
+      - name: Checkout k8s
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: kir-dev/k8s
+          fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+
+      # bunx runs Renovate with Node; renovate@44 requires Node ^24.11.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # Renders <app>/renovate.ts and opens/updates a PR on kir-dev/k8s.
+      - run: bun run renovate "${{ needs.build.outputs.k8s-app }}"
+        env:
+          RENOVATE_TOKEN: ${{ secrets.KIR_DEV_BOT_PAT }}
