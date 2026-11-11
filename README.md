@@ -118,9 +118,14 @@ Runtime environment (production):
 | `ENABLE_SWAGGER` | Optional; Swagger UI at `/api/docs`. |
 | `RUN_MIGRATIONS` | Optional; `false` skips the migrations on start. |
 
-Probes: `GET /api/health/live` and `GET /api/health/ready`. The `Build Image`
-workflow builds and smoke-tests the image on every PR, and on `main` pushes
-`harbor.sch.bme.hu/org-kir-dev/sprint-review-app-v2:sha-<commit>`.
+Probes: `GET /api/health/live` and `GET /api/health/ready`.
+
+Deployment follows the StartSCH/ehk GitOps pattern. The `Build Image` workflow
+builds and smoke-tests the image on every PR. On a push to `main` it publishes
+`ghcr.io/kir-dev/sprint-review-app-v2:v0.0.<run>`, on a push to `staging`
+`ghcr.io/kir-dev/sprint-review-app-v2-staging:v0.0.<run>`, then Renovate opens a
+PR on `kir-dev/k8s` (`sprint-review` / `sprint-review-staging`) and ArgoCD rolls
+it out once that PR is merged.
 
 ## Build
 
