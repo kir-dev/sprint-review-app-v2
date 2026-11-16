@@ -1,7 +1,8 @@
+import type { NextFunction, Request, Response } from 'express';
 import {
-  createCorsOrigins,
   createSessionOptions,
   configureTrustProxy,
+  rejectCrossOriginWrites,
   SESSION_TTL_MS,
 } from './http.config';
 
@@ -25,26 +26,41 @@ describe('HTTP runtime configuration', () => {
     });
   });
 
-  it('allows only the configured frontend origin in production', () => {
-    expect(
-      createCorsOrigins({
-        nodeEnv: 'production',
-        frontendUrl: 'https://review.example.com/',
-      }),
-    ).toBe('https://review.example.com');
-  });
+  describe('cross-origin write protection', () => {
+    const guard = rejectCrossOriginWrites('https://review.example.com');
+    const run = (method: string, origin?: string) => {
+      const next = jest.fn() as NextFunction;
+      const response = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      };
+      guard(
+        { method, headers: origin ? { origin } : {} } as Request,
+        response as unknown as Response,
+        next,
+      );
+      return { next, response };
+    };
 
-  it('allows localhost only outside production', () => {
-    expect(
-      createCorsOrigins({
-        nodeEnv: 'development',
-        frontendUrl: 'https://review.example.com',
-      }),
-    ).toEqual([
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'https://review.example.com',
-    ]);
+    it.each([
+      ['a same-origin write', 'POST', 'https://review.example.com'],
+      ['a write without an Origin header', 'DELETE', undefined],
+      ['a cross-origin read', 'GET', 'https://other.example.com'],
+    ])('allows %s', (_case, method, origin) => {
+      const { next, response } = run(method, origin);
+      expect(next).toHaveBeenCalled();
+      expect(response.status).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['a sibling subdomain', 'https://other.example.com'],
+      ['an opaque origin', 'null'],
+      ['the same host over HTTP', 'http://review.example.com'],
+    ])('rejects writes from %s', (_case, origin) => {
+      const { next, response } = run('PATCH', origin);
+      expect(next).not.toHaveBeenCalled();
+      expect(response.status).toHaveBeenCalledWith(403);
+    });
   });
 
   it('trusts exactly one ingress proxy hop', () => {

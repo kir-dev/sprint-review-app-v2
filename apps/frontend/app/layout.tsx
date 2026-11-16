@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ThemedToaster } from '@/components/ThemedToaster';
 import { AuthProvider } from '@/context/AuthContext';
 import { BrandingProvider } from '@/context/BrandingContext';
-import { backendUrl } from '@/lib/backend';
+import { serverApiUrl } from '@/lib/server-api';
 import type { Metadata, Viewport } from 'next';
 import { cache } from 'react';
 import type React from 'react';
@@ -22,7 +22,7 @@ export const dynamic = 'force-dynamic';
 
 const fetchBrandingSettings = cache(async function fetchBrandingSettings() {
   try {
-    const res = await fetch(`${backendUrl()}/settings/public`, {
+    const res = await fetch(`${serverApiUrl()}/settings/public`, {
       cache: 'no-store',
     });
     if (res.ok) {

@@ -1,3 +1,4 @@
+import type { NextFunction, Request, Response } from 'express';
 import type { SessionOptions } from 'express-session';
 
 const SESSION_TTL_MS = 15 * 60 * 1000;
@@ -5,11 +6,6 @@ const SESSION_TTL_MS = 15 * 60 * 1000;
 export interface HttpRuntimeConfiguration {
   nodeEnv: string;
   sessionSecret: string;
-}
-
-export interface CorsRuntimeConfiguration {
-  nodeEnv: string;
-  frontendUrl?: string;
 }
 
 interface TrustProxyTarget {
@@ -34,22 +30,27 @@ export function createSessionOptions(
   };
 }
 
-export function createCorsOrigins(
-  configuration: CorsRuntimeConfiguration,
-): string | string[] {
-  const frontendOrigin = configuration.frontendUrl
-    ? new URL(configuration.frontendUrl).origin
-    : undefined;
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-  if (configuration.nodeEnv === 'production') {
-    return frontendOrigin || '';
-  }
-
-  return [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    frontendOrigin,
-  ].filter((origin): origin is string => Boolean(origin));
+/**
+ * Rejects state-changing browser requests sent from another origin. The API
+ * authenticates with a SameSite=Lax cookie, which sibling sites under the same
+ * registrable domain would still attach to their requests. Clients that send
+ * no Origin header (curl, scripts) authenticate with a Bearer token instead.
+ */
+export function rejectCrossOriginWrites(appOrigin: string) {
+  return (request: Request, response: Response, next: NextFunction) => {
+    const origin = request.headers.origin;
+    if (
+      SAFE_METHODS.has(request.method) ||
+      origin === undefined ||
+      origin === appOrigin
+    ) {
+      next();
+      return;
+    }
+    response.status(403).json({ statusCode: 403, message: 'Forbidden' });
+  };
 }
 
 export function configureTrustProxy(target: TrustProxyTarget): void {

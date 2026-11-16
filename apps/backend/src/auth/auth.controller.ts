@@ -3,8 +3,8 @@ import type { AuthSchProfile } from '@kir-dev/passport-authsch';
 import {
   Controller,
   Get,
-  InternalServerErrorException,
-  Req,
+  HttpCode,
+  Post,
   Res,
   UseFilters,
   UseGuards,
@@ -12,54 +12,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
-import { randomBytes } from 'node:crypto';
+import type { Response } from 'express';
 import { Public } from '../common/decorators/public.decorator';
-import { parseBrowserOrigin } from '../config/public-url';
+import { appUrl } from '../config/app-url';
 import { AuthCallbackFilter } from './auth-callback.filter';
 import { AuthService } from './auth.service';
 import { AuthSchDedupGuard } from './authsch-dedup.guard';
-
-function frontendLoginUrl(config: ConfigService): URL {
-  const configuredUrl = config.get<string>('FRONTEND_URL');
-  if (!configuredUrl) {
-    throw new InternalServerErrorException('FRONTEND_URL must be configured');
-  }
-
-  try {
-    return new URL(
-      '/api/auth/session',
-      parseBrowserOrigin(configuredUrl, 'FRONTEND_URL'),
-    );
-  } catch (error) {
-    throw new InternalServerErrorException(
-      error instanceof Error ? error.message : 'FRONTEND_URL is invalid',
-    );
-  }
-}
-
-function escapeHtmlAttribute(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-}
-
-function sessionHandoffPage(
-  destination: URL,
-  state: string,
-  jwt: string,
-  nonce: string,
-): string {
-  return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Signing in</title></head>
-<body><form id="session-handoff" method="post" action="${escapeHtmlAttribute(destination.toString())}">
-<input type="hidden" name="state" value="${escapeHtmlAttribute(state)}">
-<input type="hidden" name="jwt" value="${escapeHtmlAttribute(jwt)}">
-</form><script nonce="${nonce}">document.getElementById('session-handoff').submit();</script></body></html>`;
-}
+import { APP_SESSION_COOKIE, appSessionCookieOptions } from './session-cookie';
 
 /** Handles AuthSCH redirects and current-user reads. */
 @ApiTags('auth')
@@ -86,33 +45,32 @@ export class AuthController {
     summary: 'Validate group membership and issue an application session',
   })
   @ApiResponse({
-    status: 200,
-    description: 'Posts a state-bound session handoff to the frontend',
+    status: 302,
+    description: 'Sets the session cookie and redirects to the login page',
   })
   async oauthRedirect(
     @CurrentUser() profile: AuthSchProfile,
-    @Req() req: Request & { authSchState?: string },
     @Res() res: Response,
   ) {
-    const url = frontendLoginUrl(this.config);
-    if (!req.authSchState) {
-      throw new InternalServerErrorException(
-        'AuthSCH callback state is missing',
-      );
-    }
+    const origin = appUrl(this.config);
     const jwt = await this.auth.login(profile);
-    const nonce = randomBytes(18).toString('base64url');
+    res.cookie(APP_SESSION_COOKIE, jwt, appSessionCookieOptions(origin));
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Referrer-Policy', 'no-referrer');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader(
-      'Content-Security-Policy',
-      `default-src 'none'; script-src 'nonce-${nonce}'; form-action ${url.origin}; base-uri 'none'; frame-ancestors 'none'`,
+    res.redirect(new URL('/login', origin).toString());
+  }
+
+  @Public()
+  @Post('logout')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Clear the application session cookie' })
+  @ApiResponse({ status: 204, description: 'Session cookie removed' })
+  logout(@Res({ passthrough: true }) res: Response) {
+    const { maxAge: _maxAge, ...options } = appSessionCookieOptions(
+      appUrl(this.config),
     );
-    return res
-      .status(200)
-      .type('html')
-      .send(sessionHandoffPage(url, req.authSchState, jwt, nonce));
+    res.clearCookie(APP_SESSION_COOKIE, options);
+    res.setHeader('Cache-Control', 'no-store');
   }
 
   @Get('me')
